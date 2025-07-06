@@ -15,6 +15,7 @@ export interface AnthropicUserMessage {
     | AnthropicTextContent
     | AnthropicImageContent
     | AnthropicDocumentContent
+    | AnthropicSearchResultContent
     | AnthropicToolResultContent
   >;
 }
@@ -28,6 +29,7 @@ export interface AnthropicAssistantMessage {
     | AnthropicToolCallContent
     | AnthropicServerToolUseContent
     | AnthropicWebSearchToolResultContent
+    | AnthropicSearchResultsToolResultContent
   >;
 }
 
@@ -81,6 +83,15 @@ export interface AnthropicDocumentContent {
   cache_control: AnthropicCacheControl | undefined;
 }
 
+export interface AnthropicSearchResultContent {
+  type: 'search_result';
+  source: string;
+  title: string;
+  content: Array<AnthropicTextContent>;
+  citations?: { enabled: boolean };
+  cache_control: AnthropicCacheControl | undefined;
+}
+
 export interface AnthropicToolCallContent {
   type: 'tool_use';
   id: string;
@@ -100,7 +111,7 @@ export interface AnthropicServerToolUseContent {
 export interface AnthropicToolResultContent {
   type: 'tool_result';
   tool_use_id: string;
-  content: string | Array<AnthropicTextContent | AnthropicImageContent>;
+  content: string | Array<AnthropicTextContent | AnthropicImageContent | AnthropicSearchResultContent>;
   is_error: boolean | undefined;
   cache_control: AnthropicCacheControl | undefined;
 }
@@ -115,6 +126,13 @@ export interface AnthropicWebSearchToolResultContent {
     encrypted_content: string;
     type: string;
   }>;
+  cache_control: AnthropicCacheControl | undefined;
+}
+
+export interface AnthropicSearchResultsToolResultContent {
+  type: 'search_results_tool_result';
+  tool_use_id: string;
+  content: Array<AnthropicSearchResultContent>;
   cache_control: AnthropicCacheControl | undefined;
 }
 

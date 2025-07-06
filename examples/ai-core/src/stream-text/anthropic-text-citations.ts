@@ -16,7 +16,10 @@ async function main() {
           {
             type: 'file',
             mediaType: 'text/plain',
-            data: 'The grass is green in spring and summer. The sky is blue during clear weather.',
+            data: Buffer.from(
+              'The grass is green in spring and summer. The sky is blue during clear weather.',
+              'utf-8',
+            ).toString('base64'),
             providerOptions: {
               anthropic: {
                 citations: { enabled: true },

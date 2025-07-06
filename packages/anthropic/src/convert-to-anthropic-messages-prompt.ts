@@ -261,46 +261,89 @@ export async function convertToAnthropicMessagesPrompt({
                     : undefined);
 
                 const output = part.output;
+                
+                let searchResultParts: any[] = [];
+                
+                if (output.type === 'content') {
+                  searchResultParts = output.value.filter((contentPart: any) => 
+                    contentPart.type === 'text' && 
+                    contentPart.providerOptions?.anthropic?.searchResult
+                  );
+                } else if (output.type === 'json') {
+                  try {
+                    const parsedValue = Array.isArray(output.value) ? output.value : JSON.parse(output.value);
+                    if (Array.isArray(parsedValue)) {
+                      searchResultParts = parsedValue.filter((contentPart: any) => 
+                        contentPart.type === 'text' && 
+                        contentPart.providerOptions?.anthropic?.searchResult
+                      );
+                    }
+                  } catch (e) {
+                    // Continue with empty searchResultParts
+                  }
+                }
+
                 let contentValue: AnthropicToolResultContent['content'];
-                switch (output.type) {
-                  case 'content':
-                    contentValue = output.value.map(contentPart => {
-                      switch (contentPart.type) {
-                        case 'text':
-                          return {
-                            type: 'text',
-                            text: contentPart.text,
-                            cache_control: undefined,
-                          };
-                        case 'media': {
-                          if (contentPart.mediaType.startsWith('image/')) {
+                
+                if (searchResultParts.length > 0) {
+                  betas.add('search-results-2025-06-09');
+                  
+                  contentValue = searchResultParts.map((contentPart: any) => {
+                    const searchMeta = contentPart.providerOptions.anthropic.searchResult;
+                    return {
+                      type: 'search_result',
+                      source: searchMeta.source,
+                      title: searchMeta.title,
+                      content: [{
+                        type: 'text',
+                        text: contentPart.text,
+                        cache_control: undefined,
+                      }],
+                      citations: searchMeta.citations,
+                      cache_control: undefined,
+                    };
+                  });
+                } else {
+                  switch (output.type) {
+                    case 'content':
+                      contentValue = output.value.map(contentPart => {
+                        switch (contentPart.type) {
+                          case 'text':
                             return {
-                              type: 'image',
-                              source: {
-                                type: 'base64',
-                                media_type: contentPart.mediaType,
-                                data: contentPart.data,
-                              },
+                              type: 'text',
+                              text: contentPart.text,
                               cache_control: undefined,
                             };
-                          }
+                          case 'media': {
+                            if (contentPart.mediaType.startsWith('image/')) {
+                              return {
+                                type: 'image',
+                                source: {
+                                  type: 'base64',
+                                  media_type: contentPart.mediaType,
+                                  data: contentPart.data,
+                                },
+                                cache_control: undefined,
+                              };
+                            }
 
-                          throw new UnsupportedFunctionalityError({
-                            functionality: `media type: ${contentPart.mediaType}`,
-                          });
+                            throw new UnsupportedFunctionalityError({
+                              functionality: `media type: ${contentPart.mediaType}`,
+                            });
+                          }
                         }
-                      }
-                    });
-                    break;
-                  case 'text':
-                  case 'error-text':
-                    contentValue = output.value;
-                    break;
-                  case 'json':
-                  case 'error-json':
-                  default:
-                    contentValue = JSON.stringify(output.value);
-                    break;
+                      });
+                      break;
+                    case 'text':
+                    case 'error-text':
+                      contentValue = output.value;
+                      break;
+                    case 'json':
+                    case 'error-json':
+                    default:
+                      contentValue = JSON.stringify(output.value);
+                      break;
+                  }
                 }
 
                 anthropicContent.push({

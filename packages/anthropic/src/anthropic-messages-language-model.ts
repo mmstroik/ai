@@ -57,12 +57,22 @@ const citationSchemas = {
     start_char_index: z.number(),
     end_char_index: z.number(),
   }),
+  searchResultLocation: z.object({
+    type: z.literal('search_result_location'),
+    cited_text: z.string(),
+    source: z.string(),
+    title: z.string().nullable(),
+    search_result_index: z.number(),
+    start_block_index: z.number(),
+    end_block_index: z.number(),
+  }),
 };
 
 const citationSchema = z.discriminatedUnion('type', [
   citationSchemas.webSearchResult,
   citationSchemas.pageLocation,
   citationSchemas.charLocation,
+  citationSchemas.searchResultLocation,
 ]);
 
 const documentCitationSchema = z.discriminatedUnion('type', [
@@ -92,6 +102,9 @@ function processCitation(
     if (source) {
       onSource(source);
     }
+  } else if (citation.type === 'search_result_location') {
+    const source = createSearchResultCitationSource(citation, generateId);
+    onSource(source);
   }
 }
 
@@ -131,6 +144,27 @@ function createCitationSource(
     filename: documentInfo.filename,
     providerMetadata: {
       anthropic: providerMetadata,
+    },
+  };
+}
+
+function createSearchResultCitationSource(
+  citation: z.infer<typeof citationSchemas.searchResultLocation>,
+  generateId: () => string,
+) {
+  return {
+    type: 'source' as const,
+    sourceType: 'url' as const,
+    id: generateId(),
+    url: citation.source,
+    title: citation.title,
+    providerMetadata: {
+      anthropic: {
+        citedText: citation.cited_text,
+        searchResultIndex: citation.search_result_index,
+        startBlockIndex: citation.start_block_index,
+        endBlockIndex: citation.end_block_index,
+      },
     },
   };
 }
@@ -562,6 +596,24 @@ export class AnthropicMessagesLanguageModel implements LanguageModelV2 {
           }
           break;
         }
+        case 'search_results_tool_result': {
+          for (const searchResult of part.content) {
+            content.push({
+              type: 'source',
+              sourceType: 'url',
+              id: this.generateId(),
+              url: searchResult.source,
+              title: searchResult.title,
+              providerMetadata: {
+                anthropic: {
+                  searchResultContent: searchResult.content.map(block => block.text).join('\n'),
+                  citationsEnabled: searchResult.citations?.enabled ?? false,
+                },
+              },
+            });
+          }
+          break;
+        }
       }
     }
 
@@ -645,6 +697,7 @@ export class AnthropicMessagesLanguageModel implements LanguageModelV2 {
       | 'redacted_thinking'
       | 'server_tool_use'
       | 'web_search_tool_result'
+      | 'search_results_tool_result'
       | undefined = undefined;
 
     const generateId = this.generateId;
@@ -799,6 +852,27 @@ export class AnthropicMessagesLanguageModel implements LanguageModelV2 {
                           errorCode: part.content.error_code,
                         },
                         providerExecuted: true,
+                      });
+                    }
+                    return;
+                  }
+
+                  case 'search_results_tool_result': {
+                    const part = value.content_block;
+
+                    for (const searchResult of part.content) {
+                      controller.enqueue({
+                        type: 'source',
+                        sourceType: 'url',
+                        id: generateId(),
+                        url: searchResult.source,
+                        title: searchResult.title,
+                        providerMetadata: {
+                          anthropic: {
+                            searchResultContent: searchResult.content.map(block => block.text).join('\n'),
+                            citationsEnabled: searchResult.citations?.enabled ?? false,
+                          },
+                        },
                       });
                     }
                     return;
@@ -1071,6 +1145,26 @@ const anthropicMessagesResponseSchema = z.object({
           }),
         ]),
       }),
+      z.object({
+        type: z.literal('search_results_tool_result'),
+        tool_use_id: z.string(),
+        content: z.array(
+          z.object({
+            type: z.literal('search_result'),
+            source: z.string(),
+            title: z.string(),
+            content: z.array(
+              z.object({
+                type: z.literal('text'),
+                text: z.string(),
+              })
+            ),
+            citations: z.object({
+              enabled: z.boolean(),
+            }).optional(),
+          })
+        ),
+      }),
     ]),
   ),
   stop_reason: z.string().nullish(),
@@ -1148,6 +1242,26 @@ const anthropicMessagesChunkSchema = z.discriminatedUnion('type', [
             error_code: z.string(),
           }),
         ]),
+      }),
+      z.object({
+        type: z.literal('search_results_tool_result'),
+        tool_use_id: z.string(),
+        content: z.array(
+          z.object({
+            type: z.literal('search_result'),
+            source: z.string(),
+            title: z.string(),
+            content: z.array(
+              z.object({
+                type: z.literal('text'),
+                text: z.string(),
+              })
+            ),
+            citations: z.object({
+              enabled: z.boolean(),
+            }).optional(),
+          })
+        ),
       }),
     ]),
   }),

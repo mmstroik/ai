@@ -489,6 +489,66 @@ describe('tool messages', () => {
       }
     `);
   });
+
+  it('should handle tool result with search results and add search-results beta', async () => {
+    const result = await convertToAnthropicMessagesPrompt({
+      prompt: [
+        {
+          role: 'tool',
+          content: [
+            {
+              type: 'tool-result',
+              toolName: 'search',
+              toolCallId: 'search-1',
+              output: {
+                type: 'content',
+                value: [
+                  {
+                    type: 'text',
+                    text: 'This is the first paragraph of the article.',
+                    providerOptions: {
+                      anthropic: {
+                        searchResult: {
+                          source: 'https://example.com/article',
+                          title: 'Example Article',
+                          citations: { enabled: true },
+                        },
+                      },
+                    },
+                  },
+                  {
+                    type: 'text', 
+                    text: 'This is the second paragraph of the article.',
+                    providerOptions: {
+                      anthropic: {
+                        searchResult: {
+                          source: 'https://example.com/article2',
+                          title: 'Example Article 2',
+                          citations: { enabled: true },
+                        },
+                      },
+                    },
+                  },
+                ] as any,
+              },
+            },
+          ],
+        },
+      ],
+      sendReasoning: true,
+      warnings: [],
+    });
+
+    expect(result.betas).toContain('search-results-2025-06-09');
+    expect(result.prompt.messages[0].role).toBe('user');
+    const toolResult = result.prompt.messages[0].content.find(
+      (item: any) => item.type === 'tool_result'
+    );
+    expect(toolResult).toBeDefined();
+    expect(toolResult.content.some(
+      (item: any) => item.type === 'search_result'
+    )).toBe(true);
+  });
 });
 
 describe('assistant messages', () => {
