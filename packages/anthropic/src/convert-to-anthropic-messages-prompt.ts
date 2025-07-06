@@ -17,6 +17,10 @@ import { convertToBase64, parseProviderOptions } from '@ai-sdk/provider-utils';
 import { anthropicReasoningMetadataSchema } from './anthropic-messages-language-model';
 import { anthropicFilePartProviderOptions } from './anthropic-messages-options';
 import { webSearch_20250305OutputSchema } from './tool/web-search_20250305';
+import {
+  searchResults_20250609OutputSchema,
+  type SearchResults_20250609Output,
+} from './tool/search-results_20250609';
 
 function convertToString(data: LanguageModelV2DataContent): string {
   if (typeof data === 'string') {
@@ -262,54 +266,34 @@ export async function convertToAnthropicMessagesPrompt({
 
                 const output = part.output;
 
-                let searchResultParts: any[] = [];
-
-                if (output.type === 'content') {
-                  searchResultParts = output.value.filter(
-                    (contentPart: any) =>
-                      contentPart.type === 'text' &&
-                      contentPart.providerOptions?.anthropic?.searchResult,
-                  );
-                } else if (output.type === 'json') {
-                  try {
-                    const parsedValue = Array.isArray(output.value)
-                      ? output.value
-                      : JSON.parse(output.value as string);
-                    if (Array.isArray(parsedValue)) {
-                      searchResultParts = parsedValue.filter(
-                        (contentPart: any) =>
-                          contentPart.type === 'text' &&
-                          contentPart.providerOptions?.anthropic?.searchResult,
-                      );
-                    }
-                  } catch (e) {
-                    // Continue with empty searchResultParts
-                  }
-                }
-
                 let contentValue: AnthropicToolResultContent['content'];
 
-                if (searchResultParts.length > 0) {
-                  betas.add('search-results-2025-06-09');
+                if (output.type === 'json') {
+                  const searchResults =
+                    searchResults_20250609OutputSchema.safeParse(output.value);
 
-                  contentValue = searchResultParts.map((contentPart: any) => {
-                    const searchMeta =
-                      contentPart.providerOptions.anthropic.searchResult;
-                    return {
-                      type: 'search_result',
-                      source: searchMeta.source,
-                      title: searchMeta.title,
-                      content: [
-                        {
-                          type: 'text',
-                          text: contentPart.text,
-                          cache_control: undefined,
-                        },
-                      ],
-                      citations: searchMeta.citations,
-                      cache_control: undefined,
-                    };
-                  });
+                  if (searchResults.success) {
+                    betas.add('search-results-2025-06-09');
+
+                    contentValue = searchResults.data.map(
+                      (result: SearchResults_20250609Output[0]) => ({
+                        type: 'search_result',
+                        source: result.source,
+                        title: result.title,
+                        content: [
+                          {
+                            type: 'text',
+                            text: result.content,
+                            cache_control: undefined,
+                          },
+                        ],
+                        citations: result.citations,
+                        cache_control: undefined,
+                      }),
+                    );
+                  } else {
+                    contentValue = JSON.stringify(output.value);
+                  }
                 } else {
                   switch (output.type) {
                     case 'content':
@@ -345,7 +329,6 @@ export async function convertToAnthropicMessagesPrompt({
                     case 'error-text':
                       contentValue = output.value;
                       break;
-                    case 'json':
                     case 'error-json':
                     default:
                       contentValue = JSON.stringify(output.value);

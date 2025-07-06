@@ -18,30 +18,18 @@ async function main() {
         execute: async ({ query }) => {
           return [
             {
-              type: 'text' as const,
-              text: 'Recent research has shown significant progress in constitutional AI approaches to safety. These methods involve training AI systems to follow a set of principles or constitution. Key findings include improved alignment and reduced harmful outputs.',
-              providerOptions: {
-                anthropic: {
-                  searchResult: {
-                    source: 'https://arxiv.org/abs/2024.01234',
-                    title: 'Advances in AI Safety: Constitutional AI Methods',
-                    citations: { enabled: true },
-                  },
-                },
-              },
+              source: 'https://arxiv.org/abs/2024.01234',
+              title: 'Advances in AI Safety: Constitutional AI Methods',
+              content:
+                'Recent research has shown significant progress in constitutional AI approaches to safety. These methods involve training AI systems to follow a set of principles or constitution. Key findings include improved alignment and reduced harmful outputs.',
+              citations: { enabled: true },
             },
             {
-              type: 'text' as const,
-              text: 'OpenAI has published new safety guidelines for large language models. The updates focus on red teaming, evaluation frameworks, and deployment protocols.',
-              providerOptions: {
-                anthropic: {
-                  searchResult: {
-                    source: 'https://openai.com/research/safety-updates-2024',
-                    title: 'OpenAI Safety Updates 2024',
-                    citations: { enabled: true },
-                  },
-                },
-              },
+              source: 'https://openai.com/research/safety-updates-2024',
+              title: 'OpenAI Safety Updates 2024',
+              content:
+                'OpenAI has published new safety guidelines for large language models. The updates focus on red teaming, evaluation frameworks, and deployment protocols.',
+              citations: { enabled: true },
             },
           ];
         },
