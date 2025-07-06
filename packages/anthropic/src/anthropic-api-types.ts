@@ -111,7 +111,13 @@ export interface AnthropicServerToolUseContent {
 export interface AnthropicToolResultContent {
   type: 'tool_result';
   tool_use_id: string;
-  content: string | Array<AnthropicTextContent | AnthropicImageContent | AnthropicSearchResultContent>;
+  content:
+    | string
+    | Array<
+        | AnthropicTextContent
+        | AnthropicImageContent
+        | AnthropicSearchResultContent
+      >;
   is_error: boolean | undefined;
   cache_control: AnthropicCacheControl | undefined;
 }

@@ -261,21 +261,25 @@ export async function convertToAnthropicMessagesPrompt({
                     : undefined);
 
                 const output = part.output;
-                
+
                 let searchResultParts: any[] = [];
-                
+
                 if (output.type === 'content') {
-                  searchResultParts = output.value.filter((contentPart: any) => 
-                    contentPart.type === 'text' && 
-                    contentPart.providerOptions?.anthropic?.searchResult
+                  searchResultParts = output.value.filter(
+                    (contentPart: any) =>
+                      contentPart.type === 'text' &&
+                      contentPart.providerOptions?.anthropic?.searchResult,
                   );
                 } else if (output.type === 'json') {
                   try {
-                    const parsedValue = Array.isArray(output.value) ? output.value : JSON.parse(output.value);
+                    const parsedValue = Array.isArray(output.value)
+                      ? output.value
+                      : JSON.parse(output.value);
                     if (Array.isArray(parsedValue)) {
-                      searchResultParts = parsedValue.filter((contentPart: any) => 
-                        contentPart.type === 'text' && 
-                        contentPart.providerOptions?.anthropic?.searchResult
+                      searchResultParts = parsedValue.filter(
+                        (contentPart: any) =>
+                          contentPart.type === 'text' &&
+                          contentPart.providerOptions?.anthropic?.searchResult,
                       );
                     }
                   } catch (e) {
@@ -284,21 +288,24 @@ export async function convertToAnthropicMessagesPrompt({
                 }
 
                 let contentValue: AnthropicToolResultContent['content'];
-                
+
                 if (searchResultParts.length > 0) {
                   betas.add('search-results-2025-06-09');
-                  
+
                   contentValue = searchResultParts.map((contentPart: any) => {
-                    const searchMeta = contentPart.providerOptions.anthropic.searchResult;
+                    const searchMeta =
+                      contentPart.providerOptions.anthropic.searchResult;
                     return {
                       type: 'search_result',
                       source: searchMeta.source,
                       title: searchMeta.title,
-                      content: [{
-                        type: 'text',
-                        text: contentPart.text,
-                        cache_control: undefined,
-                      }],
+                      content: [
+                        {
+                          type: 'text',
+                          text: contentPart.text,
+                          cache_control: undefined,
+                        },
+                      ],
                       citations: searchMeta.citations,
                       cache_control: undefined,
                     };

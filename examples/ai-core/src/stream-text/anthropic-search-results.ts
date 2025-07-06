@@ -6,7 +6,8 @@ import { z } from 'zod/v4';
 async function main() {
   const result = streamText({
     model: anthropic('claude-3-5-sonnet-latest'),
-    prompt: 'What are the latest developments in AI safety research? Please search for information and provide a comprehensive answer with proper citations.',
+    prompt:
+      'What are the latest developments in AI safety research? Please search for information and provide a comprehensive answer with proper citations.',
     stopWhen: stepCountIs(5),
     tools: {
       searchKnowledgeBase: tool({
@@ -67,7 +68,9 @@ async function main() {
     }
   }
 
-  console.log(`\n\nCitations: ${citationCount}, Sources: ${(await result.sources).length}`);
+  console.log(
+    `\n\nCitations: ${citationCount}, Sources: ${(await result.sources).length}`,
+  );
 }
 
 main().catch(console.error);

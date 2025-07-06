@@ -517,7 +517,7 @@ describe('tool messages', () => {
                     },
                   },
                   {
-                    type: 'text', 
+                    type: 'text',
                     text: 'This is the second paragraph of the article.',
                     providerOptions: {
                       anthropic: {
@@ -542,12 +542,12 @@ describe('tool messages', () => {
     expect(result.betas).toContain('search-results-2025-06-09');
     expect(result.prompt.messages[0].role).toBe('user');
     const toolResult = result.prompt.messages[0].content.find(
-      (item: any) => item.type === 'tool_result'
+      (item: any) => item.type === 'tool_result',
     );
     expect(toolResult).toBeDefined();
-    expect(toolResult.content.some(
-      (item: any) => item.type === 'search_result'
-    )).toBe(true);
+    expect(
+      toolResult.content.some((item: any) => item.type === 'search_result'),
+    ).toBe(true);
   });
 });
 

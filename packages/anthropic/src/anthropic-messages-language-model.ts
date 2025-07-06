@@ -606,7 +606,9 @@ export class AnthropicMessagesLanguageModel implements LanguageModelV2 {
               title: searchResult.title,
               providerMetadata: {
                 anthropic: {
-                  searchResultContent: searchResult.content.map(block => block.text).join('\n'),
+                  searchResultContent: searchResult.content
+                    .map(block => block.text)
+                    .join('\n'),
                   citationsEnabled: searchResult.citations?.enabled ?? false,
                 },
               },
@@ -869,8 +871,11 @@ export class AnthropicMessagesLanguageModel implements LanguageModelV2 {
                         title: searchResult.title,
                         providerMetadata: {
                           anthropic: {
-                            searchResultContent: searchResult.content.map(block => block.text).join('\n'),
-                            citationsEnabled: searchResult.citations?.enabled ?? false,
+                            searchResultContent: searchResult.content
+                              .map(block => block.text)
+                              .join('\n'),
+                            citationsEnabled:
+                              searchResult.citations?.enabled ?? false,
                           },
                         },
                       });
@@ -1157,12 +1162,14 @@ const anthropicMessagesResponseSchema = z.object({
               z.object({
                 type: z.literal('text'),
                 text: z.string(),
-              })
+              }),
             ),
-            citations: z.object({
-              enabled: z.boolean(),
-            }).optional(),
-          })
+            citations: z
+              .object({
+                enabled: z.boolean(),
+              })
+              .optional(),
+          }),
         ),
       }),
     ]),
@@ -1255,12 +1262,14 @@ const anthropicMessagesChunkSchema = z.discriminatedUnion('type', [
               z.object({
                 type: z.literal('text'),
                 text: z.string(),
-              })
+              }),
             ),
-            citations: z.object({
-              enabled: z.boolean(),
-            }).optional(),
-          })
+            citations: z
+              .object({
+                enabled: z.boolean(),
+              })
+              .optional(),
+          }),
         ),
       }),
     ]),
