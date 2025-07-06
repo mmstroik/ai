@@ -545,9 +545,172 @@ describe('tool messages', () => {
       (item: any) => item.type === 'tool_result',
     );
     expect(toolResult).toBeDefined();
-    expect(
-      toolResult.content.some((item: any) => item.type === 'search_result'),
-    ).toBe(true);
+    if (toolResult && 'content' in toolResult && Array.isArray(toolResult.content)) {
+      expect(
+        toolResult.content.some((item: any) => item.type === 'search_result'),
+      ).toBe(true);
+      expect(toolResult.content).toHaveLength(2);
+      expect(toolResult.content[0]).toEqual({
+        type: 'search_result',
+        source: 'https://example.com/article',
+        title: 'Example Article',
+        content: [
+          {
+            type: 'text',
+            text: 'This is the first paragraph of the article.',
+            cache_control: undefined,
+          },
+        ],
+        citations: { enabled: true },
+        cache_control: undefined,
+      });
+      expect(toolResult.content[1]).toEqual({
+        type: 'search_result',
+        source: 'https://example.com/article2',
+        title: 'Example Article 2',
+        content: [
+          {
+            type: 'text',
+            text: 'This is the second paragraph of the article.',
+            cache_control: undefined,
+          },
+        ],
+        citations: { enabled: true },
+        cache_control: undefined,
+      });
+    }
+  });
+
+  it('should handle tool result with JSON format search results', async () => {
+    const result = await convertToAnthropicMessagesPrompt({
+      prompt: [
+        {
+          role: 'tool',
+          content: [
+            {
+              type: 'tool-result',
+              toolName: 'search',
+              toolCallId: 'search-1',
+              output: {
+                type: 'json',
+                value: [
+                  {
+                    type: 'text',
+                    text: 'This is content from JSON format.',
+                    providerOptions: {
+                      anthropic: {
+                        searchResult: {
+                          source: 'https://example.com/json-article',
+                          title: 'JSON Article',
+                          citations: { enabled: true },
+                        },
+                      },
+                    },
+                  },
+                ] as any,
+              },
+            },
+          ],
+        },
+      ],
+      sendReasoning: true,
+      warnings: [],
+    });
+
+    expect(result.betas).toContain('search-results-2025-06-09');
+    expect(result.prompt.messages[0].role).toBe('user');
+    const toolResult = result.prompt.messages[0].content.find(
+      (item: any) => item.type === 'tool_result',
+    );
+    expect(toolResult).toBeDefined();
+    if (toolResult && 'content' in toolResult && Array.isArray(toolResult.content)) {
+      expect(
+        toolResult.content.some((item: any) => item.type === 'search_result'),
+      ).toBe(true);
+      expect(toolResult.content).toHaveLength(1);
+      expect(toolResult.content[0]).toEqual({
+        type: 'search_result',
+        source: 'https://example.com/json-article',
+        title: 'JSON Article',
+        content: [
+          {
+            type: 'text',
+            text: 'This is content from JSON format.',
+            cache_control: undefined,
+          },
+        ],
+        citations: { enabled: true },
+        cache_control: undefined,
+      });
+    }
+  });
+
+  it('should handle tool result with mixed search results and regular content', async () => {
+    const result = await convertToAnthropicMessagesPrompt({
+      prompt: [
+        {
+          role: 'tool',
+          content: [
+            {
+              type: 'tool-result',
+              toolName: 'search',
+              toolCallId: 'search-1',
+              output: {
+                type: 'content',
+                value: [
+                  {
+                    type: 'text',
+                    text: 'This is a search result.',
+                    providerOptions: {
+                      anthropic: {
+                        searchResult: {
+                          source: 'https://example.com/search-result',
+                          title: 'Search Result',
+                          citations: { enabled: true },
+                        },
+                      },
+                    },
+                  },
+                  {
+                    type: 'text',
+                    text: 'This is regular content without search metadata.',
+                  },
+                ] as any,
+              },
+            },
+          ],
+        },
+      ],
+      sendReasoning: true,
+      warnings: [],
+    });
+
+    expect(result.betas).toContain('search-results-2025-06-09');
+    expect(result.prompt.messages[0].role).toBe('user');
+    const toolResult = result.prompt.messages[0].content.find(
+      (item: any) => item.type === 'tool_result',
+    );
+    expect(toolResult).toBeDefined();
+    if (toolResult && 'content' in toolResult && Array.isArray(toolResult.content)) {
+      expect(
+        toolResult.content.some((item: any) => item.type === 'search_result'),
+      ).toBe(true);
+      expect(toolResult.content).toHaveLength(1);
+      expect(toolResult.content[0]).toEqual({
+        type: 'search_result',
+        source: 'https://example.com/search-result',
+        title: 'Search Result',
+        content: [
+          {
+            type: 'text',
+            text: 'This is a search result.',
+            cache_control: undefined,
+          },
+        ],
+        citations: { enabled: true },
+        cache_control: undefined,
+      });
+    }
   });
 });
 

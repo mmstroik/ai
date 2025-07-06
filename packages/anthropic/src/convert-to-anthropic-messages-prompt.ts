@@ -274,7 +274,7 @@ export async function convertToAnthropicMessagesPrompt({
                   try {
                     const parsedValue = Array.isArray(output.value)
                       ? output.value
-                      : JSON.parse(output.value);
+                      : JSON.parse(output.value as string);
                     if (Array.isArray(parsedValue)) {
                       searchResultParts = parsedValue.filter(
                         (contentPart: any) =>
