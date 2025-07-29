@@ -33,6 +33,7 @@ export type OpenAIResponsesAssistantMessage = {
     | OpenAIWebSearchCall
     | OpenAIComputerCall
   >;
+  id?: string;
 };
 
 export type OpenAIResponsesFunctionCall = {
@@ -40,6 +41,7 @@ export type OpenAIResponsesFunctionCall = {
   call_id: string;
   name: string;
   arguments: string;
+  id?: string;
 };
 
 export type OpenAIResponsesFunctionCallOutput = {
@@ -76,6 +78,24 @@ export type OpenAIResponsesTool =
         city: string;
         region: string;
       };
+    }
+  | {
+      type: 'file_search';
+      vector_store_ids?: string[];
+      max_num_results?: number;
+      ranking_options?: {
+        ranker?: 'auto' | 'keyword' | 'semantic';
+      };
+      filters?:
+        | {
+            key: string;
+            type: 'eq' | 'ne' | 'gt' | 'gte' | 'lt' | 'lte';
+            value: string | number | boolean;
+          }
+        | {
+            type: 'and' | 'or';
+            filters: any[];
+          };
     };
 
 export type OpenAIResponsesReasoning = {

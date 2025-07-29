@@ -7,7 +7,9 @@ export type AnthropicMessagesPrompt = {
 
 export type AnthropicMessage = AnthropicUserMessage | AnthropicAssistantMessage;
 
-export type AnthropicCacheControl = { type: 'ephemeral' };
+export type AnthropicCacheControl = {
+  type: 'ephemeral';
+};
 
 export interface AnthropicUserMessage {
   role: 'user';
@@ -147,6 +149,7 @@ export type AnthropicTool =
       name: string;
       description: string | undefined;
       input_schema: JSONSchema7;
+      cache_control: AnthropicCacheControl | undefined;
     }
   | {
       name: string;
@@ -157,7 +160,10 @@ export type AnthropicTool =
     }
   | {
       name: string;
-      type: 'text_editor_20250124' | 'text_editor_20241022';
+      type:
+        | 'text_editor_20250124'
+        | 'text_editor_20241022'
+        | 'text_editor_20250429';
     }
   | {
       name: string;
@@ -179,5 +185,5 @@ export type AnthropicTool =
     };
 
 export type AnthropicToolChoice =
-  | { type: 'auto' | 'any' }
-  | { type: 'tool'; name: string };
+  | { type: 'auto' | 'any'; disable_parallel_tool_use?: boolean }
+  | { type: 'tool'; name: string; disable_parallel_tool_use?: boolean };

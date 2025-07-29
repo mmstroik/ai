@@ -1,4 +1,4 @@
-import { UIMessageStreamPart } from '../ui-message-stream';
+import { UIMessageChunk } from '../ui-message-stream';
 import { ChatRequestOptions } from './chat';
 import { UIMessage } from './ui-messages';
 
@@ -9,17 +9,14 @@ export interface ChatTransport<UI_MESSAGE extends UIMessage> {
       messages: UI_MESSAGE[];
       abortSignal: AbortSignal | undefined;
     } & {
-      trigger:
-        | 'submit-user-message'
-        | 'submit-tool-result'
-        | 'regenerate-assistant-message';
+      trigger: 'submit-message' | 'regenerate-message';
       messageId: string | undefined;
     } & ChatRequestOptions,
-  ) => Promise<ReadableStream<UIMessageStreamPart>>;
+  ) => Promise<ReadableStream<UIMessageChunk>>;
 
   reconnectToStream: (
     options: {
       chatId: string;
     } & ChatRequestOptions,
-  ) => Promise<ReadableStream<UIMessageStreamPart> | null>;
+  ) => Promise<ReadableStream<UIMessageChunk> | null>;
 }

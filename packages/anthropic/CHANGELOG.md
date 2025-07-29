@@ -1,5 +1,66 @@
 # @ai-sdk/anthropic
 
+## 2.0.0-beta.11
+
+### Patch Changes
+
+- eb173f1: chore (providers): remove model shorthand deprecation warnings
+- Updated dependencies [dd5fd43]
+  - @ai-sdk/provider-utils@3.0.0-beta.8
+
+## 2.0.0-beta.10
+
+### Patch Changes
+
+- 269683f: Add raw Anthropic usage information to provider metadata
+- Updated dependencies [e7fcc86]
+  - @ai-sdk/provider-utils@3.0.0-beta.7
+
+## 2.0.0-beta.9
+
+### Patch Changes
+
+- 4f26d59: feat(provider/anthropic): add disable parallel tool use option
+- a753b3a: feat (provider/anthropic): cache control for tools
+- Updated dependencies [ac34802]
+  - @ai-sdk/provider-utils@3.0.0-beta.6
+
+## 2.0.0-beta.8
+
+### Patch Changes
+
+- Updated dependencies [57edfcb]
+- Updated dependencies [383cbfa]
+  - @ai-sdk/provider-utils@3.0.0-beta.5
+
+## 2.0.0-beta.7
+
+### Patch Changes
+
+- 205077b: fix: improve Zod compatibility
+- Updated dependencies [205077b]
+  - @ai-sdk/provider-utils@3.0.0-beta.4
+
+## 2.0.0-beta.6
+
+### Patch Changes
+
+- Updated dependencies [05d2819]
+  - @ai-sdk/provider-utils@3.0.0-beta.3
+
+## 2.0.0-beta.5
+
+### Patch Changes
+
+- b9ddcdd: feat(anthropic): add text_editor_20250429 tool for Claude 4 models
+
+## 2.0.0-beta.4
+
+### Patch Changes
+
+- fdff8a4: fix(provider/anthropic): correct Claude 4 model ID format
+- 84577c8: fix (providers/anthropic): remove fine grained tool streaming beta
+
 ## 2.0.0-beta.3
 
 ### Patch Changes

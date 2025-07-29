@@ -1350,6 +1350,142 @@ describe('doStream', () => {
       ]
     `);
   });
+
+  it('should transform reasoningConfig to thinking in stream requests', async () => {
+    setupMockEventStreamHandler();
+    server.urls[streamUrl].response = {
+      type: 'stream-chunks',
+      chunks: [
+        JSON.stringify({
+          contentBlockDelta: {
+            contentBlockIndex: 0,
+            delta: { text: 'Hello' },
+          },
+        }) + '\n',
+        JSON.stringify({
+          messageStop: {
+            stopReason: 'stop_sequence',
+          },
+        }) + '\n',
+      ],
+    };
+
+    await model.doStream({
+      prompt: TEST_PROMPT,
+      maxOutputTokens: 100,
+      includeRawChunks: false,
+      providerOptions: {
+        bedrock: {
+          reasoningConfig: {
+            type: 'enabled',
+            budgetTokens: 2000,
+          },
+        },
+      },
+    });
+
+    const requestBody = await server.calls[0].requestBodyJson;
+
+    // Should contain thinking in additionalModelRequestFields
+    expect(requestBody).toMatchObject({
+      additionalModelRequestFields: {
+        thinking: {
+          type: 'enabled',
+          budget_tokens: 2000,
+        },
+      },
+      // Should have adjusted maxOutputTokens (100 + 2000)
+      inferenceConfig: {
+        maxOutputTokens: 2100,
+      },
+    });
+
+    // Should NOT contain reasoningConfig at the top level
+    expect(requestBody).not.toHaveProperty('reasoningConfig');
+  });
+
+  it('should handle JSON response format in streaming', async () => {
+    setupMockEventStreamHandler();
+    server.urls[streamUrl].response = {
+      type: 'stream-chunks',
+      chunks: [
+        JSON.stringify({
+          contentBlockStart: {
+            contentBlockIndex: 0,
+            start: {
+              toolUse: { toolUseId: 'json-tool-id', name: 'json' },
+            },
+          },
+        }) + '\n',
+        JSON.stringify({
+          contentBlockDelta: {
+            contentBlockIndex: 0,
+            delta: { toolUse: { input: '{"value":' } },
+          },
+        }) + '\n',
+        JSON.stringify({
+          contentBlockDelta: {
+            contentBlockIndex: 0,
+            delta: { toolUse: { input: '"test"}' } },
+          },
+        }) + '\n',
+        JSON.stringify({
+          contentBlockStop: { contentBlockIndex: 0 },
+        }) + '\n',
+        JSON.stringify({
+          messageStop: {
+            stopReason: 'tool_use',
+          },
+        }) + '\n',
+      ],
+    };
+
+    const { stream } = await model.doStream({
+      prompt: [
+        { role: 'user', content: [{ type: 'text', text: 'Generate JSON' }] },
+      ],
+      responseFormat: {
+        type: 'json',
+        schema: {
+          type: 'object',
+          properties: { value: { type: 'string' } },
+          required: ['value'],
+        },
+      },
+      includeRawChunks: false,
+    });
+
+    expect(await convertReadableStreamToArray(stream)).toMatchInlineSnapshot(`
+      [
+        {
+          "type": "stream-start",
+          "warnings": [],
+        },
+        {
+          "id": "0",
+          "type": "text-start",
+        },
+        {
+          "delta": "{"value":"test"}",
+          "id": "0",
+          "type": "text-delta",
+        },
+        {
+          "id": "0",
+          "type": "text-end",
+        },
+        {
+          "finishReason": "tool-calls",
+          "type": "finish",
+          "usage": {
+            "inputTokens": undefined,
+            "outputTokens": undefined,
+            "totalTokens": undefined,
+          },
+        },
+      ]
+    `);
+  });
 });
 
 describe('doGenerate', () => {
@@ -1753,6 +1889,42 @@ describe('doGenerate', () => {
     });
   });
 
+  it('should transform reasoningConfig to thinking in additionalModelRequestFields', async () => {
+    prepareJsonResponse({});
+
+    await model.doGenerate({
+      prompt: TEST_PROMPT,
+      maxOutputTokens: 100,
+      providerOptions: {
+        bedrock: {
+          reasoningConfig: {
+            type: 'enabled',
+            budgetTokens: 2000,
+          },
+        },
+      },
+    });
+
+    const requestBody = await server.calls[0].requestBodyJson;
+
+    // Should contain thinking in additionalModelRequestFields
+    expect(requestBody).toMatchObject({
+      additionalModelRequestFields: {
+        thinking: {
+          type: 'enabled',
+          budget_tokens: 2000,
+        },
+      },
+      // Should have adjusted maxOutputTokens (100 + 2000)
+      inferenceConfig: {
+        maxOutputTokens: 2100,
+      },
+    });
+
+    // Should NOT contain reasoningConfig at the top level
+    expect(requestBody).not.toHaveProperty('reasoningConfig');
+  });
+
   it('should extract reasoning text with signature', async () => {
     const reasoningText = 'I need to think about this problem carefully...';
     const signature = 'abc123signature';
@@ -1917,5 +2089,254 @@ describe('doGenerate', () => {
         },
       ]
     `);
+  });
+
+  it('should omit toolConfig and filter tool content when conversation has tool calls but no active tools', async () => {
+    prepareJsonResponse({});
+
+    const conversationWithToolCalls: LanguageModelV2Prompt = [
+      {
+        role: 'user',
+        content: [{ type: 'text', text: 'What is the weather in Toronto?' }],
+      },
+      {
+        role: 'assistant',
+        content: [
+          {
+            type: 'tool-call',
+            toolCallId: 'tool-call-1',
+            toolName: 'weather',
+            input: { city: 'Toronto' },
+          },
+        ],
+      },
+      {
+        role: 'tool',
+        content: [
+          {
+            type: 'tool-result',
+            toolCallId: 'tool-call-1',
+            toolName: 'weather',
+            output: {
+              type: 'text',
+              value: 'The weather in Toronto is 20°C.',
+            },
+          },
+        ],
+      },
+      {
+        role: 'user',
+        content: [{ type: 'text', text: 'Now give me a summary.' }],
+      },
+    ];
+
+    const result = await model.doGenerate({
+      prompt: conversationWithToolCalls,
+      tools: [],
+    });
+
+    const requestBody = await server.calls[0].requestBodyJson;
+
+    expect(requestBody.toolConfig).toMatchInlineSnapshot(`undefined`);
+
+    expect(requestBody.messages).toMatchInlineSnapshot(`
+      [
+        {
+          "content": [
+            {
+              "text": "What is the weather in Toronto?",
+            },
+            {
+              "text": "Now give me a summary.",
+            },
+          ],
+          "role": "user",
+        },
+      ]
+    `);
+
+    expect(result.warnings).toMatchInlineSnapshot(`
+      [
+        {
+          "details": "Tool calls and results removed from conversation because Bedrock does not support tool content without active tools.",
+          "setting": "toolContent",
+          "type": "unsupported-setting",
+        },
+      ]
+    `);
+  });
+
+  it('should handle JSON response format with schema', async () => {
+    prepareJsonResponse({
+      content: [
+        {
+          type: 'tool_use',
+          id: 'json-tool-id',
+          name: 'json',
+          input: {
+            recipe: { name: 'Lasagna', ingredients: ['pasta', 'cheese'] },
+          },
+        },
+      ],
+    });
+
+    const result = await model.doGenerate({
+      prompt: [
+        {
+          role: 'user',
+          content: [{ type: 'text', text: 'Generate a recipe' }],
+        },
+      ],
+      responseFormat: {
+        type: 'json',
+        schema: {
+          type: 'object',
+          properties: {
+            recipe: {
+              type: 'object',
+              properties: {
+                name: { type: 'string' },
+                ingredients: { type: 'array', items: { type: 'string' } },
+              },
+              required: ['name', 'ingredients'],
+            },
+          },
+          required: ['recipe'],
+        },
+      },
+    });
+
+    expect(result.content).toMatchInlineSnapshot(`[]`);
+
+    expect(result.providerMetadata?.bedrock?.isJsonResponseFromTool).toBe(true);
+
+    const requestBody = await server.calls[0].requestBodyJson;
+    expect(requestBody.toolConfig.tools).toHaveLength(1);
+    expect(requestBody.toolConfig.tools[0].toolSpec.name).toBe('json');
+    expect(requestBody.toolConfig.tools[0].toolSpec.description).toBe(
+      'Respond with a JSON object.',
+    );
+    expect(requestBody.toolConfig.toolChoice).toEqual({
+      tool: { name: 'json' },
+    });
+  });
+
+  it('should warn when tools are provided with JSON response format', async () => {
+    prepareJsonResponse({
+      content: [
+        {
+          type: 'tool_use',
+          id: 'json-tool-id',
+          name: 'json',
+          input: { value: 'test' },
+        },
+      ],
+    });
+
+    const result = await model.doGenerate({
+      prompt: [{ role: 'user', content: [{ type: 'text', text: 'Test' }] }],
+      responseFormat: {
+        type: 'json',
+        schema: {
+          type: 'object',
+          properties: { value: { type: 'string' } },
+          required: ['value'],
+        },
+      },
+      tools: [
+        {
+          type: 'function',
+          name: 'test-tool',
+          inputSchema: { type: 'object', properties: {} },
+        },
+      ],
+    });
+
+    expect(result.warnings).toEqual([
+      {
+        type: 'other',
+        message:
+          'JSON response format does not support tools. The provided tools are ignored.',
+      },
+    ]);
+  });
+
+  it('should handle unsupported response format types', async () => {
+    prepareJsonResponse({});
+
+    const result = await model.doGenerate({
+      prompt: TEST_PROMPT,
+      responseFormat: { type: 'xml' as any },
+    });
+
+    expect(result.warnings).toEqual([
+      {
+        type: 'unsupported-setting',
+        setting: 'responseFormat',
+        details: 'Only text and json response formats are supported.',
+      },
+    ]);
+  });
+
+  it('should omit toolConfig when conversation has tool calls but toolChoice is none', async () => {
+    prepareJsonResponse({});
+
+    const conversationWithToolCalls: LanguageModelV2Prompt = [
+      {
+        role: 'user',
+        content: [{ type: 'text', text: 'What is the weather in Toronto?' }],
+      },
+      {
+        role: 'assistant',
+        content: [
+          {
+            type: 'tool-call',
+            toolCallId: 'tool-call-1',
+            toolName: 'weather',
+            input: { city: 'Toronto' },
+          },
+        ],
+      },
+      {
+        role: 'tool',
+        content: [
+          {
+            type: 'tool-result',
+            toolCallId: 'tool-call-1',
+            toolName: 'weather',
+            output: {
+              type: 'text',
+              value: 'The weather in Toronto is 20°C.',
+            },
+          },
+        ],
+      },
+      {
+        role: 'user',
+        content: [{ type: 'text', text: 'Now give me a summary.' }],
+      },
+    ];
+
+    await model.doGenerate({
+      prompt: conversationWithToolCalls,
+      tools: [
+        {
+          type: 'function',
+          name: 'weather',
+          inputSchema: {
+            type: 'object',
+            properties: { city: { type: 'string' } },
+            required: ['city'],
+            additionalProperties: false,
+            $schema: 'http://json-schema.org/draft-07/schema#',
+          },
+        },
+      ],
+      toolChoice: { type: 'none' },
+    });
+
+    const requestBody = await server.calls[0].requestBodyJson;
+
+    expect(requestBody.toolConfig).toMatchInlineSnapshot(`undefined`);
   });
 });

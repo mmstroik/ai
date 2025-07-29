@@ -1,5 +1,100 @@
 # @ai-sdk/google
 
+## 2.0.0-beta.17
+
+### Patch Changes
+
+- eb173f1: chore (providers): remove model shorthand deprecation warnings
+- Updated dependencies [dd5fd43]
+  - @ai-sdk/provider-utils@3.0.0-beta.8
+
+## 2.0.0-beta.16
+
+### Patch Changes
+
+- Updated dependencies [e7fcc86]
+  - @ai-sdk/provider-utils@3.0.0-beta.7
+
+## 2.0.0-beta.15
+
+### Patch Changes
+
+- Updated dependencies [ac34802]
+  - @ai-sdk/provider-utils@3.0.0-beta.6
+
+## 2.0.0-beta.14
+
+### Patch Changes
+
+- 75f03b1: Add Gemini 2.5 Flash Lite GA
+
+## 2.0.0-beta.13
+
+### Patch Changes
+
+- Updated dependencies [57edfcb]
+- Updated dependencies [383cbfa]
+  - @ai-sdk/provider-utils@3.0.0-beta.5
+
+## 2.0.0-beta.12
+
+### Patch Changes
+
+- 205077b: fix: improve Zod compatibility
+- Updated dependencies [205077b]
+  - @ai-sdk/provider-utils@3.0.0-beta.4
+
+## 2.0.0-beta.11
+
+### Patch Changes
+
+- 6a16dcf: embed() now uses the single embeddings endpoint
+  No code updates are needed.
+
+  This is to make sure that users are not ratelimited when using the batch endpoint, since many models have different limits for batch and single embeddings.
+
+  Eg: Google has a limit of 150 RPM for batch requests, and 1500 RPM for single requests.
+
+  Before, AI SDK would always use the batch endpoint, even for embed() calls, which led to ratelimits.
+
+  This does not have any breaking functionality and is fully tested :)
+  if (values.length > 1) {
+  const batchResult = await this.doEmbedBatch({
+  values,
+  options,
+  });
+  return batchResult;
+  }
+
+## 2.0.0-beta.10
+
+### Patch Changes
+
+- 7badba2: fix(google): grounding streaming sources
+- Updated dependencies [05d2819]
+  - @ai-sdk/provider-utils@3.0.0-beta.3
+
+## 2.0.0-beta.9
+
+### Patch Changes
+
+- 8af9e03: Added Image Models to the Google Provider for Imagen 3 Support
+
+## 2.0.0-beta.8
+
+### Patch Changes
+
+- 2e06f14: feat (provider/google): Change to provider defined tools
+
+  - Change the google search tool to be a provider defined tool
+  - Added new URL context tool as a provider defined tool
+
+## 2.0.0-beta.7
+
+### Patch Changes
+
+- 19a4336: Expose raw usageMetadata returned from Google Generative AI in providerMetadata
+
 ## 2.0.0-beta.6
 
 ### Patch Changes

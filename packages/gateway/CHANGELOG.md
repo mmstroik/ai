@@ -1,5 +1,100 @@
 # @ai-sdk/gateway
 
+## 1.0.0-beta.17
+
+### Patch Changes
+
+- Updated dependencies [dd5fd43]
+  - @ai-sdk/provider-utils@3.0.0-beta.8
+
+## 1.0.0-beta.16
+
+### Patch Changes
+
+- fedb55e: feat (provider/gateway): add z.ai and glm-4.5 models
+
+## 1.0.0-beta.15
+
+### Patch Changes
+
+- Updated dependencies [e7fcc86]
+  - @ai-sdk/provider-utils@3.0.0-beta.7
+
+## 1.0.0-beta.14
+
+### Patch Changes
+
+- Updated dependencies [ac34802]
+  - @ai-sdk/provider-utils@3.0.0-beta.6
+
+## 1.0.0-beta.13
+
+### Patch Changes
+
+- 0477a13: feat (provider/gateway): Add OpenAI embedding support
+- cf1e00e: feat (provider/gateway): add devstral model id
+- cc21603: feat (provider/gateway): Add AI Gateway provider options (ordering)
+
+## 1.0.0-beta.12
+
+### Patch Changes
+
+- 70ebead: feat (provider/gateway): add qwen3 coder model id
+
+## 1.0.0-beta.11
+
+### Patch Changes
+
+- 8bd3624: feat (provider/gateway): update model ids to include vercel
+- e001ea1: fix (provider/gateway): remove unnecessary 'x-' prefix on auth method header
+
+## 1.0.0-beta.10
+
+### Patch Changes
+
+- Updated dependencies [57edfcb]
+- Updated dependencies [383cbfa]
+  - @ai-sdk/provider-utils@3.0.0-beta.5
+
+## 1.0.0-beta.9
+
+### Patch Changes
+
+- 205077b: fix: improve Zod compatibility
+- Updated dependencies [205077b]
+  - @ai-sdk/provider-utils@3.0.0-beta.4
+
+## 1.0.0-beta.8
+
+### Patch Changes
+
+- Updated dependencies [05d2819]
+  - @ai-sdk/provider-utils@3.0.0-beta.3
+
+## 1.0.0-beta.7
+
+### Patch Changes
+
+- c190907: fix (provider/gateway): use zod v4
+
+## 1.0.0-beta.6
+
+### Patch Changes
+
+- 9e16bfd: feat (provider/gateway): update model ids
+
+## 1.0.0-beta.5
+
+### Patch Changes
+
+- 30ab1de: feat (provider/gateway): add grok-4 model id
+
+## 1.0.0-beta.4
+
+### Patch Changes
+
+- 97fedf9: feat (providers/gateway): include description and pricing info in model list
+
 ## 1.0.0-beta.3
 
 ### Patch Changes

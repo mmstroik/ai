@@ -1,5 +1,75 @@
 # @ai-sdk/openai
 
+## 2.0.0-beta.14
+
+### Patch Changes
+
+- eb173f1: chore (providers): remove model shorthand deprecation warnings
+- 7032dc5: feat(openai): add priority processing service tier support
+- Updated dependencies [dd5fd43]
+  - @ai-sdk/provider-utils@3.0.0-beta.8
+
+## 2.0.0-beta.13
+
+### Patch Changes
+
+- Updated dependencies [e7fcc86]
+  - @ai-sdk/provider-utils@3.0.0-beta.7
+
+## 2.0.0-beta.12
+
+### Patch Changes
+
+- d521cda: feat(openai): add file_search filters and update field names
+- 0059ee2: fix(openai): update file_search fields to match API changes
+- Updated dependencies [ac34802]
+  - @ai-sdk/provider-utils@3.0.0-beta.6
+
+## 2.0.0-beta.11
+
+### Patch Changes
+
+- Updated dependencies [57edfcb]
+- Updated dependencies [383cbfa]
+  - @ai-sdk/provider-utils@3.0.0-beta.5
+
+## 2.0.0-beta.10
+
+### Patch Changes
+
+- 0fa7414: chore (provider/openai): standardize on itemId in provider metadata
+- 205077b: fix: improve Zod compatibility
+- Updated dependencies [205077b]
+  - @ai-sdk/provider-utils@3.0.0-beta.4
+
+## 2.0.0-beta.9
+
+### Patch Changes
+
+- faea29f: fix (provider/openai): multi-step reasoning with text
+
+## 2.0.0-beta.8
+
+### Patch Changes
+
+- db64cbe: fix (provider/openai): multi-step reasoning with tool calls
+- Updated dependencies [05d2819]
+  - @ai-sdk/provider-utils@3.0.0-beta.3
+
+## 2.0.0-beta.7
+
+### Patch Changes
+
+- 209256d: Add missing file_search tool support to OpenAI Responses API
+
+## 2.0.0-beta.6
+
+### Patch Changes
+
+- 0eee6a8: Fix streaming and reconstruction of reasoning summary parts
+- b5a0e32: fix (provider/openai): correct default for chat model strict mode
+- c7d3b2e: fix (provider/openai): push first reasoning chunk in output item added event
+
 ## 2.0.0-beta.5
 
 ### Patch Changes

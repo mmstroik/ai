@@ -1,5 +1,42 @@
 # @ai-sdk/provider-utils
 
+## 3.0.0-beta.8
+
+### Patch Changes
+
+- dd5fd43: feat (ai): support dynamic tools in Chat onToolCall
+
+## 3.0.0-beta.7
+
+### Patch Changes
+
+- e7fcc86: feat (ai): introduce dynamic tools
+
+## 3.0.0-beta.6
+
+### Patch Changes
+
+- ac34802: Add clear object function to StructuredObject
+
+## 3.0.0-beta.5
+
+### Patch Changes
+
+- 57edfcb: Adds support for async zod validators
+- 383cbfa: feat (ai): add isAborted to onFinish callback for ui message streams
+
+## 3.0.0-beta.4
+
+### Patch Changes
+
+- 205077b: fix: improve Zod compatibility
+
+## 3.0.0-beta.3
+
+### Patch Changes
+
+- 05d2819: feat: allow zod 4.x as peer dependency
+
 ## 3.0.0-beta.2
 
 ### Patch Changes

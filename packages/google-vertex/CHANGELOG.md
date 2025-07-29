@@ -1,5 +1,120 @@
 # @ai-sdk/google-vertex
 
+## 3.0.0-beta.19
+
+### Patch Changes
+
+- Updated dependencies [eb173f1]
+- Updated dependencies [dd5fd43]
+  - @ai-sdk/anthropic@2.0.0-beta.11
+  - @ai-sdk/google@2.0.0-beta.17
+  - @ai-sdk/provider-utils@3.0.0-beta.8
+
+## 3.0.0-beta.18
+
+### Patch Changes
+
+- Updated dependencies [e7fcc86]
+- Updated dependencies [269683f]
+  - @ai-sdk/provider-utils@3.0.0-beta.7
+  - @ai-sdk/anthropic@2.0.0-beta.10
+  - @ai-sdk/google@2.0.0-beta.16
+
+## 3.0.0-beta.17
+
+### Patch Changes
+
+- Updated dependencies [4f26d59]
+- Updated dependencies [ac34802]
+- Updated dependencies [a753b3a]
+  - @ai-sdk/anthropic@2.0.0-beta.9
+  - @ai-sdk/provider-utils@3.0.0-beta.6
+  - @ai-sdk/google@2.0.0-beta.15
+
+## 3.0.0-beta.16
+
+### Patch Changes
+
+- Updated dependencies [75f03b1]
+  - @ai-sdk/google@2.0.0-beta.14
+
+## 3.0.0-beta.15
+
+### Patch Changes
+
+- Updated dependencies [57edfcb]
+- Updated dependencies [383cbfa]
+  - @ai-sdk/provider-utils@3.0.0-beta.5
+  - @ai-sdk/anthropic@2.0.0-beta.8
+  - @ai-sdk/google@2.0.0-beta.13
+
+## 3.0.0-beta.14
+
+### Patch Changes
+
+- 205077b: fix: improve Zod compatibility
+- Updated dependencies [205077b]
+  - @ai-sdk/provider-utils@3.0.0-beta.4
+  - @ai-sdk/anthropic@2.0.0-beta.7
+  - @ai-sdk/google@2.0.0-beta.12
+
+## 3.0.0-beta.13
+
+### Patch Changes
+
+- Updated dependencies [6a16dcf]
+  - @ai-sdk/google@2.0.0-beta.11
+
+## 3.0.0-beta.12
+
+### Minor Changes
+
+- 6ca44f2: Fixed global region for vertex provider
+
+### Patch Changes
+
+- Updated dependencies [05d2819]
+- Updated dependencies [7badba2]
+  - @ai-sdk/provider-utils@3.0.0-beta.3
+  - @ai-sdk/google@2.0.0-beta.10
+  - @ai-sdk/anthropic@2.0.0-beta.6
+
+## 3.0.0-beta.11
+
+### Patch Changes
+
+- Updated dependencies [8af9e03]
+  - @ai-sdk/google@2.0.0-beta.9
+
+## 3.0.0-beta.10
+
+### Patch Changes
+
+- Updated dependencies [b9ddcdd]
+  - @ai-sdk/anthropic@2.0.0-beta.5
+
+## 3.0.0-beta.9
+
+### Patch Changes
+
+- Updated dependencies [2e06f14]
+  - @ai-sdk/google@2.0.0-beta.8
+
+## 3.0.0-beta.8
+
+### Patch Changes
+
+- Updated dependencies [19a4336]
+  - @ai-sdk/google@2.0.0-beta.7
+
+## 3.0.0-beta.7
+
+### Patch Changes
+
+- Updated dependencies [fdff8a4]
+- Updated dependencies [84577c8]
+  - @ai-sdk/anthropic@2.0.0-beta.4
+
 ## 3.0.0-beta.6
 
 ### Patch Changes

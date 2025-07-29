@@ -110,7 +110,7 @@ The following optional provider options are available for Anthropic models:
 
 ### Reasoning
 
-Anthropic has reasoning support for `claude-4-opus-20250514`, `claude-4-sonnet-20250514`, and `claude-3-7-sonnet-20250219` models.
+Anthropic has reasoning support for `claude-opus-4-20250514`, `claude-sonnet-4-20250514`, and `claude-3-7-sonnet-20250219` models.
 
 You can enable it using the `thinking` provider option
 and specifying a thinking budget in tokens.
@@ -120,7 +120,7 @@ import { anthropic, AnthropicProviderOptions } from '@ai-sdk/anthropic';
 import { generateText } from 'ai';
 
 const { text, reasoning, reasoningDetails } = await generateText({
-  model: anthropic('claude-4-opus-20250514'),
+  model: anthropic('claude-opus-4-20250514'),
   prompt: 'How many people will live in the world in 2040?',
   providerOptions: {
     anthropic: {
@@ -138,13 +138,6 @@ See [AI SDK UI: Chatbot](/docs/ai-sdk-ui/chatbot#reasoning) for more details
 on how to integrate reasoning into your chatbot.
 
 ### Cache Control
-
-<Note>
-  Anthropic cache control was originally a beta feature and required passing an
-  opt-in `cacheControl` setting when creating the model instance. It is now
-  Generally Available and enabled by default. The `cacheControl` setting is no
-  longer needed and will be removed in a future release.
-</Note>
 
 In the messages and message parts, you can use the `providerOptions` property to set cache control breakpoints.
 You need to set the `anthropic` property in the `providerOptions` object to `{ cacheControl: { type: 'ephemeral' } }` to set a cache control breakpoint.
@@ -211,6 +204,65 @@ const result = await generateText({
 });
 ```
 
+Cache control for tools:
+
+```ts
+const result = await generateText({
+  model: anthropic('claude-3-5-haiku-latest'),
+  tools: {
+    cityAttractions: tool({
+      inputSchema: z.object({ city: z.string() }),
+      providerOptions: {
+        anthropic: {
+          cacheControl: { type: 'ephemeral' },
+        },
+      },
+    }),
+  },
+  messages: [
+    {
+      role: 'user',
+      content: 'User prompt',
+    },
+  ],
+});
+```
+
+#### Longer cache TTL
+
+Anthropic also supports a longer 1-hour cache duration. At time of writing,
+[this is currently in beta](https://docs.anthropic.com/en/docs/build-with-claude/prompt-caching#1-hour-cache-duration),
+so you must pass a `'anthropic-beta'` header set to `'extended-cache-ttl-2025-04-11'`.
+
+Here's an example:
+
+```ts
+const result = await generateText({
+  model: anthropic('claude-3-5-haiku-latest'),
+  headers: {
+    'anthropic-beta': 'extended-cache-ttl-2025-04-11',
+  },
+  messages: [
+    {
+      role: 'user',
+      content: [
+        {
+          type: 'text',
+          text: 'Long cached message',
+          providerOptions: {
+            anthropic: {
+              cacheControl: { type: 'ephemeral', ttl: '1h' },
+            },
+          },
+        },
+      ],
+    },
+  ],
+});
+```
+
+#### Limitations
+
 The minimum cacheable prompt length is:
 
 - 1024 tokens for Claude 3.7 Sonnet, Claude 3.5 Sonnet and Claude 3 Opus
@@ -258,7 +310,28 @@ Parameters:
 
 #### Text Editor Tool
 
-The Text Editor Tool provides functionality for viewing and editing text files:
+The Text Editor Tool provides functionality for viewing and editing text files.
+
+**For Claude 4 models (Opus & Sonnet):**
+
+```ts
+const textEditorTool = anthropic.tools.textEditor_20250429({
+  execute: async ({
+    command,
+    path,
+    file_text,
+    insert_line,
+    new_str,
+    old_str,
+    view_range,
+  }) => {
+    // Implement your text editing logic here
+    // Return the result of the text editing operation
+  },
+});
+```
+
+**For Claude 3.5 Sonnet and earlier models:**
 
 ```ts
 const textEditorTool = anthropic.tools.textEditor_20241022({
@@ -279,7 +352,7 @@ const textEditorTool = anthropic.tools.textEditor_20241022({
 
 Parameters:
 
-- `command` ('view' | 'create' | 'str_replace' | 'insert' | 'undo_edit'): The command to run.
+- `command` ('view' | 'create' | 'str_replace' | 'insert' | 'undo_edit'): The command to run. Note: `undo_edit` is only available in Claude 3.5 Sonnet and earlier models.
 - `path` (string): Absolute path to file or directory, e.g. `/repo/file.py` or `/repo`.
 - `file_text` (string, optional): Required for `create` command, with the content of the file to be created.
 - `insert_line` (number, optional): Required for `insert` command. The line number after which to insert the new string.
@@ -287,15 +360,29 @@ Parameters:
 - `old_str` (string, optional): Required for `str_replace` command, containing the string to replace.
 - `view_range` (number[], optional): Optional for `view` command to specify line range to show.
 
-When using the Text Editor Tool, make sure to name the key in the tools object `str_replace_editor`.
+When using the Text Editor Tool, make sure to name the key in the tools object correctly:
+
+- **Claude 4 models**: Use `str_replace_based_edit_tool`
+- **Claude 3.5 Sonnet and earlier**: Use `str_replace_editor`
 
 ```ts
+// For Claude 4 models
+const response = await generateText({
+  model: anthropic('claude-opus-4-20250514'),
+  prompt:
+    "Create a new file called example.txt, write 'Hello World' to it, and run 'cat example.txt' in the terminal",
+  tools: {
+    str_replace_based_edit_tool: textEditorTool, // Claude 4 tool name
+  },
+});
+
+// For Claude 3.5 Sonnet and earlier
 const response = await generateText({
   model: anthropic('claude-3-5-sonnet-20241022'),
   prompt:
     "Create a new file called example.txt, write 'Hello World' to it, and run 'cat example.txt' in the terminal",
   tools: {
-    str_replace_editor: textEditorTool,
+    str_replace_editor: textEditorTool, // Earlier models tool name
   },
 });
 ```
@@ -335,7 +422,7 @@ const computerTool = anthropic.tools.computer_20241022({
   },
 
   // map to tool result content for LLM consumption:
-  experimental_toToolResultContent(result) {
+  toModelOutput(result) {
     return typeof result === 'string'
       ? [{ type: 'text', text: result }]
       : [{ type: 'image', data: result.data, mediaType: 'image/png' }];
@@ -371,7 +458,7 @@ const webSearchTool = anthropic.tools.webSearch_20250305({
 });
 
 const result = await generateText({
-  model: anthropic('claude-4-opus-20250514'),
+  model: anthropic('claude-opus-4-20250514'),
   prompt: 'What are the latest developments in AI?',
   tools: {
     web_search: webSearchTool,
@@ -414,7 +501,7 @@ const webSearchTool = anthropic.tools.webSearch_20250305({
 });
 
 const result = await generateText({
-  model: anthropic('claude-4-opus-20250514'),
+  model: anthropic('claude-opus-4-20250514'),
   prompt: 'Find local news about technology',
   tools: {
     web_search: webSearchTool,
@@ -432,7 +519,7 @@ Web search errors throw exceptions that you can catch:
 ```ts
 try {
   const result = await generateText({
-    model: anthropic('claude-4-opus-20250514'),
+    model: anthropic('claude-opus-4-20250514'),
     prompt: 'Search for something',
     tools: {
       web_search: webSearchTool,
@@ -451,7 +538,7 @@ Web search errors are delivered as error parts in the stream:
 
 ```ts
 const result = await streamText({
-  model: anthropic('claude-4-opus-20250514'),
+  model: anthropic('claude-opus-4-20250514'),
   prompt: 'Search for something',
   tools: {
     web_search: webSearchTool,
@@ -530,8 +617,8 @@ and the `mediaType` should be set to `'application/pdf'`.
 
 | Model                        | Image Input         | Object Generation   | Tool Usage          | Computer Use        | Web Search          |
 | ---------------------------- | ------------------- | ------------------- | ------------------- | ------------------- | ------------------- |
-| `claude-4-opus-20250514`     | <Check size={18} /> | <Check size={18} /> | <Check size={18} /> | <Check size={18} /> | <Check size={18} /> |
-| `claude-4-sonnet-20250514`   | <Check size={18} /> | <Check size={18} /> | <Check size={18} /> | <Check size={18} /> | <Check size={18} /> |
+| `claude-opus-4-20250514`     | <Check size={18} /> | <Check size={18} /> | <Check size={18} /> | <Check size={18} /> | <Check size={18} /> |
+| `claude-sonnet-4-20250514`   | <Check size={18} /> | <Check size={18} /> | <Check size={18} /> | <Check size={18} /> | <Check size={18} /> |
 | `claude-3-7-sonnet-20250219` | <Check size={18} /> | <Check size={18} /> | <Check size={18} /> | <Check size={18} /> | <Check size={18} /> |
 | `claude-3-5-sonnet-20241022` | <Check size={18} /> | <Check size={18} /> | <Check size={18} /> | <Check size={18} /> | <Check size={18} /> |
 | `claude-3-5-sonnet-20240620` | <Check size={18} /> | <Check size={18} /> | <Check size={18} /> | <Cross size={18} /> | <Check size={18} /> |

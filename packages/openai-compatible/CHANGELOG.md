@@ -1,5 +1,68 @@
 # @ai-sdk/openai-compatible
 
+## 1.0.0-beta.11
+
+### Patch Changes
+
+- Updated dependencies [dd5fd43]
+  - @ai-sdk/provider-utils@3.0.0-beta.8
+
+## 1.0.0-beta.10
+
+### Patch Changes
+
+- Updated dependencies [e7fcc86]
+  - @ai-sdk/provider-utils@3.0.0-beta.7
+
+## 1.0.0-beta.9
+
+### Patch Changes
+
+- 737f1e2: Add (optional) includeUsage option to createOpenAICompatible
+- Updated dependencies [ac34802]
+  - @ai-sdk/provider-utils@3.0.0-beta.6
+
+## 1.0.0-beta.8
+
+### Patch Changes
+
+- Updated dependencies [57edfcb]
+- Updated dependencies [383cbfa]
+  - @ai-sdk/provider-utils@3.0.0-beta.5
+
+## 1.0.0-beta.7
+
+### Patch Changes
+
+- 205077b: fix: improve Zod compatibility
+- Updated dependencies [205077b]
+  - @ai-sdk/provider-utils@3.0.0-beta.4
+
+## 1.0.0-beta.6
+
+### Patch Changes
+
+- 281bb1c: fix (provider/openai-incompatible): support empty tool calls
+
+## 1.0.0-beta.5
+
+### Patch Changes
+
+- Updated dependencies [05d2819]
+  - @ai-sdk/provider-utils@3.0.0-beta.3
+
+## 1.0.0-beta.4
+
+### Patch Changes
+
+- 1b101e1: feat (provider/openai-compatible): allow providers that do not specify function type
+
+## 1.0.0-beta.3
+
+### Patch Changes
+
+- 7b069ed: allow any string as reasoningEffort
+
 ## 1.0.0-beta.2
 
 ### Patch Changes
