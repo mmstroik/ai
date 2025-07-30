@@ -70,3 +70,39 @@ export const anthropicProviderOptions = z.object({
 });
 
 export type AnthropicProviderOptions = z.infer<typeof anthropicProviderOptions>;
+
+/**
+ * Schema for search results returned by tools.
+ * Tools can return this structure to enable automatic citation support.
+ */
+export const anthropicSearchResultToolOutput = z.array(
+  z.object({
+    /**
+     * The source URL or identifier for this search result
+     */
+    source: z.string(),
+
+    /**
+     * The title of the search result
+     */
+    title: z.string(),
+
+    /**
+     * The content text of the search result
+     */
+    content: z.string(),
+
+    /**
+     * Optional citation configuration for this result
+     */
+    citations: z
+      .object({
+        enabled: z.boolean(),
+      })
+      .optional(),
+  }),
+);
+
+export type AnthropicSearchResultToolOutput = z.infer<
+  typeof anthropicSearchResultToolOutput
+>;

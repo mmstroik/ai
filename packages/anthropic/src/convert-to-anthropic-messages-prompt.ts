@@ -18,9 +18,9 @@ import { anthropicFilePartProviderOptions } from './anthropic-messages-options';
 import { getCacheControl } from './get-cache-control';
 import { webSearch_20250305OutputSchema } from './tool/web-search_20250305';
 import {
-  searchResults_20250609OutputSchema,
-  type SearchResults_20250609Output,
-} from './tool/search-results_20250609';
+  anthropicSearchResultToolOutput,
+  type AnthropicSearchResultToolOutput,
+} from './anthropic-messages-options';
 
 function convertToString(data: LanguageModelV2DataContent): string {
   if (typeof data === 'string') {
@@ -256,13 +256,13 @@ export async function convertToAnthropicMessagesPrompt({
 
                 if (output.type === 'json') {
                   const searchResults =
-                    searchResults_20250609OutputSchema.safeParse(output.value);
+                    anthropicSearchResultToolOutput.safeParse(output.value);
 
                   if (searchResults.success) {
                     betas.add('search-results-2025-06-09');
 
                     contentValue = searchResults.data.map(
-                      (result: SearchResults_20250609Output[0]) => ({
+                      (result: AnthropicSearchResultToolOutput[0]) => ({
                         type: 'search_result',
                         source: result.source,
                         title: result.title,

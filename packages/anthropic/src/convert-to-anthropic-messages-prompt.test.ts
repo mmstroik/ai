@@ -631,7 +631,6 @@ describe('tool messages', () => {
       });
     }
   });
-
 });
 
 describe('assistant messages', () => {

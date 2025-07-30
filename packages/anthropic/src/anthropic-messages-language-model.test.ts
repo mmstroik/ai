@@ -1423,6 +1423,234 @@ describe('AnthropicMessagesLanguageModel', () => {
       });
     });
 
+    describe('search results', () => {
+      const TEST_PROMPT = [
+        {
+          role: 'user' as const,
+          content: [
+            { type: 'text' as const, text: 'Search for information about AI' },
+          ],
+        },
+      ];
+
+      function prepareJsonResponse(body: any) {
+        server.urls['https://api.anthropic.com/v1/messages'].response = {
+          type: 'json-value',
+          body,
+        };
+      }
+
+      it('should handle search_results_tool_result content blocks', async () => {
+        prepareJsonResponse({
+          type: 'message',
+          id: 'msg_test',
+          content: [
+            {
+              type: 'search_results_tool_result',
+              tool_use_id: 'tool_1',
+              content: [
+                {
+                  type: 'search_result',
+                  source: 'https://example.com/ai-research',
+                  title: 'AI Research Paper',
+                  content: [
+                    {
+                      type: 'text',
+                      text: 'This paper discusses the latest advances in artificial intelligence.',
+                    },
+                  ],
+                  citations: { enabled: true },
+                },
+                {
+                  type: 'search_result',
+                  source: 'https://example.com/ai-news',
+                  title: 'AI News Article',
+                  content: [
+                    {
+                      type: 'text',
+                      text: 'Recent developments in AI technology show promising results.',
+                    },
+                  ],
+                  citations: { enabled: true },
+                },
+              ],
+            },
+            {
+              type: 'text',
+              text: 'Based on the search results, AI continues to advance rapidly.',
+              citations: [
+                {
+                  type: 'search_result_location',
+                  cited_text: 'latest advances in artificial intelligence',
+                  source: 'https://example.com/ai-research',
+                  title: 'AI Research Paper',
+                  search_result_index: 0,
+                  start_block_index: 0,
+                  end_block_index: 0,
+                },
+              ],
+            },
+          ],
+          stop_reason: 'end_turn',
+          usage: { input_tokens: 20, output_tokens: 30 },
+        });
+
+        const provider = createAnthropic({
+          apiKey: 'test-api-key',
+          generateId: mockId(),
+        });
+        const model = provider('claude-3-haiku-20240307');
+
+        const result = await model.doGenerate({
+          prompt: TEST_PROMPT,
+        });
+
+        expect(result.content).toMatchInlineSnapshot(`
+          [
+            {
+              "id": "id-0",
+              "providerMetadata": {
+                "anthropic": {
+                  "citationsEnabled": true,
+                  "searchResultContent": "This paper discusses the latest advances in artificial intelligence.",
+                },
+              },
+              "sourceType": "url",
+              "title": "AI Research Paper",
+              "type": "source",
+              "url": "https://example.com/ai-research",
+            },
+            {
+              "id": "id-1",
+              "providerMetadata": {
+                "anthropic": {
+                  "citationsEnabled": true,
+                  "searchResultContent": "Recent developments in AI technology show promising results.",
+                },
+              },
+              "sourceType": "url",
+              "title": "AI News Article",
+              "type": "source",
+              "url": "https://example.com/ai-news",
+            },
+            {
+              "text": "Based on the search results, AI continues to advance rapidly.",
+              "type": "text",
+            },
+            {
+              "id": "id-2",
+              "providerMetadata": {
+                "anthropic": {
+                  "citedText": "latest advances in artificial intelligence",
+                  "endBlockIndex": 0,
+                  "searchResultIndex": 0,
+                  "startBlockIndex": 0,
+                },
+              },
+              "sourceType": "url",
+              "title": "AI Research Paper",
+              "type": "source",
+              "url": "https://example.com/ai-research",
+            },
+          ]
+        `);
+      });
+
+      it('should handle search_result_location citations', async () => {
+        prepareJsonResponse({
+          type: 'message',
+          id: 'msg_test',
+          content: [
+            {
+              type: 'text',
+              text: 'Machine learning has shown significant progress in recent years.',
+              citations: [
+                {
+                  type: 'search_result_location',
+                  cited_text: 'significant progress in recent years',
+                  source: 'https://example.com/ml-study',
+                  title: 'Machine Learning Study',
+                  search_result_index: 0,
+                  start_block_index: 0,
+                  end_block_index: 0,
+                },
+              ],
+            },
+            {
+              type: 'text',
+              text: 'Deep learning models are becoming more efficient.',
+              citations: [
+                {
+                  type: 'search_result_location',
+                  cited_text: 'becoming more efficient',
+                  source: 'https://example.com/dl-research',
+                  title: null,
+                  search_result_index: 1,
+                  start_block_index: 0,
+                  end_block_index: 1,
+                },
+              ],
+            },
+          ],
+          stop_reason: 'end_turn',
+          usage: { input_tokens: 15, output_tokens: 25 },
+        });
+
+        const provider = createAnthropic({
+          apiKey: 'test-api-key',
+          generateId: mockId(),
+        });
+        const model = provider('claude-3-haiku-20240307');
+
+        const result = await model.doGenerate({
+          prompt: TEST_PROMPT,
+        });
+
+        expect(result.content).toMatchInlineSnapshot(`
+          [
+            {
+              "text": "Machine learning has shown significant progress in recent years.",
+              "type": "text",
+            },
+            {
+              "id": "id-0",
+              "providerMetadata": {
+                "anthropic": {
+                  "citedText": "significant progress in recent years",
+                  "endBlockIndex": 0,
+                  "searchResultIndex": 0,
+                  "startBlockIndex": 0,
+                },
+              },
+              "sourceType": "url",
+              "title": "Machine Learning Study",
+              "type": "source",
+              "url": "https://example.com/ml-study",
+            },
+            {
+              "text": "Deep learning models are becoming more efficient.",
+              "type": "text",
+            },
+            {
+              "id": "id-1",
+              "providerMetadata": {
+                "anthropic": {
+                  "citedText": "becoming more efficient",
+                  "endBlockIndex": 1,
+                  "searchResultIndex": 1,
+                  "startBlockIndex": 0,
+                },
+              },
+              "sourceType": "url",
+              "title": null,
+              "type": "source",
+              "url": "https://example.com/dl-research",
+            },
+          ]
+        `);
+      });
+    });
+
     it('should throw an api error when the server is overloaded', async () => {
       server.urls['https://api.anthropic.com/v1/messages'].response = {
         type: 'error',
@@ -2745,6 +2973,115 @@ describe('AnthropicMessagesLanguageModel', () => {
           },
         ]
       `);
+    });
+
+    describe('search results', () => {
+      it('should stream search_results_tool_result sources', async () => {
+        server.urls['https://api.anthropic.com/v1/messages'].response = {
+          type: 'stream-chunks',
+          chunks: [
+            `data: {"type":"message_start","message":{"id":"msg_01SZs8CgARn2ixN9VnpjE6WH","type":"message","role":"assistant","model":"claude-3-5-sonnet-20241022","content":[],"stop_reason":null,"stop_sequence":null,"usage":{"input_tokens":100,"cache_creation_input_tokens":0,"cache_read_input_tokens":0,"output_tokens":2,"service_tier":"standard"}}}\n\n`,
+            `data: {"type":"content_block_start","index":0,"content_block":{"type":"search_results_tool_result","tool_use_id":"tool_1","content":[{"type":"search_result","source":"https://example.com/ai-research","title":"AI Research Paper","content":[{"type":"text","text":"This paper discusses the latest advances in artificial intelligence."}],"citations":{"enabled":true}},{"type":"search_result","source":"https://example.com/ai-news","title":"AI News Article","content":[{"type":"text","text":"Recent developments in AI technology show promising results."}],"citations":{"enabled":true}}]}}\n\n`,
+            `data: {"type":"content_block_start","index":1,"content_block":{"type":"text","text":""}}\n\n`,
+            `data: {"type":"content_block_delta","index":1,"delta":{"type":"text_delta","text":"Based on the search results, AI continues to advance rapidly."}}\n\n`,
+            `data: {"type":"content_block_stop","index":1}\n\n`,
+            `data: {"type":"message_delta","delta":{"stop_reason":"end_turn","stop_sequence":null},"usage":{"output_tokens":50}}\n\n`,
+            `data: {"type":"message_stop"}\n\n`,
+          ],
+        };
+
+        const provider = createAnthropic({
+          apiKey: 'test-api-key',
+          generateId: mockId(),
+        });
+        const model = provider('claude-3-5-sonnet-20241022');
+
+        const { stream } = await model.doStream({
+          prompt: [
+            {
+              role: 'user',
+              content: [{ type: 'text', text: 'Search for AI information' }],
+            },
+          ],
+        });
+
+        const chunks = await convertReadableStreamToArray(stream);
+
+        expect(chunks).toMatchInlineSnapshot(`
+          [
+            {
+              "type": "stream-start",
+              "warnings": [],
+            },
+            {
+              "id": "msg_01SZs8CgARn2ixN9VnpjE6WH",
+              "modelId": "claude-3-5-sonnet-20241022",
+              "type": "response-metadata",
+            },
+            {
+              "id": "id-0",
+              "providerMetadata": {
+                "anthropic": {
+                  "citationsEnabled": true,
+                  "searchResultContent": "This paper discusses the latest advances in artificial intelligence.",
+                },
+              },
+              "sourceType": "url",
+              "title": "AI Research Paper",
+              "type": "source",
+              "url": "https://example.com/ai-research",
+            },
+            {
+              "id": "id-1",
+              "providerMetadata": {
+                "anthropic": {
+                  "citationsEnabled": true,
+                  "searchResultContent": "Recent developments in AI technology show promising results.",
+                },
+              },
+              "sourceType": "url",
+              "title": "AI News Article",
+              "type": "source",
+              "url": "https://example.com/ai-news",
+            },
+            {
+              "id": "1",
+              "type": "text-start",
+            },
+            {
+              "delta": "Based on the search results, AI continues to advance rapidly.",
+              "id": "1",
+              "type": "text-delta",
+            },
+            {
+              "id": "1",
+              "type": "text-end",
+            },
+            {
+              "finishReason": "stop",
+              "providerMetadata": {
+                "anthropic": {
+                  "cacheCreationInputTokens": 0,
+                  "usage": {
+                    "cache_creation_input_tokens": 0,
+                    "cache_read_input_tokens": 0,
+                    "input_tokens": 100,
+                    "output_tokens": 2,
+                    "service_tier": "standard",
+                  },
+                },
+              },
+              "type": "finish",
+              "usage": {
+                "cachedInputTokens": 0,
+                "inputTokens": 100,
+                "outputTokens": 50,
+                "totalTokens": 150,
+              },
+            },
+          ]
+        `);
+      });
     });
   });
 });
