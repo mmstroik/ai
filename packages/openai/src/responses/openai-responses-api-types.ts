@@ -10,6 +10,7 @@ export type OpenAIResponsesMessage =
   | OpenAIResponsesFunctionCallOutput
   | OpenAIWebSearchCall
   | OpenAIComputerCall
+  | OpenAIFileSearchCall
   | OpenAIResponsesReasoning;
 
 export type OpenAIResponsesSystemMessage = {
@@ -22,7 +23,9 @@ export type OpenAIResponsesUserMessage = {
   content: Array<
     | { type: 'input_text'; text: string }
     | { type: 'input_image'; image_url: string }
+    | { type: 'input_image'; file_id: string }
     | { type: 'input_file'; filename: string; file_data: string }
+    | { type: 'input_file'; file_id: string }
   >;
 };
 
@@ -32,6 +35,7 @@ export type OpenAIResponsesAssistantMessage = {
     | { type: 'output_text'; text: string }
     | OpenAIWebSearchCall
     | OpenAIComputerCall
+    | OpenAIFileSearchCall
   >;
   id?: string;
 };
@@ -58,6 +62,12 @@ export type OpenAIWebSearchCall = {
 
 export type OpenAIComputerCall = {
   type: 'computer_call';
+  id: string;
+  status?: string;
+};
+
+export type OpenAIFileSearchCall = {
+  type: 'file_search_call';
   id: string;
   status?: string;
 };

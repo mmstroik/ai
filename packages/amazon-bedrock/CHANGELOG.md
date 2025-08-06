@@ -1,5 +1,19 @@
 # @ai-sdk/amazon-bedrock
 
+## 3.0.2
+
+### Patch Changes
+
+- 109fb4d: Add support for Anthropic Claude Opus 4.1 model (anthropic.claude-opus-4-1-20250805-v1:0)
+
+## 3.0.1
+
+### Patch Changes
+
+- Updated dependencies [90d212f]
+  - @ai-sdk/provider-utils@3.0.1
+  - @ai-sdk/anthropic@2.0.1
+
 ## 3.0.0
 
 ### Major Changes

@@ -1,5 +1,43 @@
 # ai
 
+## 5.0.5
+
+### Patch Changes
+
+- Updated dependencies [893aed6]
+  - @ai-sdk/gateway@1.0.3
+
+## 5.0.4
+
+### Patch Changes
+
+- Updated dependencies [444df49]
+  - @ai-sdk/gateway@1.0.2
+
+## 5.0.3
+
+### Patch Changes
+
+- 90d212f: feat (ai): add experimental tool call context
+- Updated dependencies [028fb9c]
+- Updated dependencies [90d212f]
+- Updated dependencies [6331826]
+  - @ai-sdk/gateway@1.0.1
+  - @ai-sdk/provider-utils@3.0.1
+
+## 5.0.2
+
+### Patch Changes
+
+- 401d73e: fix (ai): support dynamic tool calls in lastAssistantMessageIsCompleteWithToolCalls
+- 69fde99: Set status to ready when reconnect stream is null
+
+## 5.0.1
+
+### Patch Changes
+
+- 4d0c108: fix(ai/ui): convert provider metadata for system messages to model messages
+
 ## 5.0.0
 
 ### Major Changes

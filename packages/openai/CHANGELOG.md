@@ -1,5 +1,30 @@
 # @ai-sdk/openai
 
+## 2.0.4
+
+### Patch Changes
+
+- c9e0f52: Files from the OpenAI Files API are now supported, mirroring functionality of OpenAI Chat and Responses API, respectively. Also, the AI SDK supports URLs for PDFs in the responses API the same way it did for completions.
+
+## 2.0.3
+
+### Patch Changes
+
+- Updated dependencies [90d212f]
+  - @ai-sdk/provider-utils@3.0.1
+
+## 2.0.2
+
+### Patch Changes
+
+- 63e2016: fix(openai): missing url citations from web search tools
+
+## 2.0.1
+
+### Patch Changes
+
+- bc45e29: feat(openai): add file_search_call support to responses api
+
 ## 2.0.0
 
 ### Major Changes
