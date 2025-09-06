@@ -7,6 +7,7 @@ import {
   combineHeaders,
   convertBase64ToUint8Array,
   createJsonResponseHandler,
+  mediaTypeToExtension,
   parseProviderOptions,
   postFormDataToApi,
 } from '@ai-sdk/provider-utils';
@@ -129,7 +130,12 @@ export class OpenAITranscriptionModel implements TranscriptionModelV2 {
         : new Blob([convertBase64ToUint8Array(audio)]);
 
     formData.append('model', this.modelId);
-    formData.append('file', new File([blob], 'audio', { type: mediaType }));
+    const fileExtension = mediaTypeToExtension(mediaType);
+    formData.append(
+      'file',
+      new File([blob], 'audio', { type: mediaType }),
+      `audio.${fileExtension}`,
+    );
 
     // Add provider-specific options
     if (openAIOptions) {
@@ -137,7 +143,14 @@ export class OpenAITranscriptionModel implements TranscriptionModelV2 {
         include: openAIOptions.include,
         language: openAIOptions.language,
         prompt: openAIOptions.prompt,
-        response_format: 'verbose_json', // always use verbose_json to get segments
+        // https://platform.openai.com/docs/api-reference/audio/createTranscription#audio_createtranscription-response_format
+        // prefer verbose_json to get segments for models that support it
+        response_format: [
+          'gpt-4o-transcribe',
+          'gpt-4o-mini-transcribe',
+        ].includes(this.modelId)
+          ? 'json'
+          : 'verbose_json',
         temperature: openAIOptions.temperature,
         timestamp_granularities: openAIOptions.timestampGranularities,
       };
