@@ -2385,7 +2385,7 @@ describe('AnthropicMessagesLanguageModel', () => {
                 },
               },
               "sourceType": "url",
-              "title": null,
+              "title": undefined,
               "type": "source",
               "url": "https://example.com/dl-research",
             },
