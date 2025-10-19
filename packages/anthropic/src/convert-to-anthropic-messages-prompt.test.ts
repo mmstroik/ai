@@ -490,7 +490,7 @@ describe('tool messages', () => {
     `);
   });
 
-  it('should handle tool result with search results and add search-results beta', async () => {
+  it('should handle tool result with search results', async () => {
     const result = await convertToAnthropicMessagesPrompt({
       prompt: [
         {
@@ -525,7 +525,6 @@ describe('tool messages', () => {
       warnings: [],
     });
 
-    expect(result.betas).toContain('search-results-2025-06-09');
     expect(result.prompt.messages[0].role).toBe('user');
     const toolResult = result.prompt.messages[0].content.find(
       (item: any) => item.type === 'tool_result',
@@ -600,7 +599,6 @@ describe('tool messages', () => {
       warnings: [],
     });
 
-    expect(result.betas).toContain('search-results-2025-06-09');
     expect(result.prompt.messages[0].role).toBe('user');
     const toolResult = result.prompt.messages[0].content.find(
       (item: any) => item.type === 'tool_result',

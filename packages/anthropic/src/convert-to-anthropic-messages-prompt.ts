@@ -329,8 +329,6 @@ export async function convertToAnthropicMessagesPrompt({
                       anthropicSearchResultToolOutput.safeParse(output.value);
 
                     if (searchResults.success) {
-                      betas.add('search-results-2025-06-09');
-
                       contentValue = searchResults.data.map(
                         (result: AnthropicSearchResultToolOutput[0]) => ({
                           type: 'search_result',
