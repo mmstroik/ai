@@ -32,7 +32,6 @@ export interface AnthropicAssistantMessage {
     | AnthropicServerToolUseContent
     | AnthropicWebSearchToolResultContent
     | AnthropicCodeExecutionToolResultContent
-    | AnthropicSearchResultsToolResultContent
   >;
 }
 
@@ -147,13 +146,6 @@ export interface AnthropicCodeExecutionToolResultContent {
     stderr: string;
     return_code: number;
   };
-  cache_control: AnthropicCacheControl | undefined;
-}
-
-export interface AnthropicSearchResultsToolResultContent {
-  type: 'search_results_tool_result';
-  tool_use_id: string;
-  content: Array<AnthropicSearchResultContent>;
   cache_control: AnthropicCacheControl | undefined;
 }
 

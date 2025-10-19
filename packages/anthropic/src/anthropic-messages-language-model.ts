@@ -634,26 +634,6 @@ export class AnthropicMessagesLanguageModel implements LanguageModelV2 {
           }
           break;
         }
-        case 'search_results_tool_result': {
-          for (const searchResult of part.content) {
-            content.push({
-              type: 'source',
-              sourceType: 'url',
-              id: this.generateId(),
-              url: searchResult.source,
-              title: searchResult.title,
-              providerMetadata: {
-                anthropic: {
-                  searchResultContent: searchResult.content
-                    .map(block => block.text)
-                    .join('\n'),
-                  citationsEnabled: searchResult.citations?.enabled ?? false,
-                },
-              },
-            });
-          }
-          break;
-        }
       }
     }
 
@@ -739,7 +719,6 @@ export class AnthropicMessagesLanguageModel implements LanguageModelV2 {
       | 'server_tool_use'
       | 'web_search_tool_result'
       | 'code_execution_tool_result'
-      | 'search_results_tool_result'
       | undefined = undefined;
 
     const generateId = this.generateId;
@@ -934,30 +913,6 @@ export class AnthropicMessagesLanguageModel implements LanguageModelV2 {
                       });
                     }
 
-                    return;
-                  }
-
-                  case 'search_results_tool_result': {
-                    const part = value.content_block;
-
-                    for (const searchResult of part.content) {
-                      controller.enqueue({
-                        type: 'source',
-                        sourceType: 'url',
-                        id: generateId(),
-                        url: searchResult.source,
-                        title: searchResult.title,
-                        providerMetadata: {
-                          anthropic: {
-                            searchResultContent: searchResult.content
-                              .map(block => block.text)
-                              .join('\n'),
-                            citationsEnabled:
-                              searchResult.citations?.enabled ?? false,
-                          },
-                        },
-                      });
-                    }
                     return;
                   }
 
@@ -1245,28 +1200,6 @@ const anthropicMessagesResponseSchema = z.object({
           }),
         ]),
       }),
-      z.object({
-        type: z.literal('search_results_tool_result'),
-        tool_use_id: z.string(),
-        content: z.array(
-          z.object({
-            type: z.literal('search_result'),
-            source: z.string(),
-            title: z.string(),
-            content: z.array(
-              z.object({
-                type: z.literal('text'),
-                text: z.string(),
-              }),
-            ),
-            citations: z
-              .object({
-                enabled: z.boolean(),
-              })
-              .optional(),
-          }),
-        ),
-      }),
     ]),
   ),
   stop_reason: z.string().nullish(),
@@ -1355,28 +1288,6 @@ const anthropicMessagesChunkSchema = z.discriminatedUnion('type', [
             error_code: z.string(),
           }),
         ]),
-      }),
-      z.object({
-        type: z.literal('search_results_tool_result'),
-        tool_use_id: z.string(),
-        content: z.array(
-          z.object({
-            type: z.literal('search_result'),
-            source: z.string(),
-            title: z.string(),
-            content: z.array(
-              z.object({
-                type: z.literal('text'),
-                text: z.string(),
-              }),
-            ),
-            citations: z
-              .object({
-                enabled: z.boolean(),
-              })
-              .optional(),
-          }),
-        ),
       }),
     ]),
   }),
