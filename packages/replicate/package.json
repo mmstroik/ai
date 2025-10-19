@@ -1,6 +1,6 @@
 {
   "name": "@ai-sdk/replicate",
-  "version": "1.0.8",
+  "version": "1.0.13",
   "license": "Apache-2.0",
   "sideEffects": false,
   "main": "./dist/index.js",
@@ -43,7 +43,7 @@
     "zod": "3.25.76"
   },
   "peerDependencies": {
-    "zod": "^3.25.76 || ^4"
+    "zod": "^3.25.76 || ^4.1.8"
   },
   "engines": {
     "node": ">=18"

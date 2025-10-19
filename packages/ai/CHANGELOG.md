@@ -1,5 +1,296 @@
 # ai
 
+## 5.0.76
+
+### Patch Changes
+
+- 87b03d5: feat(ui): add isDataUIPart helper
+
+## 5.0.75
+
+### Patch Changes
+
+- Updated dependencies [76678cd]
+  - @ai-sdk/gateway@2.0.0
+
+## 5.0.74
+
+### Patch Changes
+
+- Updated dependencies [11a8867]
+  - @ai-sdk/gateway@1.0.41
+
+## 5.0.73
+
+### Patch Changes
+
+- 734c4c3: fix(ai): add missing export for `LoadSettingError`
+
+## 5.0.72
+
+### Patch Changes
+
+- 1b94257: fix(ui): do not submit automatically when server return with error
+
+## 5.0.71
+
+### Patch Changes
+
+- bc90c3c: feat(ai): add pruneMessages helper function
+
+## 5.0.70
+
+### Patch Changes
+
+- Updated dependencies [f6a9bf3]
+  - @ai-sdk/gateway@1.0.40
+
+## 5.0.69
+
+### Patch Changes
+
+- 1bacc1f: fix(ai): handle backpressure in `writeToServerResponse`
+
+## 5.0.68
+
+### Patch Changes
+
+- Updated dependencies [17f9872]
+  - @ai-sdk/provider-utils@3.0.12
+  - @ai-sdk/gateway@1.0.39
+
+## 5.0.67
+
+### Patch Changes
+
+- Updated dependencies [227ca94]
+  - @ai-sdk/gateway@1.0.38
+
+## 5.0.66
+
+### Patch Changes
+
+- Updated dependencies [ec5a0a0]
+  - @ai-sdk/gateway@1.0.37
+
+## 5.0.65
+
+### Patch Changes
+
+- Updated dependencies [638a561]
+  - @ai-sdk/gateway@1.0.36
+
+## 5.0.64
+
+### Patch Changes
+
+- e33947b: fix(ai): mcp errors to be jsonrpc 2.0 compliant
+
+## 5.0.63
+
+### Patch Changes
+
+- 22609f8: fix(ai): only parse experimental_output in generateText when finishReason is stop
+- b552c94: fix(core): Fix image download behavior when the initial model is swapped out during prepareStep
+
+## 5.0.62
+
+### Patch Changes
+
+- 6f0644c: chore: use import \* from zod/v4
+- 6f0644c: chore: load zod schemas lazily
+- Updated dependencies [6f0644c]
+- Updated dependencies [6f0644c]
+  - @ai-sdk/provider-utils@3.0.11
+  - @ai-sdk/gateway@1.0.35
+
+## 5.0.61
+
+### Patch Changes
+
+- Updated dependencies [143f65b]
+  - @ai-sdk/gateway@1.0.34
+
+## 5.0.60
+
+### Patch Changes
+
+- Updated dependencies [cffad55]
+  - @ai-sdk/gateway@1.0.33
+
+## 5.0.59
+
+### Patch Changes
+
+- Updated dependencies [bcdba23]
+  - @ai-sdk/gateway@1.0.32
+
+## 5.0.58
+
+### Patch Changes
+
+- Updated dependencies [094685f]
+  - @ai-sdk/gateway@1.0.31
+
+## 5.0.57
+
+### Patch Changes
+
+- c319849: fixed docs and exported NoSpeechGeneratedError
+
+## 5.0.56
+
+### Patch Changes
+
+- b1d8458: fix(ai): align logic of text-end with reasoning-end
+
+## 5.0.55
+
+### Patch Changes
+
+- 85da29e: fix(ai): remove outdated jsdoc param descriptions
+
+## 5.0.54
+
+### Patch Changes
+
+- bc5ed71: chore: update zod peer depenedency version
+- Updated dependencies [bc5ed71]
+  - @ai-sdk/provider-utils@3.0.10
+  - @ai-sdk/gateway@1.0.30
+
+## 5.0.53
+
+### Patch Changes
+
+- d335191: Extend addToolResult to support error results
+
+## 5.0.52
+
+### Patch Changes
+
+- c56822d: fix(ai): update `uiMessageChunkSchema` to satisfy the `UIMessageChunk` type
+- 930399b: fix(ai): download files when intermediate file cannot be downloaded
+- Updated dependencies [7ca78f1]
+  - @ai-sdk/gateway@1.0.29
+
+## 5.0.51
+
+### Patch Changes
+
+- 27645bb: Export `parseJsonEventStream` and `uiMessageChunkSchema` from "ai" package
+- Updated dependencies [322901b]
+  - @ai-sdk/gateway@1.0.28
+
+## 5.0.50
+
+### Patch Changes
+
+- Updated dependencies [c5f403a]
+  - @ai-sdk/gateway@1.0.27
+
+## 5.0.49
+
+### Patch Changes
+
+- Updated dependencies [e304478]
+  - @ai-sdk/gateway@1.0.26
+
+## 5.0.48
+
+### Patch Changes
+
+- Updated dependencies [4d3ff64]
+  - @ai-sdk/gateway@1.0.25
+
+## 5.0.47
+
+### Patch Changes
+
+- Updated dependencies [c86e0f7]
+- Updated dependencies [6bbae01]
+  - @ai-sdk/gateway@1.0.24
+
+## 5.0.46
+
+### Patch Changes
+
+- c580fbd: Add safeValidateUIMessages utility to validate UI messages without throwing, returning a success/failure result object like Zod’s safeParse
+
+## 5.0.45
+
+### Patch Changes
+
+- 76024fc: fix(ai): fix static tool call and result detection when dynamic is undefined
+- 93d8b60: fix(ai): do not filter zero-length text parts that have provider options
+- d8eb31f: fix(ai): fix webp image detection from base64
+
+## 5.0.44
+
+### Patch Changes
+
+- Updated dependencies [f49f924]
+  - @ai-sdk/gateway@1.0.23
+
+## 5.0.43
+
+### Patch Changes
+
+- 0294b58: feat(ai): set `ai`, `@ai-sdk/provider-utils`, and runtime in `user-agent` header
+- Updated dependencies [0294b58]
+  - @ai-sdk/provider-utils@3.0.9
+  - @ai-sdk/gateway@1.0.22
+
+## 5.0.42
+
+### Patch Changes
+
+- de5c066: fix(ai): forwarded providerExecuted flag in validateUIMessages
+
+## 5.0.41
+
+### Patch Changes
+
+- cd91e4b: fix(ai): use correct type for reasoning outputs
+
+## 5.0.40
+
+### Patch Changes
+
+- Updated dependencies [4ee3719]
+  - @ai-sdk/gateway@1.0.21
+
+## 5.0.39
+
+### Patch Changes
+
+- a0a725f: feat (ai): export createGateway
+
+## 5.0.38
+
+### Patch Changes
+
+- Updated dependencies [350a328]
+  - @ai-sdk/gateway@1.0.20
+
+## 5.0.37
+
+### Patch Changes
+
+- d6785d7: feat (ai): add tool and agent helpers
+
+## 5.0.36
+
+### Patch Changes
+
+- ccc2ded: feat (ai): export gateway provider
+
+## 5.0.35
+
+### Patch Changes
+
+- 99c946a: export missing type
+
 ## 5.0.34
 
 ### Patch Changes

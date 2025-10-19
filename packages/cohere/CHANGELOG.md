@@ -1,5 +1,50 @@
 # @ai-sdk/cohere
 
+## 2.0.14
+
+### Patch Changes
+
+- Updated dependencies [17f9872]
+  - @ai-sdk/provider-utils@3.0.12
+
+## 2.0.13
+
+### Patch Changes
+
+- 6f0644c: chore: use import \* from zod/v4
+- Updated dependencies [6f0644c]
+- Updated dependencies [6f0644c]
+  - @ai-sdk/provider-utils@3.0.11
+
+## 2.0.12
+
+### Patch Changes
+
+- bc5ed71: chore: update zod peer depenedency version
+- Updated dependencies [bc5ed71]
+  - @ai-sdk/provider-utils@3.0.10
+
+## 2.0.11
+
+### Patch Changes
+
+- 322901b: feat: add provider version to user-agent header
+
+## 2.0.10
+
+### Patch Changes
+
+- Updated dependencies [0294b58]
+  - @ai-sdk/provider-utils@3.0.9
+
+## 2.0.9
+
+### Patch Changes
+
+- 0816d3a: feat(provider/cohere): reasoning model support
+
+  Reasoning is now supported for all Cohere models that support it (`command-a-reasoning-08-2025` as of today). See https://docs.cohere.com/docs/reasoning
+
 ## 2.0.8
 
 ### Patch Changes

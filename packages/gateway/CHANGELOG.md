@@ -1,5 +1,153 @@
 # @ai-sdk/gateway
 
+## 2.0.0
+
+### Major Changes
+
+- 76678cd: fix(gateway): bump `@vercel/oidc` to latest
+
+## 1.0.41
+
+### Patch Changes
+
+- 11a8867: feat (provider/gateway): improve auth error messages
+
+## 1.0.40
+
+### Patch Changes
+
+- f6a9bf3: feat (provider/gateway): add user and tags provider options
+
+## 1.0.39
+
+### Patch Changes
+
+- Updated dependencies [17f9872]
+  - @ai-sdk/provider-utils@3.0.12
+
+## 1.0.38
+
+### Patch Changes
+
+- 227ca94: fix: revert zod import change
+
+## 1.0.37
+
+### Patch Changes
+
+- ec5a0a0: chore(provider/gateway): lazy schema loading
+
+## 1.0.36
+
+### Patch Changes
+
+- 638a561: feat (provider/gateway): add 'only' to provider options
+
+## 1.0.35
+
+### Patch Changes
+
+- 6f0644c: chore: use import \* from zod/v4
+- Updated dependencies [6f0644c]
+- Updated dependencies [6f0644c]
+  - @ai-sdk/provider-utils@3.0.11
+
+## 1.0.34
+
+### Patch Changes
+
+- 143f65b: fix(provider/gateway): add "react-native" as export condition for browser behavior
+
+  This avoids the use of native Node APIs in bundles created for React Native / Expo apps
+
+## 1.0.33
+
+### Patch Changes
+
+- cffad55: feat(gateway): oidc refresh with `@vercel/oidc`
+
+## 1.0.32
+
+### Patch Changes
+
+- bcdba23: feat(provider/gateway): Update DeepSeek model string autocomplete
+
+## 1.0.31
+
+### Patch Changes
+
+- 094685f: feat(provider/gateway): Add DeepSeek V3.2 Exp to Gateway language model settings
+
+## 1.0.30
+
+### Patch Changes
+
+- bc5ed71: chore: update zod peer depenedency version
+- Updated dependencies [bc5ed71]
+  - @ai-sdk/provider-utils@3.0.10
+
+## 1.0.29
+
+### Patch Changes
+
+- 7ca78f1: feat(provider/gateway): Add new Qwen models to Gateway model string autocomplete
+
+## 1.0.28
+
+### Patch Changes
+
+- 322901b: feat: add provider version to user-agent header
+
+## 1.0.27
+
+### Patch Changes
+
+- c5f403a: feat(provider/gateway): Add gpt-5-codex to Gateway model string autocomplete
+
+## 1.0.26
+
+### Patch Changes
+
+- e304478: feat(provider/gateway): Add LongCat Thinking model to Gateway autocomplete
+
+## 1.0.25
+
+### Patch Changes
+
+- 4d3ff64: feat(provider/gateway): Add new xAI models
+
+## 1.0.24
+
+### Patch Changes
+
+- c86e0f7: add getCredits() gateway method
+- 6bbae01: getCredits style improvements
+
+## 1.0.23
+
+### Patch Changes
+
+- f49f924: feat (provider/gateway): add qwen3 next model ids
+
+## 1.0.22
+
+### Patch Changes
+
+- Updated dependencies [0294b58]
+  - @ai-sdk/provider-utils@3.0.9
+
+## 1.0.21
+
+### Patch Changes
+
+- 4ee3719: feat(provider/gateway): Add Meituan LongCat Flash Chat to autocomplete
+
+## 1.0.20
+
+### Patch Changes
+
+- 350a328: feat(provider/gateway): Add stealth models to Gateway autocomplete
+
 ## 1.0.19
 
 ### Patch Changes

@@ -31,8 +31,9 @@ export { TextStreamChatTransport } from './text-stream-chat-transport';
 export {
   getToolName,
   getToolOrDynamicToolName,
-  isToolUIPart,
+  isDataUIPart,
   isToolOrDynamicToolUIPart,
+  isToolUIPart,
   type DataUIPart,
   type DynamicToolUIPart,
   type FileUIPart,
@@ -48,10 +49,15 @@ export {
   type UIMessage,
   type UIMessagePart,
   type UITool,
+  type UIToolInvocation,
   type UITools,
 } from './ui-messages';
 export {
   type CompletionRequestOptions,
   type UseCompletionOptions,
 } from './use-completion';
-export { validateUIMessages } from './validate-ui-messages';
+export {
+  validateUIMessages,
+  safeValidateUIMessages,
+  type SafeValidateUIMessagesResult,
+} from './validate-ui-messages';

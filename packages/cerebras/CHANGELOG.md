@@ -1,5 +1,87 @@
 # @ai-sdk/cerebras
 
+## 1.0.25
+
+### Patch Changes
+
+- Updated dependencies [f02b7ab]
+  - @ai-sdk/openai-compatible@1.0.22
+
+## 1.0.24
+
+### Patch Changes
+
+- 0ebacd0: Add support for 5 new Cerebras models:
+
+  - gpt-oss-120b (120B parameters)
+  - qwen-3-235b-a22b-instruct-2507 (235B instruction-tuned)
+  - qwen-3-235b-a22b-thinking-2507 (235B enhanced reasoning)
+  - qwen-3-32b (32B multilingual)
+  - qwen-3-coder-480b (480B code generation)
+
+  Remove deprecated llama3.1-70b model.
+
+## 1.0.23
+
+### Patch Changes
+
+- Updated dependencies [17f9872]
+  - @ai-sdk/provider-utils@3.0.12
+  - @ai-sdk/openai-compatible@1.0.21
+
+## 1.0.22
+
+### Patch Changes
+
+- 6f0644c: chore: use import \* from zod/v4
+- Updated dependencies [6f0644c]
+- Updated dependencies [6f0644c]
+  - @ai-sdk/openai-compatible@1.0.20
+  - @ai-sdk/provider-utils@3.0.11
+
+## 1.0.21
+
+### Patch Changes
+
+- bc5ed71: chore: update zod peer depenedency version
+- Updated dependencies [bc5ed71]
+  - @ai-sdk/openai-compatible@1.0.19
+  - @ai-sdk/provider-utils@3.0.10
+
+## 1.0.20
+
+### Patch Changes
+
+- 322901b: feat: add provider version to user-agent header
+
+## 1.0.19
+
+### Patch Changes
+
+- d430df4: feat (provider/cerebras): enable structured outputs
+
+## 1.0.18
+
+### Patch Changes
+
+- Updated dependencies [28363da]
+  - @ai-sdk/openai-compatible@1.0.18
+
+## 1.0.17
+
+### Patch Changes
+
+- Updated dependencies [3aed04c]
+  - @ai-sdk/openai-compatible@1.0.17
+
+## 1.0.16
+
+### Patch Changes
+
+- Updated dependencies [0294b58]
+  - @ai-sdk/provider-utils@3.0.9
+  - @ai-sdk/openai-compatible@1.0.16
+
 ## 1.0.15
 
 ### Patch Changes

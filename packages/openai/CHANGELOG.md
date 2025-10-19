@@ -1,5 +1,202 @@
 # @ai-sdk/openai
 
+## 2.0.52
+
+### Patch Changes
+
+- 8de8de5: fix(provider/openai): end reasoning parts earlier
+
+## 2.0.51
+
+### Patch Changes
+
+- cad5c1d: fix(provider/openai): fix web search tool input types
+
+## 2.0.50
+
+### Patch Changes
+
+- c336b43: feat(provider/openai): send assistant text and tool call parts as reference ids when store: true
+
+## 2.0.49
+
+### Patch Changes
+
+- f4287d0: feat(provider/openai): automatically add reasoning.encrypted_content include when store = false
+
+## 2.0.48
+
+### Patch Changes
+
+- Updated dependencies [17f9872]
+  - @ai-sdk/provider-utils@3.0.12
+
+## 2.0.47
+
+### Patch Changes
+
+- 99e2a2a: feat(provider/openai): support file and image tool results
+
+## 2.0.46
+
+### Patch Changes
+
+- 66f69e7: Add 'default' as service tier
+
+## 2.0.45
+
+### Patch Changes
+
+- 6f0644c: chore: use import \* from zod/v4
+- 6f0644c: chore: load zod schemas lazily
+- Updated dependencies [6f0644c]
+- Updated dependencies [6f0644c]
+  - @ai-sdk/provider-utils@3.0.11
+
+## 2.0.44
+
+### Patch Changes
+
+- 28215ca: fix(provider/openai): add providerExecuted flag to tool start chunks
+
+## 2.0.43
+
+### Patch Changes
+
+- fd46da1: feat(provider/openai): add new model IDs `gpt-image-1-mini`, `gpt-5-pro`, `gpt-5-pro-2025-10-06`
+
+## 2.0.42
+
+### Patch Changes
+
+- 2a5edd3: enables image_generation capabilities in the Azure provider through the Responses API.
+
+## 2.0.41
+
+### Patch Changes
+
+- 110c735: support OPENAI_BASE_URL env
+
+## 2.0.40
+
+### Patch Changes
+
+- 8c74f47: feat(provider/openai): add gpt-5-codex model id
+- adca087: feat(provider/openai): local shell tool
+
+## 2.0.39
+
+### Patch Changes
+
+- 5428a0d: The built in Code Interpreter tool input code is streamed in `tool-input-<start/delta/end>` chunks.
+
+## 2.0.38
+
+### Patch Changes
+
+- 0bda600: enables code_interpreter and file_search capabilities in the Azure provider through the Responses API
+
+## 2.0.37
+
+### Patch Changes
+
+- 6075c91: feat(provider/openai): only send item references for reasoning when store: true
+
+## 2.0.36
+
+### Patch Changes
+
+- bc5ed71: chore: update zod peer depenedency version
+- Updated dependencies [bc5ed71]
+  - @ai-sdk/provider-utils@3.0.10
+
+## 2.0.35
+
+### Patch Changes
+
+- 1cfc209: feat(provider/openai): `OpenAIChatLanguageModelOptions` type
+
+  ```ts
+  import { openai, type OpenAIChatLanguageModelOptions } from '@ai-sdk/openai';
+  import { generateText } from 'ai';
+
+  await generateText({
+    model: openai.chat('gpt-4o'),
+    prompt: 'Invent a new holiday and describe its traditions.',
+    providerOptions: {
+      openai: {
+        user: 'user-123',
+      } satisfies OpenAIChatLanguageModelOptions,
+    },
+  });
+  ```
+
+## 2.0.34
+
+### Patch Changes
+
+- 322901b: feat: add provider version to user-agent header
+
+## 2.0.33
+
+### Patch Changes
+
+- a617948: fix the "incomplete_details" key from nullable to nullish for openai compatibility
+
+## 2.0.32
+
+### Patch Changes
+
+- 1cf857d: fix(provider/openai): remove provider-executed tools from chat completions model
+- 01de47f: feat(provider/openai): rework file search tool
+
+## 2.0.31
+
+### Patch Changes
+
+- bb94467: feat(provider/openai): add maxToolCalls provider option
+- 4a2b70e: feat(provider/openai): send item references for provider-executed tool results
+- 643711d: feat (provider/openai): provider defined image generation tool support
+
+## 2.0.30
+
+### Patch Changes
+
+- Updated dependencies [0294b58]
+  - @ai-sdk/provider-utils@3.0.9
+
+## 2.0.29
+
+### Patch Changes
+
+- 4235eb3: feat(provider/openai): code interpreter tool calls and results
+
+## 2.0.28
+
+### Patch Changes
+
+- 4c2bb77: fix (provider/openai): send sources action as include
+- 561e8b0: fix (provider/openai): fix code interpreter tool in doGenerate
+
+## 2.0.27
+
+### Patch Changes
+
+- 2338c79: feat (provider/openai): add jsdoc for openai tools
+
+## 2.0.26
+
+### Patch Changes
+
+- 5819aec: fix (provider/openai): only send tool calls finish reason for tools that are not provider-executed
+- af8c6bb: feat (provider/openai): add web_search tool
+
+## 2.0.25
+
+### Patch Changes
+
+- fb45ade: fix timestamp granularities support for openai transcription
+
 ## 2.0.24
 
 ### Patch Changes

@@ -6,6 +6,7 @@ export * from './fetch-function';
 export { createIdGenerator, generateId, type IdGenerator } from './generate-id';
 export * from './get-error-message';
 export * from './get-from-api';
+export { getRuntimeEnvironmentUserAgent } from './get-runtime-environment-user-agent';
 export { injectJsonInstructionIntoMessages } from './inject-json-instruction';
 export * from './is-abort-error';
 export { isUrlSupported } from './is-url-supported';
@@ -29,13 +30,28 @@ export * from './response-handler';
 export {
   asSchema,
   jsonSchema,
+  lazySchema,
   type FlexibleSchema,
   type InferSchema,
+  type LazySchema,
   type Schema,
 } from './schema';
 export * from './uint8-utils';
 export * from './validate-types';
-export * from './validator';
+export {
+  asValidator,
+  isValidator,
+  lazyValidator,
+  standardSchemaValidator,
+  validator,
+  type FlexibleValidator,
+  type InferValidator,
+  type LazyValidator,
+  type ValidationResult,
+  type Validator,
+} from './validator';
+export { VERSION } from './version';
+export { withUserAgentSuffix } from './with-user-agent-suffix';
 export * from './without-trailing-slash';
 export { zodSchema } from './zod-schema';
 

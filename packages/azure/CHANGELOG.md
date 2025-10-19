@@ -1,5 +1,222 @@
 # @ai-sdk/azure
 
+## 2.0.53
+
+### Patch Changes
+
+- Updated dependencies [8de8de5]
+  - @ai-sdk/openai@2.0.52
+
+## 2.0.52
+
+### Patch Changes
+
+- Updated dependencies [cad5c1d]
+  - @ai-sdk/openai@2.0.51
+
+## 2.0.51
+
+### Patch Changes
+
+- Updated dependencies [c336b43]
+  - @ai-sdk/openai@2.0.50
+
+## 2.0.50
+
+### Patch Changes
+
+- Updated dependencies [f4287d0]
+  - @ai-sdk/openai@2.0.49
+
+## 2.0.49
+
+### Patch Changes
+
+- Updated dependencies [17f9872]
+  - @ai-sdk/provider-utils@3.0.12
+  - @ai-sdk/openai@2.0.48
+
+## 2.0.48
+
+### Patch Changes
+
+- Updated dependencies [99e2a2a]
+  - @ai-sdk/openai@2.0.47
+
+## 2.0.47
+
+### Patch Changes
+
+- Updated dependencies [66f69e7]
+  - @ai-sdk/openai@2.0.46
+
+## 2.0.46
+
+### Patch Changes
+
+- Updated dependencies [6f0644c]
+- Updated dependencies [6f0644c]
+  - @ai-sdk/provider-utils@3.0.11
+  - @ai-sdk/openai@2.0.45
+
+## 2.0.45
+
+### Patch Changes
+
+- Updated dependencies [28215ca]
+  - @ai-sdk/openai@2.0.44
+
+## 2.0.44
+
+### Patch Changes
+
+- 03b924a: The default api-version for Microsoft Azure OpenAI has been changed from preview to v1
+
+## 2.0.43
+
+### Patch Changes
+
+- Updated dependencies [fd46da1]
+  - @ai-sdk/openai@2.0.43
+
+## 2.0.42
+
+### Patch Changes
+
+- 2a5edd3: enables image_generation capabilities in the Azure provider through the Responses API.
+- Updated dependencies [2a5edd3]
+  - @ai-sdk/openai@2.0.42
+
+## 2.0.41
+
+### Patch Changes
+
+- Updated dependencies [110c735]
+  - @ai-sdk/openai@2.0.41
+
+## 2.0.40
+
+### Patch Changes
+
+- Updated dependencies [8c74f47]
+- Updated dependencies [adca087]
+  - @ai-sdk/openai@2.0.40
+
+## 2.0.39
+
+### Patch Changes
+
+- Updated dependencies [5428a0d]
+  - @ai-sdk/openai@2.0.39
+
+## 2.0.38
+
+### Patch Changes
+
+- 0bda600: enables code_interpreter and file_search capabilities in the Azure provider through the Responses API
+- Updated dependencies [0bda600]
+  - @ai-sdk/openai@2.0.38
+
+## 2.0.37
+
+### Patch Changes
+
+- Updated dependencies [6075c91]
+  - @ai-sdk/openai@2.0.37
+
+## 2.0.36
+
+### Patch Changes
+
+- bc5ed71: chore: update zod peer depenedency version
+- Updated dependencies [bc5ed71]
+  - @ai-sdk/provider-utils@3.0.10
+  - @ai-sdk/openai@2.0.36
+
+## 2.0.35
+
+### Patch Changes
+
+- Updated dependencies [1cfc209]
+  - @ai-sdk/openai@2.0.35
+
+## 2.0.34
+
+### Patch Changes
+
+- 322901b: feat: add provider version to user-agent header
+- Updated dependencies [322901b]
+  - @ai-sdk/openai@2.0.34
+
+## 2.0.33
+
+### Patch Changes
+
+- Updated dependencies [a617948]
+  - @ai-sdk/openai@2.0.33
+
+## 2.0.32
+
+### Patch Changes
+
+- Updated dependencies [1cf857d]
+- Updated dependencies [01de47f]
+  - @ai-sdk/openai@2.0.32
+
+## 2.0.31
+
+### Patch Changes
+
+- Updated dependencies [bb94467]
+- Updated dependencies [4a2b70e]
+- Updated dependencies [643711d]
+  - @ai-sdk/openai@2.0.31
+
+## 2.0.30
+
+### Patch Changes
+
+- Updated dependencies [0294b58]
+  - @ai-sdk/provider-utils@3.0.9
+  - @ai-sdk/openai@2.0.30
+
+## 2.0.29
+
+### Patch Changes
+
+- Updated dependencies [4235eb3]
+  - @ai-sdk/openai@2.0.29
+
+## 2.0.28
+
+### Patch Changes
+
+- Updated dependencies [4c2bb77]
+- Updated dependencies [561e8b0]
+  - @ai-sdk/openai@2.0.28
+
+## 2.0.27
+
+### Patch Changes
+
+- Updated dependencies [2338c79]
+  - @ai-sdk/openai@2.0.27
+
+## 2.0.26
+
+### Patch Changes
+
+- Updated dependencies [5819aec]
+- Updated dependencies [af8c6bb]
+  - @ai-sdk/openai@2.0.26
+
+## 2.0.25
+
+### Patch Changes
+
+- Updated dependencies [fb45ade]
+  - @ai-sdk/openai@2.0.25
+
 ## 2.0.24
 
 ### Patch Changes

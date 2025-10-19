@@ -1,5 +1,54 @@
 # @ai-sdk/groq
 
+## 2.0.24
+
+### Patch Changes
+
+- Updated dependencies [17f9872]
+  - @ai-sdk/provider-utils@3.0.12
+
+## 2.0.23
+
+### Patch Changes
+
+- 6f0644c: chore: use import \* from zod/v4
+- Updated dependencies [6f0644c]
+- Updated dependencies [6f0644c]
+  - @ai-sdk/provider-utils@3.0.11
+
+## 2.0.22
+
+### Patch Changes
+
+- bc5ed71: chore: update zod peer depenedency version
+- Updated dependencies [bc5ed71]
+  - @ai-sdk/provider-utils@3.0.10
+
+## 2.0.21
+
+### Patch Changes
+
+- 322901b: feat: add provider version to user-agent header
+
+## 2.0.20
+
+### Patch Changes
+
+- e389009: fix(provider/groq): track cached tokens usage
+
+## 2.0.19
+
+### Patch Changes
+
+- Updated dependencies [0294b58]
+  - @ai-sdk/provider-utils@3.0.9
+
+## 2.0.18
+
+### Patch Changes
+
+- c37bc3b: feat (provider/groq): remove obsolete saba model id
+
 ## 2.0.17
 
 ### Patch Changes
