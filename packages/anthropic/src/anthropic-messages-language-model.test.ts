@@ -2343,7 +2343,7 @@ describe('AnthropicMessagesLanguageModel', () => {
           apiKey: 'test-api-key',
           generateId: mockId(),
         });
-        const model = provider('claude-3-haiku-20240307');
+        const model = provider('claude-3-5-haiku-20241022');
 
         const result = await model.doGenerate({
           prompt: TEST_PROMPT,
