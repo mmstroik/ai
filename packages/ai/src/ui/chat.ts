@@ -4,6 +4,7 @@ import {
   StandardSchemaV1,
   Validator,
 } from '@ai-sdk/provider-utils';
+import { FinishReason } from '../types/language-model';
 import { UIMessageChunk } from '../ui-message-stream/ui-message-chunks';
 import { consumeStream } from '../util/consume-stream';
 import { SerialJobExecutor } from '../util/serial-job-executor';
@@ -19,6 +20,8 @@ import {
   InferUIMessageToolCall,
   isToolOrDynamicToolUIPart,
   ToolUIPart,
+  UIMessagePart,
+  UITools,
   type DataUIPart,
   type FileUIPart,
   type InferUIMessageData,
@@ -107,6 +110,7 @@ export type ChatOnDataCallback<UI_MESSAGE extends UIMessage> = (
  * @param isAbort Indicates whether the request has been aborted.
  * @param isDisconnect Indicates whether the request has been ended by a network error.
  * @param isError Indicates whether the request has been ended by an error.
+ * @param finishReason The reason why the generation finished.
  */
 export type ChatOnFinishCallback<UI_MESSAGE extends UIMessage> = (options: {
   message: UI_MESSAGE;
@@ -114,6 +118,7 @@ export type ChatOnFinishCallback<UI_MESSAGE extends UIMessage> = (options: {
   isAbort: boolean;
   isDisconnect: boolean;
   isError: boolean;
+  finishReason?: FinishReason;
 }) => void;
 
 export interface ChatInit<UI_MESSAGE extends UIMessage> {
@@ -414,7 +419,7 @@ export abstract class AbstractChat<UI_MESSAGE extends UIMessage> {
     }
   };
 
-  addToolResult = async <TOOL extends keyof InferUIMessageTools<UI_MESSAGE>>({
+  addToolOutput = async <TOOL extends keyof InferUIMessageTools<UI_MESSAGE>>({
     state = 'output-available',
     tool,
     toolCallId,
@@ -476,6 +481,9 @@ export abstract class AbstractChat<UI_MESSAGE extends UIMessage> {
         });
       }
     });
+
+  /** @deprecated Use addToolOutput */
+  addToolResult = this.addToolOutput;
 
   /**
    * Abort the current request immediately, keep the generated tokens if any.
@@ -629,6 +637,7 @@ export abstract class AbstractChat<UI_MESSAGE extends UIMessage> {
           isAbort,
           isDisconnect,
           isError,
+          finishReason: this.activeResponse?.state.finishReason,
         });
       } catch (err) {
         console.error(err);

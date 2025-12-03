@@ -1,8 +1,7 @@
 import {
   createTestServer,
-  mockId,
   TestResponseController,
-} from '@ai-sdk/provider-utils/test';
+} from '@ai-sdk/test-server/with-vitest';
 import {
   DefaultChatTransport,
   isToolUIPart,
@@ -10,7 +9,7 @@ import {
 } from 'ai';
 import { Chat } from './chat.ng';
 import { beforeEach, describe, it, expect, vi } from 'vitest';
-
+import { mockId } from '@ai-sdk/provider-utils/test';
 function formatStreamPart(part: object) {
   return `data: ${JSON.stringify(part)}\n\n`;
 }
@@ -419,7 +418,7 @@ describe('onToolCall', () => {
     chat = new Chat({
       async onToolCall({ toolCall }) {
         await toolCallPromise;
-        chat.addToolResult({
+        chat.addToolOutput({
           tool: 'test-tool',
           toolCallId: toolCall.toolCallId,
           output: `test-tool-response: ${toolCall.toolName} ${
@@ -688,7 +687,7 @@ describe('tool invocations', () => {
     ]);
   });
 
-  it('should update tool call to result when addToolResult is called', async () => {
+  it('should update tool call to result when addToolOutput is called', async () => {
     server.urls['/api/chat'].response = {
       type: 'stream-chunks',
       chunks: [
@@ -721,7 +720,7 @@ describe('tool invocations', () => {
       ]);
     });
 
-    chat.addToolResult({
+    chat.addToolOutput({
       tool: 'test-tool',
       toolCallId: 'tool-call-0',
       output: 'test-result',

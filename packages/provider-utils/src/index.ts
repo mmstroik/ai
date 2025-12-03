@@ -1,6 +1,7 @@
 export * from './combine-headers';
 export { convertAsyncIteratorToReadableStream } from './convert-async-iterator-to-readable-stream';
 export * from './delay';
+export { DelayedPromise } from './delayed-promise';
 export * from './extract-response-headers';
 export * from './fetch-function';
 export { createIdGenerator, generateId, type IdGenerator } from './generate-id';
@@ -14,6 +15,7 @@ export * from './load-api-key';
 export { loadOptionalSetting } from './load-optional-setting';
 export { loadSetting } from './load-setting';
 export { mediaTypeToExtension } from './media-type-to-extension';
+export { normalizeHeaders } from './normalize-headers';
 export * from './parse-json';
 export { parseJsonEventStream } from './parse-json-event-stream';
 export { parseProviderOptions } from './parse-provider-options';

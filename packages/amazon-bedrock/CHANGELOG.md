@@ -1,5 +1,159 @@
 # @ai-sdk/amazon-bedrock
 
+## 3.0.65
+
+### Patch Changes
+
+- Updated dependencies [65dee10]
+  - @ai-sdk/anthropic@2.0.53
+
+## 3.0.64
+
+### Patch Changes
+
+- Updated dependencies [518e786]
+  - @ai-sdk/anthropic@2.0.52
+
+## 3.0.63
+
+### Patch Changes
+
+- Updated dependencies [a54839c]
+  - @ai-sdk/anthropic@2.0.51
+
+## 3.0.62
+
+### Patch Changes
+
+- Updated dependencies [d1dbe5d]
+- Updated dependencies [d1dbe5d]
+  - @ai-sdk/provider-utils@3.0.18
+  - @ai-sdk/anthropic@2.0.50
+
+## 3.0.61
+
+### Patch Changes
+
+- Updated dependencies [dcdfeb7]
+  - @ai-sdk/anthropic@2.0.49
+
+## 3.0.60
+
+### Patch Changes
+
+- Updated dependencies [f2c6cbd]
+  - @ai-sdk/anthropic@2.0.48
+
+## 3.0.59
+
+### Patch Changes
+
+- Updated dependencies [3a7a427]
+  - @ai-sdk/anthropic@2.0.47
+
+## 3.0.58
+
+### Patch Changes
+
+- Updated dependencies [54a0480]
+  - @ai-sdk/anthropic@2.0.46
+
+## 3.0.57
+
+### Patch Changes
+
+- 708df55: feat(provider/amazon-bedrock,provider/google-vertex-anthropic): add support for tool calling with structured output
+
+  Added support for combining tool calling with structured outputs in both Amazon Bedrock and Google Vertex Anthropic providers. This allows developers to use tools (like weather lookups, web search, etc.) alongside structured JSON output schemas, enabling multi-step agentic workflows with structured final outputs.
+
+  **Amazon Bedrock Changes:**
+
+  - Removed incorrect warning that prevented using tools with JSON response format
+  - Updated tool choice to use `{ type: 'required' }` instead of specific tool selection when using structured outputs
+  - Added `isJsonResponseFromTool` parameter to finish reason mapping
+  - JSON tool responses are correctly converted to text content and finish reason is mapped from `tool_use` to `stop`
+  - Added comprehensive test coverage for combining tools with structured outputs
+  - Added example files demonstrating the feature
+
+  **Google Vertex Anthropic Changes:**
+
+  - Inherits support from underlying Anthropic provider implementation
+  - Added test coverage to verify the feature works correctly
+  - Added example files demonstrating the feature
+
+  This brings Anthropic provider's structured output capabilities to the Amazon Bedrock and Google Vertex Anthropic providers.
+
+## 3.0.56
+
+### Patch Changes
+
+- f1f5804: fix(amazon-bedrock): clamp temperature to valid 0-1 range with warnings
+- 9cb8436: fix(amazon-bedrock): move anthropic_beta to request body
+- Updated dependencies [54b7c08]
+  - @ai-sdk/anthropic@2.0.45
+
+## 3.0.55
+
+### Patch Changes
+
+- cddda46: fix (provider/amazon-bedrock): deal gracefully with empty tool descriptions
+
+## 3.0.54
+
+### Patch Changes
+
+- Updated dependencies [056c471]
+  - @ai-sdk/provider-utils@3.0.17
+  - @ai-sdk/anthropic@2.0.44
+
+## 3.0.53
+
+### Patch Changes
+
+- Updated dependencies [e2dac8b]
+  - @ai-sdk/anthropic@2.0.43
+
+## 3.0.52
+
+### Patch Changes
+
+- Updated dependencies [035b927]
+  - @ai-sdk/anthropic@2.0.42
+
+## 3.0.51
+
+### Patch Changes
+
+- 51aa5de: backport: test server
+- Updated dependencies [51aa5de]
+  - @ai-sdk/provider-utils@3.0.16
+  - @ai-sdk/anthropic@2.0.41
+
+## 3.0.50
+
+### Patch Changes
+
+- Updated dependencies [f2da310]
+  - @ai-sdk/provider-utils@3.0.15
+  - @ai-sdk/anthropic@2.0.40
+
+## 3.0.49
+
+### Patch Changes
+
+- Updated dependencies [949718b]
+  - @ai-sdk/provider-utils@3.0.14
+  - @ai-sdk/anthropic@2.0.39
+
+## 3.0.48
+
+### Patch Changes
+
+- 1e05490: refactor: consolidate header normalization across packages, remove duplicates, preserve custom headers
+- Updated dependencies [1e05490]
+  - @ai-sdk/provider-utils@3.0.13
+  - @ai-sdk/anthropic@2.0.38
+
 ## 3.0.47
 
 ### Patch Changes

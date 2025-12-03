@@ -1,10 +1,8 @@
 import { LanguageModelV2Prompt } from '@ai-sdk/provider';
 import { describe, it, expect, vi } from 'vitest';
 
-import {
-  convertReadableStreamToArray,
-  createTestServer,
-} from '@ai-sdk/provider-utils/test';
+import { createTestServer } from '@ai-sdk/test-server/with-vitest';
+import { convertReadableStreamToArray } from '@ai-sdk/provider-utils/test';
 import { XaiChatLanguageModel } from './xai-chat-language-model';
 import { createXai } from './xai-provider';
 
@@ -193,6 +191,7 @@ describe('XaiChatLanguageModel', () => {
 
       expect(usage).toMatchInlineSnapshot(`
         {
+          "cachedInputTokens": undefined,
           "inputTokens": 20,
           "outputTokens": 5,
           "reasoningTokens": undefined,
@@ -722,6 +721,64 @@ describe('XaiChatLanguageModel', () => {
         ]
       `);
     });
+
+    it('should support json schema response format without warnings', async () => {
+      prepareJsonResponse({ content: '{"name":"john doe"}' });
+
+      const { warnings } = await model.doGenerate({
+        prompt: TEST_PROMPT,
+        responseFormat: {
+          type: 'json',
+          schema: {
+            type: 'object',
+            properties: {
+              name: { type: 'string' },
+            },
+            required: ['name'],
+            additionalProperties: false,
+          },
+        },
+      });
+
+      expect(warnings).toEqual([]);
+    });
+
+    it('should send json schema in response format', async () => {
+      prepareJsonResponse({ content: '{"name":"john"}' });
+
+      await model.doGenerate({
+        prompt: TEST_PROMPT,
+        responseFormat: {
+          type: 'json',
+          name: 'person',
+          schema: {
+            type: 'object',
+            properties: {
+              name: { type: 'string' },
+            },
+            required: ['name'],
+          },
+        },
+      });
+
+      expect(await server.calls[0].requestBodyJson).toMatchObject({
+        model: 'grok-beta',
+        response_format: {
+          type: 'json_schema',
+          json_schema: {
+            name: 'person',
+            schema: {
+              type: 'object',
+              properties: {
+                name: { type: 'string' },
+              },
+              required: ['name'],
+            },
+            strict: true,
+          },
+        },
+      });
+    });
   });
 
   describe('doStream', () => {
@@ -802,6 +859,7 @@ describe('XaiChatLanguageModel', () => {
             "finishReason": "stop",
             "type": "finish",
             "usage": {
+              "cachedInputTokens": undefined,
               "inputTokens": 4,
               "outputTokens": 32,
               "reasoningTokens": undefined,
@@ -865,6 +923,7 @@ describe('XaiChatLanguageModel', () => {
             "finishReason": "stop",
             "type": "finish",
             "usage": {
+              "cachedInputTokens": undefined,
               "inputTokens": 4,
               "outputTokens": 32,
               "reasoningTokens": undefined,
@@ -943,6 +1002,7 @@ describe('XaiChatLanguageModel', () => {
             "finishReason": "tool-calls",
             "type": "finish",
             "usage": {
+              "cachedInputTokens": undefined,
               "inputTokens": 183,
               "outputTokens": 133,
               "reasoningTokens": undefined,
@@ -1129,6 +1189,7 @@ describe('XaiChatLanguageModel', () => {
             "finishReason": "stop",
             "type": "finish",
             "usage": {
+              "cachedInputTokens": undefined,
               "inputTokens": 4,
               "outputTokens": 30,
               "reasoningTokens": undefined,
@@ -1255,6 +1316,7 @@ describe('XaiChatLanguageModel', () => {
 
       expect(usage).toMatchInlineSnapshot(`
         {
+          "cachedInputTokens": undefined,
           "inputTokens": 15,
           "outputTokens": 20,
           "reasoningTokens": 10,
@@ -1337,6 +1399,7 @@ describe('XaiChatLanguageModel', () => {
             "finishReason": "stop",
             "type": "finish",
             "usage": {
+              "cachedInputTokens": undefined,
               "inputTokens": 15,
               "outputTokens": 20,
               "reasoningTokens": 10,
@@ -1427,6 +1490,7 @@ describe('XaiChatLanguageModel', () => {
             "finishReason": "stop",
             "type": "finish",
             "usage": {
+              "cachedInputTokens": undefined,
               "inputTokens": 15,
               "outputTokens": 20,
               "reasoningTokens": 10,
@@ -1570,6 +1634,7 @@ describe('doStream with raw chunks', () => {
           "finishReason": "stop",
           "type": "finish",
           "usage": {
+            "cachedInputTokens": undefined,
             "inputTokens": 10,
             "outputTokens": 5,
             "reasoningTokens": undefined,

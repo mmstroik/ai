@@ -1,5 +1,205 @@
 # @ai-sdk/svelte
 
+## 3.0.106
+
+### Patch Changes
+
+- ai@5.0.106
+
+## 3.0.105
+
+### Patch Changes
+
+- Updated dependencies [1063aca]
+  - ai@5.0.105
+
+## 3.0.104
+
+### Patch Changes
+
+- Updated dependencies [d1dbe5d]
+  - @ai-sdk/provider-utils@3.0.18
+  - ai@5.0.104
+
+## 3.0.103
+
+### Patch Changes
+
+- ai@5.0.103
+
+## 3.0.102
+
+### Patch Changes
+
+- Updated dependencies [83b2c4b]
+  - ai@5.0.102
+
+## 3.0.101
+
+### Patch Changes
+
+- ai@5.0.101
+
+## 3.0.100
+
+### Patch Changes
+
+- ai@5.0.100
+
+## 3.0.99
+
+### Patch Changes
+
+- Updated dependencies [15cfac8]
+  - ai@5.0.99
+
+## 3.0.98
+
+### Patch Changes
+
+- ai@5.0.98
+
+## 3.0.97
+
+### Patch Changes
+
+- ai@5.0.97
+
+## 3.0.96
+
+### Patch Changes
+
+- Updated dependencies [c89268c]
+  - ai@5.0.96
+
+## 3.0.95
+
+### Patch Changes
+
+- Updated dependencies [a20e687]
+  - ai@5.0.95
+
+## 3.0.94
+
+### Patch Changes
+
+- ai@5.0.94
+
+## 3.0.93
+
+### Patch Changes
+
+- ai@5.0.93
+
+## 3.0.92
+
+### Patch Changes
+
+- Updated dependencies [250edbd]
+  - ai@5.0.92
+
+## 3.0.91
+
+### Patch Changes
+
+- Updated dependencies [056c471]
+  - @ai-sdk/provider-utils@3.0.17
+  - ai@5.0.91
+
+## 3.0.90
+
+### Patch Changes
+
+- Updated dependencies [818b144]
+  - ai@5.0.90
+
+## 3.0.89
+
+### Patch Changes
+
+- Updated dependencies [7cfada6]
+  - ai@5.0.89
+
+## 3.0.88
+
+### Patch Changes
+
+- ai@5.0.88
+
+## 3.0.87
+
+### Patch Changes
+
+- 51aa5de: backport: test server
+- Updated dependencies [51aa5de]
+  - @ai-sdk/provider-utils@3.0.16
+  - ai@5.0.87
+
+## 3.0.86
+
+### Patch Changes
+
+- Updated dependencies [0f92046]
+  - ai@5.0.86
+
+## 3.0.85
+
+### Patch Changes
+
+- Updated dependencies [f2da310]
+  - @ai-sdk/provider-utils@3.0.15
+  - ai@5.0.85
+
+## 3.0.84
+
+### Patch Changes
+
+- Updated dependencies [a017497]
+  - ai@5.0.84
+
+## 3.0.83
+
+### Patch Changes
+
+- ai@5.0.83
+
+## 3.0.82
+
+### Patch Changes
+
+- Updated dependencies [949718b]
+  - @ai-sdk/provider-utils@3.0.14
+  - ai@5.0.82
+
+## 3.0.81
+
+### Patch Changes
+
+- Updated dependencies [1e05490]
+- Updated dependencies [1e05490]
+  - ai@5.0.81
+  - @ai-sdk/provider-utils@3.0.13
+
+## 3.0.80
+
+### Patch Changes
+
+- Updated dependencies [c7688ec]
+  - ai@5.0.80
+
+## 3.0.79
+
+### Patch Changes
+
+- Updated dependencies [22ab538]
+  - ai@5.0.79
+
+## 3.0.78
+
+### Patch Changes
+
+- ai@5.0.78
+
 ## 3.0.77
 
 ### Patch Changes

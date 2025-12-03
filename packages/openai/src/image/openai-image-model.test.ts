@@ -1,4 +1,4 @@
-import { createTestServer } from '@ai-sdk/provider-utils/test';
+import { createTestServer } from '@ai-sdk/test-server/with-vitest';
 import { createOpenAI } from '../openai-provider';
 import { OpenAIImageModel } from './openai-image-model';
 import { describe, it, expect, vi } from 'vitest';
@@ -238,6 +238,42 @@ describe('doGenerate', () => {
     expect(requestBody).not.toHaveProperty('response_format');
   });
 
+  it('should handle null revised_prompt responses', async () => {
+    server.urls['https://api.openai.com/v1/images/generations'].response = {
+      type: 'json-value',
+      body: {
+        created: 1733837122,
+        data: [
+          {
+            revised_prompt: null,
+            b64_json: 'base64-image-1',
+          },
+        ],
+      },
+    };
+
+    const result = await provider.image('gpt-image-1').doGenerate({
+      prompt,
+      n: 1,
+      size: '1024x1024',
+      aspectRatio: undefined,
+      seed: undefined,
+      providerOptions: {},
+    });
+
+    expect(result.images).toStrictEqual(['base64-image-1']);
+    expect(result.warnings).toStrictEqual([]);
+    expect(result.providerMetadata).toStrictEqual({
+      openai: {
+        images: [
+          {
+            created: 1733837122,
+          },
+        ],
+      },
+    });
+  });
+
   it('should include response_format for dall-e-3', async () => {
     prepareJsonResponse();
 
@@ -273,8 +309,176 @@ describe('doGenerate', () => {
           {
             revisedPrompt:
               'A charming visual illustration of a baby sea otter swimming joyously.',
+            created: 1733837122,
           },
-          null,
+          {
+            created: 1733837122,
+          },
+        ],
+      },
+    });
+  });
+
+  it('should include all metadata fields when present in response', async () => {
+    server.urls['https://api.openai.com/v1/images/generations'].response = {
+      type: 'json-value',
+      body: {
+        created: 1733837122,
+        size: '1024x1024',
+        quality: 'hd',
+        background: 'transparent',
+        output_format: 'png',
+        data: [
+          {
+            revised_prompt: 'A detailed illustration of a cat',
+            b64_json: 'base64-image-1',
+          },
+        ],
+      },
+    };
+
+    const result = await model.doGenerate({
+      prompt,
+      n: 1,
+      size: '1024x1024',
+      aspectRatio: undefined,
+      seed: undefined,
+      providerOptions: {},
+    });
+
+    expect(result.providerMetadata).toStrictEqual({
+      openai: {
+        images: [
+          {
+            revisedPrompt: 'A detailed illustration of a cat',
+            created: 1733837122,
+            size: '1024x1024',
+            quality: 'hd',
+            background: 'transparent',
+            outputFormat: 'png',
+          },
+        ],
+      },
+    });
+  });
+
+  it('should handle response with no metadata fields', async () => {
+    server.urls['https://api.openai.com/v1/images/generations'].response = {
+      type: 'json-value',
+      body: {
+        data: [
+          {
+            b64_json: 'base64-image-1',
+          },
+        ],
+      },
+    };
+
+    const result = await model.doGenerate({
+      prompt,
+      n: 1,
+      size: undefined,
+      aspectRatio: undefined,
+      seed: undefined,
+      providerOptions: {},
+    });
+
+    expect(result.providerMetadata).toStrictEqual({
+      openai: {
+        images: [{}],
+      },
+    });
+  });
+
+  it('should handle multiple images with mixed metadata', async () => {
+    server.urls['https://api.openai.com/v1/images/generations'].response = {
+      type: 'json-value',
+      body: {
+        created: 1733837122,
+        size: '1024x1024',
+        quality: 'hd',
+        data: [
+          {
+            revised_prompt: 'First image prompt',
+            b64_json: 'base64-image-1',
+          },
+          {
+            b64_json: 'base64-image-2',
+          },
+          {
+            revised_prompt: 'Third image prompt',
+            b64_json: 'base64-image-3',
+          },
+        ],
+      },
+    };
+
+    const result = await model.doGenerate({
+      prompt,
+      n: 3,
+      size: '1024x1024',
+      aspectRatio: undefined,
+      seed: undefined,
+      providerOptions: {},
+    });
+
+    expect(result.providerMetadata).toStrictEqual({
+      openai: {
+        images: [
+          {
+            revisedPrompt: 'First image prompt',
+            created: 1733837122,
+            size: '1024x1024',
+            quality: 'hd',
+          },
+          {
+            created: 1733837122,
+            size: '1024x1024',
+            quality: 'hd',
+          },
+          {
+            revisedPrompt: 'Third image prompt',
+            created: 1733837122,
+            size: '1024x1024',
+            quality: 'hd',
+          },
+        ],
+      },
+    });
+  });
+
+  it('should handle jpeg output format', async () => {
+    server.urls['https://api.openai.com/v1/images/generations'].response = {
+      type: 'json-value',
+      body: {
+        created: 1733837122,
+        output_format: 'jpeg',
+        quality: 'standard',
+        data: [
+          {
+            b64_json: 'base64-image-1',
+          },
+        ],
+      },
+    };
+
+    const result = await model.doGenerate({
+      prompt,
+      n: 1,
+      size: undefined,
+      aspectRatio: undefined,
+      seed: undefined,
+      providerOptions: {},
+    });
+
+    expect(result.providerMetadata).toStrictEqual({
+      openai: {
+        images: [
+          {
+            created: 1733837122,
+            quality: 'standard',
+            outputFormat: 'jpeg',
+          },
         ],
       },
     });

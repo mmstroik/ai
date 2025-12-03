@@ -1,5 +1,138 @@
 # @ai-sdk/google
 
+## 2.0.44
+
+### Patch Changes
+
+- Updated dependencies [d1dbe5d]
+  - @ai-sdk/provider-utils@3.0.18
+
+## 2.0.43
+
+### Patch Changes
+
+- 7b2c30f: Fixed Zod validation error when using `google.tools.fileSearch()`. The Google File Search API returns `fileSearchStore` instead of `uri` in `retrievedContext`. Updated `extractSources()` function to handle both the old format (Google Search with `uri`) and new format (File Search with `fileSearchStore`), maintaining backward compatibility while preventing validation errors. Also fixed title handling to use `undefined` for URL sources and `'Unknown Document'` for document sources.
+
+## 2.0.42
+
+### Patch Changes
+
+- b60216b: Change streamText loop to merge file part processing into main parts loop
+
+## 2.0.41
+
+### Patch Changes
+
+- 3438163: add `gemini-3-pro-preview` and `gemini-3-pro-image-preview` model IDs
+
+## 2.0.40
+
+### Patch Changes
+
+- 733c6b3: feat(provider/google): Add support for the imageSize provider option
+
+## 2.0.39
+
+### Patch Changes
+
+- c89268c: fix(provider/google): preserve thoughtSignature through tool execution
+
+## 2.0.38
+
+### Patch Changes
+
+- 42a6339: feat(google): `thinking_level` option for Gemini 3
+
+## 2.0.37
+
+### Patch Changes
+
+- 6de29ca: Prepare search tool for gemini-3-pro-preview
+
+## 2.0.36
+
+### Patch Changes
+
+- 9df7698: fix(provider/google): remove includethoughts warning
+
+## 2.0.35
+
+### Patch Changes
+
+- f641e1b: fix: update gemini 3 model id
+
+## 2.0.34
+
+### Patch Changes
+
+- 9a66892: Add Google Vertex RAG Engine grounding provider tool
+
+## 2.0.33
+
+### Patch Changes
+
+- 30a7d54: Improve error message when mixing function tools with provider-defined tools to clarify fallback behavior and list ignored function tools
+
+## 2.0.32
+
+### Patch Changes
+
+- 0ac13cc: feat(vertex): support 'trafficType' in provider usageMetadata
+
+## 2.0.31
+
+### Patch Changes
+
+- Updated dependencies [056c471]
+  - @ai-sdk/provider-utils@3.0.17
+
+## 2.0.30
+
+### Patch Changes
+
+- e2dac8b: Support for custom provider name in google and anthropic providers
+
+## 2.0.29
+
+### Patch Changes
+
+- a929a32: Add Google File search tool
+
+## 2.0.28
+
+### Patch Changes
+
+- 9a999c4: fix(@ai-sdk/google): Make title field optional in grounding metadata schema
+
+## 2.0.27
+
+### Patch Changes
+
+- 51aa5de: backport: test server
+- Updated dependencies [51aa5de]
+  - @ai-sdk/provider-utils@3.0.16
+
+## 2.0.26
+
+### Patch Changes
+
+- Updated dependencies [f2da310]
+  - @ai-sdk/provider-utils@3.0.15
+
+## 2.0.25
+
+### Patch Changes
+
+- Updated dependencies [949718b]
+  - @ai-sdk/provider-utils@3.0.14
+
+## 2.0.24
+
+### Patch Changes
+
+- Updated dependencies [1e05490]
+  - @ai-sdk/provider-utils@3.0.13
+
 ## 2.0.23
 
 ### Patch Changes

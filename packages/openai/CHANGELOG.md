@@ -1,5 +1,150 @@
 # @ai-sdk/openai
 
+## 2.0.76
+
+### Patch Changes
+
+- 61545c4: feat (provider/openai): include more image generation response metadata
+
+## 2.0.75
+
+### Patch Changes
+
+- 1c7ff4a: distinguish between OpenAI and Azure in Responses API providerMetadata
+
+## 2.0.74
+
+### Patch Changes
+
+- Updated dependencies [d1dbe5d]
+  - @ai-sdk/provider-utils@3.0.18
+
+## 2.0.73
+
+### Patch Changes
+
+- 2e2fd83: refactoring(provider/openai): simplify code
+
+## 2.0.72
+
+### Patch Changes
+
+- 53d2fcc: added support for external_web_access parameter on web_search tool
+
+## 2.0.71
+
+### Patch Changes
+
+- 29a5595: Azure OpenAI enabled web-search-preview
+
+## 2.0.70
+
+### Patch Changes
+
+- dafda29: Set the annotations from the Responses API to doStream
+
+## 2.0.69
+
+### Patch Changes
+
+- 38a9f48: fix: error schema for Responses API
+
+## 2.0.68
+
+### Patch Changes
+
+- a4c6a12: feat(provider/openai): support conversations api
+
+## 2.0.67
+
+### Patch Changes
+
+- 3735f5a: feat(openai): Add support for 'promptCacheRetention: 24h' for gpt5.1 series
+
+## 2.0.66
+
+### Patch Changes
+
+- 73f9178: feat(openai): add 'gpt-5.1' modelID
+
+## 2.0.65
+
+### Patch Changes
+
+- Updated dependencies [056c471]
+  - @ai-sdk/provider-utils@3.0.17
+
+## 2.0.64
+
+### Patch Changes
+
+- d251e53: feat(openai): add `o3-deep-research` and `o4-mini-deep-research` models
+
+## 2.0.63
+
+### Patch Changes
+
+- 3b62c49: fix(openai): extract meta data from first chunk that contains any
+
+## 2.0.62
+
+### Patch Changes
+
+- 51aa5de: backport: test server
+- Updated dependencies [51aa5de]
+  - @ai-sdk/provider-utils@3.0.16
+
+## 2.0.61
+
+### Patch Changes
+
+- 28ce89a: fix(openai): add support for sources type 'api'
+
+## 2.0.60
+
+### Patch Changes
+
+- 3e42838: fix: remove code for unsuported o1-mini and o1-preview models
+
+## 2.0.59
+
+### Patch Changes
+
+- Updated dependencies [f2da310]
+  - @ai-sdk/provider-utils@3.0.15
+
+## 2.0.58
+
+### Patch Changes
+
+- 0f9d079: fix(openai): revised_prompt sometimes returns null, causing errors
+
+## 2.0.57
+
+### Patch Changes
+
+- Updated dependencies [949718b]
+  - @ai-sdk/provider-utils@3.0.14
+
+## 2.0.56
+
+### Patch Changes
+
+- b82d23b: feat(openai): preserve file_id when converting file citations
+
+## 2.0.55
+
+### Patch Changes
+
+- 2f4a59a: feat(openai): add sources in web-search actions
+
+## 2.0.54
+
+### Patch Changes
+
+- Updated dependencies [1e05490]
+  - @ai-sdk/provider-utils@3.0.13
+
 ## 2.0.53
 
 ### Patch Changes

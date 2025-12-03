@@ -1,5 +1,90 @@
 # @ai-sdk/xai
 
+## 2.0.39
+
+### Patch Changes
+
+- Updated dependencies [d1dbe5d]
+  - @ai-sdk/provider-utils@3.0.18
+  - @ai-sdk/openai-compatible@1.0.28
+
+## 2.0.38
+
+### Patch Changes
+
+- c6eb78c: add grok-4-1 model IDs
+
+## 2.0.37
+
+### Patch Changes
+
+- 864881c: Fix Responses API validation errors for server-side tools (web_search, x_search, code_execution). Add missing custom_tool_call type and streaming event schemas.
+
+## 2.0.36
+
+### Patch Changes
+
+- 97b820b: fix(xai): responses model fixes
+
+## 2.0.35
+
+### Patch Changes
+
+- 4b86c09: feat: xai server-side tool calling
+
+## 2.0.34
+
+### Patch Changes
+
+- 2c6ea5c: fix(xai): add cache input tokens
+
+## 2.0.33
+
+### Patch Changes
+
+- 88d06ad: fix(provider/xai): remove json schema unsupported warning
+
+## 2.0.32
+
+### Patch Changes
+
+- Updated dependencies [056c471]
+  - @ai-sdk/provider-utils@3.0.17
+  - @ai-sdk/openai-compatible@1.0.27
+
+## 2.0.31
+
+### Patch Changes
+
+- 51aa5de: backport: test server
+- Updated dependencies [51aa5de]
+  - @ai-sdk/openai-compatible@1.0.26
+  - @ai-sdk/provider-utils@3.0.16
+
+## 2.0.30
+
+### Patch Changes
+
+- Updated dependencies [f2da310]
+  - @ai-sdk/provider-utils@3.0.15
+  - @ai-sdk/openai-compatible@1.0.25
+
+## 2.0.29
+
+### Patch Changes
+
+- Updated dependencies [949718b]
+  - @ai-sdk/provider-utils@3.0.14
+  - @ai-sdk/openai-compatible@1.0.24
+
+## 2.0.28
+
+### Patch Changes
+
+- Updated dependencies [1e05490]
+  - @ai-sdk/provider-utils@3.0.13
+  - @ai-sdk/openai-compatible@1.0.23
+
 ## 2.0.27
 
 ### Patch Changes

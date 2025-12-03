@@ -1,5 +1,121 @@
 # @ai-sdk/gateway
 
+## 2.0.18
+
+### Patch Changes
+
+- 667f74c: feat (provider/gateway): add trinity-mini model id
+
+## 2.0.17
+
+### Patch Changes
+
+- Updated dependencies [d1dbe5d]
+  - @ai-sdk/provider-utils@3.0.18
+
+## 2.0.16
+
+### Patch Changes
+
+- e609736: feat (provider/gateway): add intellect-3 model id
+
+## 2.0.15
+
+### Patch Changes
+
+- c5a42ec: feat(provider/gateway): Server-side image request splitting
+
+## 2.0.14
+
+### Patch Changes
+
+- c9520e5: fix(provider/gateway): Fix Gateway image model provider options not passing through
+- 2382c89: feat(provider/gateway): Change default maxImagesPerCall per-provider
+
+## 2.0.13
+
+### Patch Changes
+
+- 8c54c71: feat(provider/gateway): update gateway model string autocomplete
+
+## 2.0.12
+
+### Patch Changes
+
+- 6465dc3: bump `@vercel/oidc` to 3.0.5
+
+## 2.0.11
+
+### Patch Changes
+
+- a20e687: feat(provider/gateway): add support for image models
+
+## 2.0.10
+
+### Patch Changes
+
+- 646dc54: feat(provider/gateway): Add Gemini 3 Pro to Gateway autocomplete
+
+## 2.0.9
+
+### Patch Changes
+
+- 29fbd2d: feat(provider/gateway): Add Kimi K2 Thinking models to Gateway model string autocomplete
+
+## 2.0.8
+
+### Patch Changes
+
+- Updated dependencies [056c471]
+  - @ai-sdk/provider-utils@3.0.17
+
+## 2.0.7
+
+### Patch Changes
+
+- 46dcc02: feat(provider/gateway): Add o3-deep-research to gateway model string autocomplete
+
+## 2.0.6
+
+### Patch Changes
+
+- 51aa5de: backport: test server
+- Updated dependencies [51aa5de]
+  - @ai-sdk/provider-utils@3.0.16
+
+## 2.0.5
+
+### Patch Changes
+
+- Updated dependencies [f2da310]
+  - @ai-sdk/provider-utils@3.0.15
+
+## 2.0.4
+
+### Patch Changes
+
+- 872543c: feat(provider/gateway): Add GPT OSS Safeguard 20B to Gateway model string autocomplete
+
+## 2.0.3
+
+### Patch Changes
+
+- Updated dependencies [949718b]
+  - @ai-sdk/provider-utils@3.0.14
+
+## 2.0.2
+
+### Patch Changes
+
+- Updated dependencies [1e05490]
+  - @ai-sdk/provider-utils@3.0.13
+
+## 2.0.1
+
+### Patch Changes
+
+- f1a8734: feat (provider/gateway): add models provider option for model routing
+
 ## 2.0.0
 
 ### Major Changes

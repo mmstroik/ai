@@ -1,5 +1,109 @@
 # @ai-sdk/anthropic
 
+## 2.0.53
+
+### Patch Changes
+
+- 65dee10: fix(anthropic): simplify pulling first chunk
+
+## 2.0.52
+
+### Patch Changes
+
+- 518e786: fix(anthropic): send {} as tool input when streaming tool calls without arguments
+
+## 2.0.51
+
+### Patch Changes
+
+- a54839c: fix(anthropic): pull first chunk without async IIFE
+
+## 2.0.50
+
+### Patch Changes
+
+- d1dbe5d: throw 500 error when the first stream chunk is an error
+- Updated dependencies [d1dbe5d]
+  - @ai-sdk/provider-utils@3.0.18
+
+## 2.0.49
+
+### Patch Changes
+
+- dcdfeb7: Retain user-supplied betas.
+
+## 2.0.48
+
+### Patch Changes
+
+- f2c6cbd: feat(provider/anthropic): Anthropic-native structured outputs
+
+## 2.0.47
+
+### Patch Changes
+
+- 3a7a427: 'fix(anthropic): Opus 4.5 `maxOutputTokens` bump `32000` -> `64000`'
+
+## 2.0.46
+
+### Patch Changes
+
+- 54a0480: Opus 4.5 and `effort` provider option
+
+## 2.0.45
+
+### Patch Changes
+
+- 54b7c08: fix(provider/anthropic): clamp temperature to valid 0-1 range with warnings
+
+## 2.0.44
+
+### Patch Changes
+
+- Updated dependencies [056c471]
+  - @ai-sdk/provider-utils@3.0.17
+
+## 2.0.43
+
+### Patch Changes
+
+- e2dac8b: Support for custom provider name in google and anthropic providers
+
+## 2.0.42
+
+### Patch Changes
+
+- 035b927: fix: set providerExecuted on Anthropic web_fetch tool results
+
+## 2.0.41
+
+### Patch Changes
+
+- 51aa5de: backport: test server
+- Updated dependencies [51aa5de]
+  - @ai-sdk/provider-utils@3.0.16
+
+## 2.0.40
+
+### Patch Changes
+
+- Updated dependencies [f2da310]
+  - @ai-sdk/provider-utils@3.0.15
+
+## 2.0.39
+
+### Patch Changes
+
+- Updated dependencies [949718b]
+  - @ai-sdk/provider-utils@3.0.14
+
+## 2.0.38
+
+### Patch Changes
+
+- Updated dependencies [1e05490]
+  - @ai-sdk/provider-utils@3.0.13
+
 ## 2.0.37
 
 ### Patch Changes

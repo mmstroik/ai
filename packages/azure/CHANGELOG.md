@@ -1,5 +1,182 @@
 # @ai-sdk/azure
 
+## 2.0.78
+
+### Patch Changes
+
+- Updated dependencies [61545c4]
+  - @ai-sdk/openai@2.0.76
+
+## 2.0.77
+
+### Patch Changes
+
+- 1c7ff4a: distinguish between OpenAI and Azure in Responses API providerMetadata
+- Updated dependencies [1c7ff4a]
+  - @ai-sdk/openai@2.0.75
+
+## 2.0.76
+
+### Patch Changes
+
+- Updated dependencies [d1dbe5d]
+  - @ai-sdk/provider-utils@3.0.18
+  - @ai-sdk/openai@2.0.74
+
+## 2.0.75
+
+### Patch Changes
+
+- Updated dependencies [2e2fd83]
+  - @ai-sdk/openai@2.0.73
+
+## 2.0.74
+
+### Patch Changes
+
+- Updated dependencies [53d2fcc]
+  - @ai-sdk/openai@2.0.72
+
+## 2.0.73
+
+### Patch Changes
+
+- 29a5595: Azure OpenAI enabled web-search-preview
+- Updated dependencies [29a5595]
+  - @ai-sdk/openai@2.0.71
+
+## 2.0.72
+
+### Patch Changes
+
+- dafda29: Set the annotations from the Responses API to doStream
+- Updated dependencies [dafda29]
+  - @ai-sdk/openai@2.0.70
+
+## 2.0.71
+
+### Patch Changes
+
+- Updated dependencies [38a9f48]
+  - @ai-sdk/openai@2.0.69
+
+## 2.0.70
+
+### Patch Changes
+
+- Updated dependencies [a4c6a12]
+  - @ai-sdk/openai@2.0.68
+
+## 2.0.69
+
+### Patch Changes
+
+- Updated dependencies [3735f5a]
+  - @ai-sdk/openai@2.0.67
+
+## 2.0.68
+
+### Patch Changes
+
+- Updated dependencies [73f9178]
+  - @ai-sdk/openai@2.0.66
+
+## 2.0.67
+
+### Patch Changes
+
+- Updated dependencies [056c471]
+  - @ai-sdk/provider-utils@3.0.17
+  - @ai-sdk/openai@2.0.65
+
+## 2.0.66
+
+### Patch Changes
+
+- 98054a7: Support idempotent doGenerate/doStream with pre-supplied result chunks in Responses API tests.
+
+## 2.0.65
+
+### Patch Changes
+
+- Updated dependencies [d251e53]
+  - @ai-sdk/openai@2.0.64
+
+## 2.0.64
+
+### Patch Changes
+
+- Updated dependencies [3b62c49]
+  - @ai-sdk/openai@2.0.63
+
+## 2.0.63
+
+### Patch Changes
+
+- 51aa5de: backport: test server
+- Updated dependencies [51aa5de]
+  - @ai-sdk/provider-utils@3.0.16
+  - @ai-sdk/openai@2.0.62
+
+## 2.0.62
+
+### Patch Changes
+
+- Updated dependencies [28ce89a]
+  - @ai-sdk/openai@2.0.61
+
+## 2.0.61
+
+### Patch Changes
+
+- Updated dependencies [3e42838]
+  - @ai-sdk/openai@2.0.60
+
+## 2.0.60
+
+### Patch Changes
+
+- Updated dependencies [f2da310]
+  - @ai-sdk/provider-utils@3.0.15
+  - @ai-sdk/openai@2.0.59
+
+## 2.0.59
+
+### Patch Changes
+
+- Updated dependencies [0f9d079]
+  - @ai-sdk/openai@2.0.58
+
+## 2.0.58
+
+### Patch Changes
+
+- Updated dependencies [949718b]
+  - @ai-sdk/provider-utils@3.0.14
+  - @ai-sdk/openai@2.0.57
+
+## 2.0.57
+
+### Patch Changes
+
+- Updated dependencies [b82d23b]
+  - @ai-sdk/openai@2.0.56
+
+## 2.0.56
+
+### Patch Changes
+
+- Updated dependencies [2f4a59a]
+  - @ai-sdk/openai@2.0.55
+
+## 2.0.55
+
+### Patch Changes
+
+- Updated dependencies [1e05490]
+  - @ai-sdk/provider-utils@3.0.13
+  - @ai-sdk/openai@2.0.54
+
 ## 2.0.54
 
 ### Patch Changes
