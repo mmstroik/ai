@@ -1,5 +1,29 @@
 # @ai-sdk/anthropic
 
+## 2.0.37
+
+### Patch Changes
+
+- de1d309: fix(provider/anthropic): do not limit maxTokens when model id is unknown
+
+## 2.0.36
+
+### Patch Changes
+
+- 5a46f11: add return `file_id` property for anthropic code-execution-20250825 to download output files.
+
+## 2.0.35
+
+### Patch Changes
+
+- 1091a20: support ANTHROPIC_BASE_URL
+
+## 2.0.34
+
+### Patch Changes
+
+- 65f2628: feat(provider/anthropic): expose container from response in provider metadata
+
 ## 2.0.33
 
 ### Patch Changes
