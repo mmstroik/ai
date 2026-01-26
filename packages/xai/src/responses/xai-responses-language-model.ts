@@ -65,6 +65,7 @@ export class XaiResponsesLanguageModel implements LanguageModelV2 {
     topP,
     stopSequences,
     seed,
+    responseFormat,
     providerOptions,
     tools,
     toolChoice,
@@ -117,10 +118,24 @@ export class XaiResponsesLanguageModel implements LanguageModelV2 {
     const baseArgs: Record<string, unknown> = {
       model: this.modelId,
       input,
-      max_tokens: maxOutputTokens,
+      max_output_tokens: maxOutputTokens,
       temperature,
       top_p: topP,
       seed,
+      ...(responseFormat?.type === 'json' && {
+        text: {
+          format:
+            responseFormat.schema != null
+              ? {
+                  type: 'json_schema',
+                  strict: true,
+                  name: responseFormat.name ?? 'response',
+                  description: responseFormat.description,
+                  schema: responseFormat.schema,
+                }
+              : { type: 'json_object' },
+        },
+      }),
       ...(options.reasoningEffort != null && {
         reasoning: { effort: options.reasoningEffort },
       }),
@@ -202,11 +217,21 @@ export class XaiResponsesLanguageModel implements LanguageModelV2 {
         part.type === 'custom_tool_call'
       ) {
         let toolName = part.name ?? '';
-        if (webSearchSubTools.includes(part.name ?? '')) {
+        if (
+          webSearchSubTools.includes(part.name ?? '') ||
+          part.type === 'web_search_call'
+        ) {
           toolName = webSearchToolName ?? 'web_search';
-        } else if (xSearchSubTools.includes(part.name ?? '')) {
+        } else if (
+          xSearchSubTools.includes(part.name ?? '') ||
+          part.type === 'x_search_call'
+        ) {
           toolName = xSearchToolName ?? 'x_search';
-        } else if (part.name === 'code_execution') {
+        } else if (
+          part.name === 'code_execution' ||
+          part.type === 'code_interpreter_call' ||
+          part.type === 'code_execution_call'
+        ) {
           toolName = codeExecutionToolName ?? 'code_execution';
         }
 
@@ -265,6 +290,36 @@ export class XaiResponsesLanguageModel implements LanguageModelV2 {
           break;
         }
 
+        case 'reasoning': {
+          const summaryTexts = part.summary
+            .map(s => s.text)
+            .filter(text => text && text.length > 0);
+
+          if (summaryTexts.length > 0) {
+            const reasoningText = summaryTexts.join('');
+            if (part.encrypted_content || part.id) {
+              content.push({
+                type: 'reasoning',
+                text: reasoningText,
+                providerMetadata: {
+                  xai: {
+                    ...(part.encrypted_content && {
+                      reasoningEncryptedContent: part.encrypted_content,
+                    }),
+                    ...(part.id && { itemId: part.id }),
+                  },
+                },
+              });
+            } else {
+              content.push({
+                type: 'reasoning',
+                text: reasoningText,
+              });
+            }
+          }
+          break;
+        }
+
         default: {
           break;
         }
@@ -274,12 +329,21 @@ export class XaiResponsesLanguageModel implements LanguageModelV2 {
     return {
       content,
       finishReason: mapXaiResponsesFinishReason(response.status),
-      usage: {
-        inputTokens: response.usage.input_tokens,
-        outputTokens: response.usage.output_tokens,
-        totalTokens: response.usage.total_tokens,
-        reasoningTokens: response.usage.output_tokens_details?.reasoning_tokens,
-      },
+      usage: response.usage
+        ? {
+            inputTokens: response.usage.input_tokens,
+            outputTokens: response.usage.output_tokens,
+            totalTokens: response.usage.total_tokens,
+            reasoningTokens:
+              response.usage.output_tokens_details?.reasoning_tokens,
+            cachedInputTokens:
+              response.usage.input_tokens_details?.cached_tokens,
+          }
+        : {
+            inputTokens: 0,
+            outputTokens: 0,
+            totalTokens: 0,
+          },
       request: { body },
       response: {
         ...getResponseMetadata(response),
@@ -327,6 +391,11 @@ export class XaiResponsesLanguageModel implements LanguageModelV2 {
     const contentBlocks: Record<string, { type: 'text' }> = {};
     const seenToolCalls = new Set<string>();
 
+    const activeReasoning: Record<
+      string,
+      { encryptedContent?: string | null }
+    > = {};
+
     const self = this;
 
     return {
@@ -371,6 +440,11 @@ export class XaiResponsesLanguageModel implements LanguageModelV2 {
               controller.enqueue({
                 type: 'reasoning-start',
                 id: blockId,
+                providerMetadata: {
+                  xai: {
+                    itemId: event.item_id,
+                  },
+                },
               });
             }
 
@@ -381,18 +455,18 @@ export class XaiResponsesLanguageModel implements LanguageModelV2 {
                 type: 'reasoning-delta',
                 id: blockId,
                 delta: event.delta,
+                providerMetadata: {
+                  xai: {
+                    itemId: event.item_id,
+                  },
+                },
               });
 
               return;
             }
 
             if (event.type === 'response.reasoning_summary_text.done') {
-              const blockId = `reasoning-${event.item_id}`;
-
-              controller.enqueue({
-                type: 'reasoning-end',
-                id: blockId,
-              });
+              return;
             }
 
             if (event.type === 'response.output_text.delta') {
@@ -459,6 +533,8 @@ export class XaiResponsesLanguageModel implements LanguageModelV2 {
 
               if (response.usage) {
                 usage.inputTokens = response.usage.input_tokens;
+                usage.cachedInputTokens =
+                  response.usage.input_tokens_details?.cached_tokens;
                 usage.outputTokens = response.usage.output_tokens;
                 usage.totalTokens = response.usage.total_tokens;
                 usage.reasoningTokens =
@@ -477,6 +553,25 @@ export class XaiResponsesLanguageModel implements LanguageModelV2 {
               event.type === 'response.output_item.done'
             ) {
               const part = event.item;
+              if (part.type === 'reasoning') {
+                if (event.type === 'response.output_item.done') {
+                  controller.enqueue({
+                    type: 'reasoning-end',
+                    id: `reasoning-${part.id}`,
+                    providerMetadata: {
+                      xai: {
+                        ...(part.encrypted_content && {
+                          reasoningEncryptedContent: part.encrypted_content,
+                        }),
+                        ...(part.id && { itemId: part.id }),
+                      },
+                    },
+                  });
+                  delete activeReasoning[part.id];
+                }
+                return;
+              }
+
               if (
                 part.type === 'web_search_call' ||
                 part.type === 'x_search_call' ||
@@ -486,35 +581,52 @@ export class XaiResponsesLanguageModel implements LanguageModelV2 {
                 part.type === 'view_x_video_call' ||
                 part.type === 'custom_tool_call'
               ) {
-                if (!seenToolCalls.has(part.id)) {
+                const webSearchSubTools = [
+                  'web_search',
+                  'web_search_with_snippets',
+                  'browse_page',
+                ];
+                const xSearchSubTools = [
+                  'x_user_search',
+                  'x_keyword_search',
+                  'x_semantic_search',
+                  'x_thread_fetch',
+                ];
+
+                let toolName = part.name ?? '';
+                if (
+                  webSearchSubTools.includes(part.name ?? '') ||
+                  part.type === 'web_search_call'
+                ) {
+                  toolName = webSearchToolName ?? 'web_search';
+                } else if (
+                  xSearchSubTools.includes(part.name ?? '') ||
+                  part.type === 'x_search_call'
+                ) {
+                  toolName = xSearchToolName ?? 'x_search';
+                } else if (
+                  part.name === 'code_execution' ||
+                  part.type === 'code_interpreter_call' ||
+                  part.type === 'code_execution_call'
+                ) {
+                  toolName = codeExecutionToolName ?? 'code_execution';
+                }
+
+                // custom_tool_call uses 'input' field, others use 'arguments'
+                const toolInput =
+                  part.type === 'custom_tool_call'
+                    ? (part.input ?? '')
+                    : (part.arguments ?? '');
+
+                // for custom_tool_call, input is only available on 'done' event
+                // for other types, input is available on 'added' event
+                const shouldEmit =
+                  part.type === 'custom_tool_call'
+                    ? event.type === 'response.output_item.done'
+                    : !seenToolCalls.has(part.id);
+
+                if (shouldEmit && !seenToolCalls.has(part.id)) {
                   seenToolCalls.add(part.id);
-
-                  const webSearchSubTools = [
-                    'web_search',
-                    'web_search_with_snippets',
-                    'browse_page',
-                  ];
-                  const xSearchSubTools = [
-                    'x_user_search',
-                    'x_keyword_search',
-                    'x_semantic_search',
-                    'x_thread_fetch',
-                  ];
-
-                  let toolName = part.name ?? '';
-                  if (webSearchSubTools.includes(part.name ?? '')) {
-                    toolName = webSearchToolName ?? 'web_search';
-                  } else if (xSearchSubTools.includes(part.name ?? '')) {
-                    toolName = xSearchToolName ?? 'x_search';
-                  } else if (part.name === 'code_execution') {
-                    toolName = codeExecutionToolName ?? 'code_execution';
-                  }
-
-                  // custom_tool_call uses 'input' field, others use 'arguments'
-                  const toolInput =
-                    part.type === 'custom_tool_call'
-                      ? (part.input ?? '')
-                      : (part.arguments ?? '');
 
                   controller.enqueue({
                     type: 'tool-input-start',
@@ -556,13 +668,13 @@ export class XaiResponsesLanguageModel implements LanguageModelV2 {
                         type: 'text-start',
                         id: blockId,
                       });
-                    }
 
-                    controller.enqueue({
-                      type: 'text-delta',
-                      id: blockId,
-                      delta: contentPart.text,
-                    });
+                      controller.enqueue({
+                        type: 'text-delta',
+                        id: blockId,
+                        delta: contentPart.text,
+                      });
+                    }
                   }
 
                   if (contentPart.annotations) {

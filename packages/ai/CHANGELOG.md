@@ -1,5 +1,122 @@
 # ai
 
+## 5.0.123
+
+### Patch Changes
+
+- Updated dependencies [5253b83]
+  - @ai-sdk/gateway@2.0.29
+
+## 5.0.122
+
+### Patch Changes
+
+- Updated dependencies [9158228]
+  - @ai-sdk/gateway@2.0.28
+
+## 5.0.121
+
+### Patch Changes
+
+- Updated dependencies [74676fa]
+  - @ai-sdk/gateway@2.0.27
+
+## 5.0.120
+
+### Patch Changes
+
+- Updated dependencies [655377e]
+  - @ai-sdk/gateway@2.0.26
+
+## 5.0.119
+
+### Patch Changes
+
+- Updated dependencies [f6b46d2]
+  - @ai-sdk/gateway@2.0.25
+
+## 5.0.118
+
+### Patch Changes
+
+- 42bad72: `https://ai-sdk.dev` -> `https://v5.ai-sdk.dev`
+
+## 5.0.117
+
+### Patch Changes
+
+- 526fe8d: fix: trigger new release for `@ai-v5` dist-tag
+- Updated dependencies [526fe8d]
+  - @ai-sdk/gateway@2.0.24
+  - @ai-sdk/provider@2.0.1
+  - @ai-sdk/provider-utils@3.0.20
+
+## 5.0.116
+
+### Patch Changes
+
+- Updated dependencies [e3de981]
+  - @ai-sdk/gateway@2.0.23
+
+## 5.0.115
+
+### Patch Changes
+
+- Updated dependencies [1bcc2d7]
+  - @ai-sdk/gateway@2.0.22
+
+## 5.0.114
+
+### Patch Changes
+
+- fc633bd: fix header loss when statusText is undefined in writeHead
+
+## 5.0.113
+
+### Patch Changes
+
+- 7e6fb4d: fix(gateway): throw error with user-friendly message in non-production environments if `AI_GATEWAY_API_KEY` is not configured
+
+## 5.0.112
+
+### Patch Changes
+
+- Updated dependencies [041a4fc]
+  - @ai-sdk/gateway@2.0.21
+
+## 5.0.111
+
+### Patch Changes
+
+- Updated dependencies [ef6d784]
+  - @ai-sdk/provider-utils@3.0.19
+  - @ai-sdk/gateway@2.0.20
+
+## 5.0.110
+
+### Patch Changes
+
+- Updated dependencies [51bbaa1]
+  - @ai-sdk/gateway@2.0.19
+
+## 5.0.109
+
+### Patch Changes
+
+- 427547a: Improve ai gateway error message when api key is not present
+
+## 5.0.108
+
+### Patch Changes
+
+- 03cafbc: chore(ai): export ContentPart type
+
+## 5.0.107
+
+### Patch Changes
+
+- 21c9f90: fix(ai): remove unused mode setting from generateObject and streamObject
+
 ## 5.0.106
 
 ### Patch Changes

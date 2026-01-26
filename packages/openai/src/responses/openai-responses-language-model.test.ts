@@ -248,6 +248,43 @@ describe('OpenAIResponsesLanguageModel', () => {
         expect(warnings).toStrictEqual([]);
       });
 
+      it('should keep temperature and topP for gpt-5.1 models when reasoning effort is none', async () => {
+        const { warnings } = await createModel('gpt-5.1').doGenerate({
+          prompt: TEST_PROMPT,
+          temperature: 0.5,
+          topP: 0.3,
+          providerOptions: {
+            openai: {
+              reasoningEffort: 'none',
+            } satisfies OpenAIResponsesProviderOptions,
+          },
+        });
+
+        expect(await server.calls[0].requestBodyJson).toMatchInlineSnapshot(`
+          {
+            "input": [
+              {
+                "content": [
+                  {
+                    "text": "Hello",
+                    "type": "input_text",
+                  },
+                ],
+                "role": "user",
+              },
+            ],
+            "model": "gpt-5.1",
+            "reasoning": {
+              "effort": "none",
+            },
+            "temperature": 0.5,
+            "top_p": 0.3,
+          }
+        `);
+
+        expect(warnings).toMatchInlineSnapshot(`[]`);
+      });
+
       it('should remove unsupported settings for o1', async () => {
         const { warnings } = await createModel('o1').doGenerate({
           prompt: [
@@ -695,6 +732,32 @@ describe('OpenAIResponsesLanguageModel', () => {
           expect(warnings).toStrictEqual([]);
         },
       );
+
+      it('should send xhigh reasoningEffort for codex-max model', async () => {
+        const { warnings } = await createModel('gpt-5.1-codex-max').doGenerate({
+          prompt: TEST_PROMPT,
+          providerOptions: {
+            openai: {
+              reasoningEffort: 'xhigh',
+            } satisfies OpenAIResponsesProviderOptions,
+          },
+        });
+
+        expect(await server.calls[0].requestBodyJson).toStrictEqual({
+          model: 'gpt-5.1-codex-max',
+          input: [
+            {
+              role: 'user',
+              content: [{ type: 'input_text', text: 'Hello' }],
+            },
+          ],
+          reasoning: {
+            effort: 'xhigh',
+          },
+        });
+
+        expect(warnings).toStrictEqual([]);
+      });
 
       it.each(nonReasoningModelIds)(
         'should not send and warn about unsupported reasoningEffort and reasoningSummary provider options for %s',

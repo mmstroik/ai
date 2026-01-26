@@ -1,5 +1,69 @@
 # @ai-sdk/amazon-bedrock
 
+## 3.0.73
+
+### Patch Changes
+
+- 526fe8d: fix: trigger new release for `@ai-v5` dist-tag
+- Updated dependencies [526fe8d]
+  - @ai-sdk/anthropic@2.0.57
+  - @ai-sdk/provider@2.0.1
+  - @ai-sdk/provider-utils@3.0.20
+
+## 3.0.72
+
+### Patch Changes
+
+- 4f0e5af: Fix bedrock ConverseStream using /delta/stop_sequence
+
+## 3.0.71
+
+### Patch Changes
+
+- 11cb33e: feat(provider/amazon-bedrock): expose stop_sequence in provider metadata
+
+  The Bedrock provider now exposes the specific stop sequence that triggered generation to halt via `providerMetadata.bedrock.stopSequence`. This is implemented by:
+
+  - Requesting `/stop_sequence` via `additionalModelResponseFieldPaths` in the API call
+  - Parsing the value from `additionalModelResponseFields.stop_sequence` in both generate and stream responses
+  - Exposing it as `stopSequence` in the provider metadata (returns `null` when no stop sequence was matched)
+
+- 11cb33e: Add stop sequence support for amazon bedrock provider
+
+## 3.0.70
+
+### Patch Changes
+
+- Updated dependencies [3716d34]
+  - @ai-sdk/anthropic@2.0.56
+
+## 3.0.69
+
+### Patch Changes
+
+- Updated dependencies [ef6d784]
+  - @ai-sdk/provider-utils@3.0.19
+  - @ai-sdk/anthropic@2.0.55
+
+## 3.0.68
+
+### Patch Changes
+
+- Updated dependencies [ccf34f3]
+  - @ai-sdk/anthropic@2.0.54
+
+## 3.0.67
+
+### Patch Changes
+
+- 1887f82: fix(bedrock): send {} as tool input when streaming tool calls without arguments
+
+## 3.0.66
+
+### Patch Changes
+
+- c36a1ad: feat(provider/bedrock): Support Nova 2 extended reasoning `maxReasoningEffort` field
+
 ## 3.0.65
 
 ### Patch Changes

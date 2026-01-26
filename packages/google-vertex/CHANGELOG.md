@@ -1,5 +1,91 @@
 # @ai-sdk/google-vertex
 
+## 3.0.97
+
+### Patch Changes
+
+- 526fe8d: fix: trigger new release for `@ai-v5` dist-tag
+- Updated dependencies [526fe8d]
+  - @ai-sdk/anthropic@2.0.57
+  - @ai-sdk/google@2.0.52
+  - @ai-sdk/provider@2.0.1
+  - @ai-sdk/provider-utils@3.0.20
+
+## 3.0.96
+
+### Patch Changes
+
+- Updated dependencies [cbc2dba]
+  - @ai-sdk/google@2.0.51
+
+## 3.0.95
+
+### Patch Changes
+
+- Updated dependencies [7c30c1d]
+  - @ai-sdk/google@2.0.50
+
+## 3.0.94
+
+### Patch Changes
+
+- 3ea80e7: feat(provider/google): add enterpriseWebSearch tool
+- Updated dependencies [3ea80e7]
+  - @ai-sdk/google@2.0.49
+
+## 3.0.93
+
+### Patch Changes
+
+- 1bcc2d7: feat(google): gemini-3-flash
+- Updated dependencies [1bcc2d7]
+  - @ai-sdk/google@2.0.48
+
+## 3.0.92
+
+### Patch Changes
+
+- 0e182c5: Add Google Maps grounding tool support for location-aware Gemini responses
+- Updated dependencies [0e182c5]
+  - @ai-sdk/google@2.0.47
+
+## 3.0.91
+
+### Patch Changes
+
+- 97c861d: Remove duplicate gemini-1.0-pro-001 model ID
+
+## 3.0.90
+
+### Patch Changes
+
+- Updated dependencies [3716d34]
+  - @ai-sdk/anthropic@2.0.56
+
+## 3.0.89
+
+### Patch Changes
+
+- Updated dependencies [ef6d784]
+  - @ai-sdk/provider-utils@3.0.19
+  - @ai-sdk/anthropic@2.0.55
+  - @ai-sdk/google@2.0.46
+
+## 3.0.88
+
+### Patch Changes
+
+- Updated dependencies [ccf34f3]
+  - @ai-sdk/anthropic@2.0.54
+
+## 3.0.87
+
+### Patch Changes
+
+- 363b1f5: fix(google,google-vertex): update known model IDs
+- Updated dependencies [363b1f5]
+  - @ai-sdk/google@2.0.45
+
 ## 3.0.86
 
 ### Patch Changes

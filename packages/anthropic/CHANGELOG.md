@@ -1,5 +1,33 @@
 # @ai-sdk/anthropic
 
+## 2.0.57
+
+### Patch Changes
+
+- 526fe8d: fix: trigger new release for `@ai-v5` dist-tag
+- Updated dependencies [526fe8d]
+  - @ai-sdk/provider@2.0.1
+  - @ai-sdk/provider-utils@3.0.20
+
+## 2.0.56
+
+### Patch Changes
+
+- 3716d34: fix(anthropic): support pdf responses in web_fetch_tool_result schema validation
+
+## 2.0.55
+
+### Patch Changes
+
+- Updated dependencies [ef6d784]
+  - @ai-sdk/provider-utils@3.0.19
+
+## 2.0.54
+
+### Patch Changes
+
+- ccf34f3: fix(anthropic): make title field nullable in web_fetch and web_search tool output schemas
+
 ## 2.0.53
 
 ### Patch Changes

@@ -104,6 +104,17 @@ export function prepareTools({
             googleTools.push({ googleSearchRetrieval: {} });
           }
           break;
+        case 'google.enterprise_web_search':
+          if (isGemini2orNewer) {
+            googleTools.push({ enterpriseWebSearch: {} });
+          } else {
+            toolWarnings.push({
+              type: 'unsupported-tool',
+              tool,
+              details: 'Enterprise Web Search requires Gemini 2.0 or newer.',
+            });
+          }
+          break;
         case 'google.url_context':
           if (isGemini2orNewer) {
             googleTools.push({ urlContext: {} });
@@ -158,6 +169,18 @@ export function prepareTools({
               tool,
               details:
                 'The RAG store tool is not supported with other Gemini models than Gemini 2.',
+            });
+          }
+          break;
+        case 'google.google_maps':
+          if (isGemini2orNewer) {
+            googleTools.push({ googleMaps: {} });
+          } else {
+            toolWarnings.push({
+              type: 'unsupported-tool',
+              tool,
+              details:
+                'The Google Maps grounding tool is not supported with Gemini models other than Gemini 2 or newer.',
             });
           }
           break;

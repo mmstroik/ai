@@ -1,5 +1,115 @@
 # @ai-sdk/langchain
 
+## 1.0.123
+
+### Patch Changes
+
+- ai@5.0.123
+
+## 1.0.122
+
+### Patch Changes
+
+- ai@5.0.122
+
+## 1.0.121
+
+### Patch Changes
+
+- ai@5.0.121
+
+## 1.0.120
+
+### Patch Changes
+
+- ai@5.0.120
+
+## 1.0.119
+
+### Patch Changes
+
+- ai@5.0.119
+
+## 1.0.118
+
+### Patch Changes
+
+- Updated dependencies [42bad72]
+  - ai@5.0.118
+
+## 1.0.117
+
+### Patch Changes
+
+- 526fe8d: fix: trigger new release for `@ai-v5` dist-tag
+- Updated dependencies [526fe8d]
+  - ai@5.0.117
+
+## 1.0.116
+
+### Patch Changes
+
+- ai@5.0.116
+
+## 1.0.115
+
+### Patch Changes
+
+- ai@5.0.115
+
+## 1.0.114
+
+### Patch Changes
+
+- Updated dependencies [fc633bd]
+  - ai@5.0.114
+
+## 1.0.113
+
+### Patch Changes
+
+- Updated dependencies [7e6fb4d]
+  - ai@5.0.113
+
+## 1.0.112
+
+### Patch Changes
+
+- ai@5.0.112
+
+## 1.0.111
+
+### Patch Changes
+
+- ai@5.0.111
+
+## 1.0.110
+
+### Patch Changes
+
+- ai@5.0.110
+
+## 1.0.109
+
+### Patch Changes
+
+- Updated dependencies [427547a]
+  - ai@5.0.109
+
+## 1.0.108
+
+### Patch Changes
+
+- Updated dependencies [03cafbc]
+  - ai@5.0.108
+
+## 1.0.107
+
+### Patch Changes
+
+- Updated dependencies [21c9f90]
+  - ai@5.0.107
+
 ## 1.0.106
 
 ### Patch Changes

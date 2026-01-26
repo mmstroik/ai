@@ -1,5 +1,130 @@
 # @ai-sdk/react
 
+## 2.0.125
+
+### Patch Changes
+
+- ai@5.0.123
+
+## 2.0.124
+
+### Patch Changes
+
+- ai@5.0.122
+
+## 2.0.123
+
+### Patch Changes
+
+- ai@5.0.121
+
+## 2.0.122
+
+### Patch Changes
+
+- ai@5.0.120
+
+## 2.0.121
+
+### Patch Changes
+
+- ai@5.0.119
+
+## 2.0.120
+
+### Patch Changes
+
+- Updated dependencies [42bad72]
+  - ai@5.0.118
+
+## 2.0.119
+
+### Patch Changes
+
+- 526fe8d: fix: trigger new release for `@ai-v5` dist-tag
+- Updated dependencies [526fe8d]
+  - ai@5.0.117
+  - @ai-sdk/provider-utils@3.0.20
+
+## 2.0.118
+
+### Patch Changes
+
+- ai@5.0.116
+
+## 2.0.117
+
+### Patch Changes
+
+- ai@5.0.115
+
+## 2.0.116
+
+### Patch Changes
+
+- Updated dependencies [fc633bd]
+  - ai@5.0.114
+
+## 2.0.115
+
+### Patch Changes
+
+- Updated dependencies [7e6fb4d]
+  - ai@5.0.113
+
+## 2.0.114
+
+### Patch Changes
+
+- ai@5.0.112
+
+## 2.0.113
+
+### Patch Changes
+
+- Updated dependencies [ef6d784]
+  - @ai-sdk/provider-utils@3.0.19
+  - ai@5.0.111
+
+## 2.0.112
+
+### Patch Changes
+
+- ai@5.0.110
+
+## 2.0.111
+
+### Patch Changes
+
+- Updated dependencies [427547a]
+  - ai@5.0.109
+
+## 2.0.110
+
+### Patch Changes
+
+- 52e8efe: Require minimal versions for RSC to address CVE-2025-55182
+
+## 2.0.109
+
+### Patch Changes
+
+- 4520a7f: Fix subscribeToMessages callback dependency in useChat
+
+## 2.0.108
+
+### Patch Changes
+
+- Updated dependencies [03cafbc]
+  - ai@5.0.108
+
+## 2.0.107
+
+### Patch Changes
+
+- Updated dependencies [21c9f90]
+  - ai@5.0.107
+
 ## 2.0.106
 
 ### Patch Changes

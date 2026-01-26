@@ -172,8 +172,11 @@ export class BedrockChatLanguageModel implements LanguageModelV2 {
       };
     }
 
-    const isThinking = bedrockOptions.reasoningConfig?.type === 'enabled';
+    const isAnthropicModel = this.modelId.includes('anthropic');
+    const isThinkingRequested =
+      bedrockOptions.reasoningConfig?.type === 'enabled';
     const thinkingBudget = bedrockOptions.reasoningConfig?.budgetTokens;
+    const isAnthropicThinkingEnabled = isAnthropicModel && isThinkingRequested;
 
     const inferenceConfig = {
       ...(maxOutputTokens != null && { maxTokens: maxOutputTokens }),
@@ -183,8 +186,7 @@ export class BedrockChatLanguageModel implements LanguageModelV2 {
       ...(stopSequences != null && { stopSequences }),
     };
 
-    // Adjust maxTokens if thinking is enabled
-    if (isThinking && thinkingBudget != null) {
+    if (isAnthropicThinkingEnabled && thinkingBudget != null) {
       if (inferenceConfig.maxTokens != null) {
         inferenceConfig.maxTokens += thinkingBudget;
       } else {
@@ -199,10 +201,37 @@ export class BedrockChatLanguageModel implements LanguageModelV2 {
           budget_tokens: thinkingBudget,
         },
       };
+    } else if (!isAnthropicModel && thinkingBudget != null) {
+      warnings.push({
+        type: 'unsupported-setting',
+        setting: 'providerOptions',
+        details:
+          'budgetTokens applies only to Anthropic models on Bedrock and will be ignored for this model.',
+      });
     }
 
-    // Remove temperature if thinking is enabled
-    if (isThinking && inferenceConfig.temperature != null) {
+    const maxReasoningEffort =
+      bedrockOptions.reasoningConfig?.maxReasoningEffort;
+    if (maxReasoningEffort != null && !isAnthropicModel) {
+      bedrockOptions.additionalModelRequestFields = {
+        ...bedrockOptions.additionalModelRequestFields,
+        reasoningConfig: {
+          ...(bedrockOptions.reasoningConfig?.type != null && {
+            type: bedrockOptions.reasoningConfig.type,
+          }),
+          maxReasoningEffort,
+        },
+      };
+    } else if (maxReasoningEffort != null && isAnthropicModel) {
+      warnings.push({
+        type: 'unsupported-setting',
+        setting: 'providerOptions',
+        details:
+          'maxReasoningEffort applies only to Amazon Nova models on Bedrock and will be ignored for this model.',
+      });
+    }
+
+    if (isAnthropicThinkingEnabled && inferenceConfig.temperature != null) {
       delete inferenceConfig.temperature;
       warnings.push({
         type: 'unsupported-setting',
@@ -211,8 +240,7 @@ export class BedrockChatLanguageModel implements LanguageModelV2 {
       });
     }
 
-    // Remove topP if thinking is enabled
-    if (isThinking && inferenceConfig.topP != null) {
+    if (isAnthropicThinkingEnabled && inferenceConfig.topP != null) {
       delete inferenceConfig.topP;
       warnings.push({
         type: 'unsupported-setting',
@@ -221,7 +249,7 @@ export class BedrockChatLanguageModel implements LanguageModelV2 {
       });
     }
 
-    if (isThinking && inferenceConfig.topK != null) {
+    if (isAnthropicThinkingEnabled && inferenceConfig.topK != null) {
       delete inferenceConfig.topK;
       warnings.push({
         type: 'unsupported-setting',
@@ -280,12 +308,19 @@ export class BedrockChatLanguageModel implements LanguageModelV2 {
       ...filteredBedrockOptions
     } = providerOptions?.bedrock || {};
 
+    const additionalModelResponseFieldPaths = isAnthropicModel
+      ? ['/delta/stop_sequence']
+      : undefined;
+
     return {
       command: {
         system,
         messages,
         additionalModelRequestFields:
           bedrockOptions.additionalModelRequestFields,
+        ...(additionalModelResponseFieldPaths && {
+          additionalModelResponseFieldPaths,
+        }),
         ...(Object.keys(inferenceConfig).length > 0 && {
           inferenceConfig,
         }),
@@ -395,15 +430,18 @@ export class BedrockChatLanguageModel implements LanguageModelV2 {
             type: 'tool-call' as const,
             toolCallId: part.toolUse?.toolUseId ?? this.config.generateId(),
             toolName: part.toolUse?.name ?? `tool-${this.config.generateId()}`,
-            input: JSON.stringify(part.toolUse?.input ?? ''),
+            input: JSON.stringify(part.toolUse?.input ?? {}),
           });
         }
       }
     }
 
     // provider metadata:
+    const stopSequence =
+      response.additionalModelResponseFields?.delta?.stop_sequence ?? null;
+
     const providerMetadata =
-      response.trace || response.usage || isJsonResponseFromTool
+      response.trace || response.usage || isJsonResponseFromTool || stopSequence
         ? {
             bedrock: {
               ...(response.trace && typeof response.trace === 'object'
@@ -415,6 +453,7 @@ export class BedrockChatLanguageModel implements LanguageModelV2 {
                 },
               }),
               ...(isJsonResponseFromTool && { isJsonResponseFromTool: true }),
+              stopSequence,
             },
           }
         : undefined;
@@ -472,6 +511,7 @@ export class BedrockChatLanguageModel implements LanguageModelV2 {
     };
     let providerMetadata: SharedV2ProviderMetadata | undefined = undefined;
     let isJsonResponseFromTool = false;
+    let stopSequence: string | null = null;
 
     const contentBlocks: Record<
       number,
@@ -537,6 +577,9 @@ export class BedrockChatLanguageModel implements LanguageModelV2 {
                 value.messageStop.stopReason as BedrockStopReason,
                 isJsonResponseFromTool,
               );
+              stopSequence =
+                value.messageStop.additionalModelResponseFields?.delta
+                  ?.stop_sequence ?? null;
             }
 
             if (value.metadata) {
@@ -652,7 +695,10 @@ export class BedrockChatLanguageModel implements LanguageModelV2 {
                       type: 'tool-call',
                       toolCallId: contentBlock.toolCallId,
                       toolName: contentBlock.toolName,
-                      input: contentBlock.jsonText,
+                      input:
+                        contentBlock.jsonText === ''
+                          ? '{}'
+                          : contentBlock.jsonText,
                     });
                   }
                 }
@@ -763,17 +809,23 @@ export class BedrockChatLanguageModel implements LanguageModelV2 {
             }
           },
           flush(controller) {
-            // Update provider metadata with isJsonResponseFromTool if needed
-            if (isJsonResponseFromTool) {
+            // Update provider metadata with isJsonResponseFromTool and stopSequence if needed
+            if (isJsonResponseFromTool || stopSequence != null) {
               if (providerMetadata) {
                 providerMetadata.bedrock = {
                   ...providerMetadata.bedrock,
-                  isJsonResponseFromTool: true,
+                  ...(isJsonResponseFromTool && {
+                    isJsonResponseFromTool: true,
+                  }),
+                  stopSequence,
                 };
               } else {
                 providerMetadata = {
                   bedrock: {
-                    isJsonResponseFromTool: true,
+                    ...(isJsonResponseFromTool && {
+                      isJsonResponseFromTool: true,
+                    }),
+                    stopSequence,
                   },
                 };
               }
@@ -803,6 +855,16 @@ const BedrockStopReasonSchema = z.union([
   z.enum(BEDROCK_STOP_REASONS),
   z.string(),
 ]);
+
+const BedrockAdditionalModelResponseFieldsSchema = z
+  .object({
+    delta: z
+      .object({
+        stop_sequence: z.string().nullish(),
+      })
+      .nullish(),
+  })
+  .catchall(z.unknown());
 
 const BedrockToolUseSchema = z.object({
   toolUseId: z.string(),
@@ -849,6 +911,8 @@ const BedrockResponseSchema = z.object({
     }),
   }),
   stopReason: BedrockStopReasonSchema,
+  additionalModelResponseFields:
+    BedrockAdditionalModelResponseFieldsSchema.nullish(),
   trace: z.unknown().nullish(),
   usage: z.object({
     inputTokens: z.number(),
@@ -902,9 +966,8 @@ const BedrockStreamSchema = z.object({
   internalServerException: z.record(z.string(), z.unknown()).nullish(),
   messageStop: z
     .object({
-      additionalModelResponseFields: z
-        .record(z.string(), z.unknown())
-        .nullish(),
+      additionalModelResponseFields:
+        BedrockAdditionalModelResponseFieldsSchema.nullish(),
       stopReason: BedrockStopReasonSchema,
     })
     .nullish(),

@@ -82,6 +82,11 @@ const anthropicGenerateUrl = `${baseUrl}/model/${encodeURIComponent(
   anthropicModelId,
 )}/converse`;
 
+const novaModelId = 'us.amazon.nova-2-lite-v1:0';
+const novaGenerateUrl = `${baseUrl}/model/${encodeURIComponent(
+  novaModelId,
+)}/converse`;
+
 const server = createTestServer({
   [generateUrl]: {},
   [streamUrl]: {
@@ -92,6 +97,7 @@ const server = createTestServer({
   },
   // Configure the server for the Anthropic model from the start
   [anthropicGenerateUrl]: {},
+  [novaGenerateUrl]: {},
 });
 
 function prepareJsonFixtureResponse(filename: string) {
@@ -132,6 +138,13 @@ beforeEach(() => {
 });
 
 const model = new BedrockChatLanguageModel(modelId, {
+  baseUrl: () => baseUrl,
+  headers: {},
+  fetch: fakeFetchWithAuth,
+  generateId: () => 'test-id',
+});
+
+const novaModel = new BedrockChatLanguageModel(novaModelId, {
   baseUrl: () => baseUrl,
   headers: {},
   fetch: fakeFetchWithAuth,
@@ -784,6 +797,7 @@ describe('doStream', () => {
     expect(await server.calls[0].requestBodyJson).toStrictEqual({
       messages: [{ role: 'user', content: [{ text: 'Hello' }] }],
       system: [{ text: 'System Prompt' }],
+      additionalModelResponseFieldPaths: ['/delta/stop_sequence'],
     });
   });
 
@@ -909,6 +923,105 @@ describe('doStream', () => {
         },
       ]
     `);
+  });
+
+  it('should include stop_sequence in provider metadata', async () => {
+    setupMockEventStreamHandler();
+    server.urls[streamUrl].response = {
+      type: 'stream-chunks',
+      chunks: [
+        JSON.stringify({
+          contentBlockDelta: {
+            contentBlockIndex: 0,
+            delta: { text: 'Hello' },
+          },
+        }) + '\n',
+        JSON.stringify({
+          metadata: {
+            usage: { inputTokens: 4, outputTokens: 34, totalTokens: 38 },
+          },
+        }) + '\n',
+        JSON.stringify({
+          messageStop: {
+            stopReason: 'stop_sequence',
+            additionalModelResponseFields: { delta: { stop_sequence: 'STOP' } },
+          },
+        }) + '\n',
+      ],
+    };
+
+    const { stream } = await model.doStream({
+      prompt: TEST_PROMPT,
+      stopSequences: ['STOP'],
+    });
+
+    const chunks = await convertReadableStreamToArray(stream);
+
+    expect(chunks.filter(chunk => chunk.type === 'finish'))
+      .toMatchInlineSnapshot(`
+        [
+          {
+            "finishReason": "stop",
+            "providerMetadata": {
+              "bedrock": {
+                "stopSequence": "STOP",
+              },
+            },
+            "type": "finish",
+            "usage": {
+              "cachedInputTokens": undefined,
+              "inputTokens": 4,
+              "outputTokens": 34,
+              "totalTokens": 38,
+            },
+          },
+        ]
+      `);
+  });
+
+  it('should correctly parse delta.stop_sequence structure in streaming with additional fields', async () => {
+    setupMockEventStreamHandler();
+    server.urls[streamUrl].response = {
+      type: 'stream-chunks',
+      chunks: [
+        JSON.stringify({
+          contentBlockDelta: {
+            contentBlockIndex: 0,
+            delta: { text: 'Response' },
+          },
+        }) + '\n',
+        JSON.stringify({
+          metadata: {
+            usage: { inputTokens: 5, outputTokens: 10, totalTokens: 15 },
+          },
+        }) + '\n',
+        JSON.stringify({
+          messageStop: {
+            stopReason: 'stop_sequence',
+            additionalModelResponseFields: {
+              delta: {
+                stop_sequence: 'CUSTOM_END',
+              },
+              // Additional fields that might be present
+              otherField: 'value',
+            },
+          },
+        }) + '\n',
+      ],
+    };
+
+    const { stream } = await model.doStream({
+      prompt: TEST_PROMPT,
+      stopSequences: ['CUSTOM_END'],
+    });
+
+    const chunks = await convertReadableStreamToArray(stream);
+    const finishChunk = chunks.find(chunk => chunk.type === 'finish');
+
+    expect(finishChunk?.providerMetadata?.bedrock?.stopSequence).toBe(
+      'CUSTOM_END',
+    );
+    expect(finishChunk?.finishReason).toBe('stop');
   });
 
   it('should include response headers in rawResponse', async () => {
@@ -1541,6 +1654,7 @@ describe('doStream', () => {
           "providerMetadata": {
             "bedrock": {
               "isJsonResponseFromTool": true,
+              "stopSequence": null,
             },
           },
           "type": "finish",
@@ -1614,6 +1728,7 @@ describe('doStream', () => {
           "providerMetadata": {
             "bedrock": {
               "isJsonResponseFromTool": true,
+              "stopSequence": null,
             },
           },
           "type": "finish",
@@ -1688,6 +1803,7 @@ describe('doStream', () => {
           "providerMetadata": {
             "bedrock": {
               "isJsonResponseFromTool": true,
+              "stopSequence": null,
             },
           },
           "type": "finish",
@@ -1775,6 +1891,7 @@ describe('doStream', () => {
           "providerMetadata": {
             "bedrock": {
               "isJsonResponseFromTool": true,
+              "stopSequence": null,
             },
           },
           "type": "finish",
@@ -1881,6 +1998,7 @@ describe('doStream', () => {
           "providerMetadata": {
             "bedrock": {
               "isJsonResponseFromTool": true,
+              "stopSequence": null,
             },
           },
           "type": "finish",
@@ -2014,6 +2132,7 @@ describe('doStream', () => {
           "providerMetadata": {
             "bedrock": {
               "isJsonResponseFromTool": true,
+              "stopSequence": null,
             },
           },
           "type": "finish",
@@ -2162,6 +2281,69 @@ describe('doStream', () => {
       ]
     `);
   });
+
+  it('should warn when Anthropic model receives maxReasoningEffort in stream', async () => {
+    setupMockEventStreamHandler();
+    server.urls[streamUrl].response = {
+      type: 'stream-chunks',
+      chunks: [
+        JSON.stringify({
+          messageStop: {
+            stopReason: 'stop_sequence',
+          },
+        }) + '\n',
+      ],
+    };
+
+    const result = await model.doStream({
+      prompt: TEST_PROMPT,
+      includeRawChunks: false,
+      providerOptions: {
+        bedrock: {
+          reasoningConfig: {
+            type: 'enabled',
+            maxReasoningEffort: 'medium',
+          },
+        },
+      },
+    });
+
+    await convertReadableStreamToArray(result.stream);
+
+    const requestBody = await server.calls[0].requestBodyJson;
+    expect(
+      requestBody.additionalModelRequestFields?.reasoningConfig,
+    ).toBeUndefined();
+  });
+
+  it('should support tool calls with empty input (no arguments)', async () => {
+    setupMockEventStreamHandler();
+    prepareChunksFixtureResponse('bedrock-tool-no-args');
+
+    const { stream } = await model.doStream({
+      tools: [
+        {
+          type: 'function',
+          name: 'updateIssueList',
+          inputSchema: {
+            type: 'object',
+            properties: {},
+            required: [],
+            additionalProperties: false,
+            $schema: 'http://json-schema.org/draft-07/schema#',
+          },
+        },
+      ],
+      prompt: TEST_PROMPT,
+      includeRawChunks: false,
+    });
+
+    const result = await convertReadableStreamToArray(stream);
+
+    const toolCallPart = result.find(part => part.type === 'tool-call');
+    expect(toolCallPart).toBeDefined();
+    expect(toolCallPart?.input).toBe('{}');
+  });
 });
 
 describe('doGenerate', () => {
@@ -2287,6 +2469,7 @@ describe('doGenerate', () => {
     expect(await server.calls[0].requestBodyJson).toStrictEqual({
       messages: [{ role: 'user', content: [{ text: 'Hello' }] }],
       system: [{ text: 'System Prompt' }],
+      additionalModelResponseFieldPaths: ['/delta/stop_sequence'],
     });
   });
 
@@ -2344,6 +2527,146 @@ describe('doGenerate', () => {
     });
 
     expect(result.providerMetadata?.bedrock.trace).toMatchObject(mockTrace);
+  });
+
+  it('should include stop_sequence in provider metadata', async () => {
+    server.urls[generateUrl].response = {
+      type: 'json-value',
+      body: {
+        output: {
+          message: {
+            role: 'assistant',
+            content: [{ text: 'Hello, World!' }],
+          },
+        },
+        stopReason: 'stop_sequence',
+        additionalModelResponseFields: { delta: { stop_sequence: 'STOP' } },
+        usage: {
+          inputTokens: 4,
+          outputTokens: 30,
+          totalTokens: 34,
+        },
+      },
+    };
+
+    const result = await model.doGenerate({
+      prompt: TEST_PROMPT,
+      stopSequences: ['STOP'],
+    });
+
+    expect(result.providerMetadata).toMatchInlineSnapshot(`
+      {
+        "bedrock": {
+          "stopSequence": "STOP",
+        },
+      }
+    `);
+  });
+
+  // https://github.com/vercel/ai/issues/11371
+  it('should handle stop_sequence: null when stopReason is tool_use', async () => {
+    server.urls[generateUrl].response = {
+      type: 'json-value',
+      body: {
+        output: {
+          message: {
+            role: 'assistant',
+            content: [
+              { text: "I'll query your Salesforce..." },
+              {
+                toolUse: {
+                  toolUseId: 'tool-use-id',
+                  name: 'querySalesforce',
+                  input: { query: 'SELECT Id FROM Account' },
+                },
+              },
+            ],
+          },
+        },
+        stopReason: 'tool_use',
+        additionalModelResponseFields: { delta: { stop_sequence: null } },
+        usage: {
+          inputTokens: 10,
+          outputTokens: 20,
+          totalTokens: 30,
+        },
+      },
+    };
+
+    const result = await model.doGenerate({
+      prompt: TEST_PROMPT,
+      tools: [
+        {
+          type: 'function',
+          name: 'querySalesforce',
+          description: 'Query Salesforce',
+          inputSchema: {
+            type: 'object',
+            properties: { query: { type: 'string' } },
+            required: ['query'],
+            additionalProperties: false,
+          },
+        },
+      ],
+    });
+
+    expect(result.finishReason).toBe('tool-calls');
+    expect(result.content).toMatchInlineSnapshot(`
+      [
+        {
+          "text": "I'll query your Salesforce...",
+          "type": "text",
+        },
+        {
+          "input": "{"query":"SELECT Id FROM Account"}",
+          "toolCallId": "tool-use-id",
+          "toolName": "querySalesforce",
+          "type": "tool-call",
+        },
+      ]
+    `);
+    expect(result.providerMetadata).toMatchInlineSnapshot(`
+      {
+        "bedrock": {
+          "stopSequence": null,
+        },
+      }
+    `);
+  });
+
+  it('should correctly parse delta.stop_sequence structure from additionalModelResponseFields', async () => {
+    server.urls[generateUrl].response = {
+      type: 'json-value',
+      body: {
+        output: {
+          message: {
+            role: 'assistant',
+            content: [{ text: 'Response text' }],
+          },
+        },
+        stopReason: 'stop_sequence',
+        additionalModelResponseFields: {
+          delta: {
+            stop_sequence: 'CUSTOM_STOP',
+          },
+          // Additional fields that might be present
+          otherField: 'value',
+        },
+        usage: {
+          inputTokens: 10,
+          outputTokens: 20,
+          totalTokens: 30,
+        },
+      },
+    };
+
+    const result = await model.doGenerate({
+      prompt: TEST_PROMPT,
+      stopSequences: ['CUSTOM_STOP'],
+    });
+
+    expect(result.providerMetadata?.bedrock.stopSequence).toBe('CUSTOM_STOP');
+    expect(result.finishReason).toBe('stop');
   });
 
   it('should include response headers in rawResponse', async () => {
@@ -2824,6 +3147,7 @@ describe('doGenerate', () => {
     expect(response.providerMetadata).toMatchInlineSnapshot(`
       {
         "bedrock": {
+          "stopSequence": null,
           "usage": {
             "cacheWriteInputTokens": 3,
           },
@@ -2914,6 +3238,71 @@ describe('doGenerate', () => {
       foo: 'bar',
       custom: 42,
       thinking: { type: 'enabled', budget_tokens: 1234 },
+    });
+  });
+
+  it('maps maxReasoningEffort for Nova without thinking (generate)', async () => {
+    server.urls[novaGenerateUrl].response = {
+      type: 'json-value',
+      body: {
+        output: {
+          message: { content: [{ text: 'Hello' }], role: 'assistant' },
+        },
+        stopReason: 'stop_sequence',
+        usage: { inputTokens: 1, outputTokens: 1, totalTokens: 2 },
+      },
+    };
+
+    await novaModel.doGenerate({
+      prompt: TEST_PROMPT,
+      providerOptions: {
+        bedrock: {
+          reasoningConfig: {
+            type: 'enabled',
+            maxReasoningEffort: 'medium',
+            budgetTokens: 2048,
+          },
+        },
+      },
+    });
+
+    const requestBody = await server.calls[0].requestBodyJson;
+    expect(requestBody).toMatchObject({
+      additionalModelRequestFields: {
+        reasoningConfig: {
+          type: 'enabled',
+          maxReasoningEffort: 'medium',
+        },
+      },
+    });
+    expect(requestBody.additionalModelRequestFields?.thinking).toBeUndefined();
+  });
+
+  it('should warn when Anthropic model receives maxReasoningEffort (generate)', async () => {
+    prepareJsonResponse({});
+
+    const result = await model.doGenerate({
+      prompt: TEST_PROMPT,
+      providerOptions: {
+        bedrock: {
+          reasoningConfig: {
+            type: 'enabled',
+            maxReasoningEffort: 'medium',
+          },
+        },
+      },
+    });
+
+    const requestBody = await server.calls[0].requestBodyJson;
+    expect(
+      requestBody.additionalModelRequestFields?.reasoningConfig,
+    ).toBeUndefined();
+
+    expect(result.warnings).toContainEqual({
+      type: 'unsupported-setting',
+      setting: 'providerOptions',
+      details:
+        'maxReasoningEffort applies only to Amazon Nova models on Bedrock and will be ignored for this model.',
     });
   });
 
@@ -3738,5 +4127,41 @@ describe('doGenerate', () => {
 
     expect(result.providerMetadata?.bedrock?.isJsonResponseFromTool).toBe(true);
     expect(result.finishReason).toBe('stop');
+  });
+
+  it('should support tool calls with empty input (no arguments)', async () => {
+    prepareJsonFixtureResponse('bedrock-tool-no-args');
+
+    const result = await model.doGenerate({
+      tools: [
+        {
+          type: 'function',
+          name: 'updateIssueList',
+          inputSchema: {
+            type: 'object',
+            properties: {},
+            required: [],
+            additionalProperties: false,
+            $schema: 'http://json-schema.org/draft-07/schema#',
+          },
+        },
+      ],
+      prompt: TEST_PROMPT,
+    });
+
+    expect(result.content).toMatchInlineSnapshot(`
+      [
+        {
+          "text": "I'll update the issue list for you.",
+          "type": "text",
+        },
+        {
+          "input": "{}",
+          "toolCallId": "tool-use-id",
+          "toolName": "updateIssueList",
+          "type": "tool-call",
+        },
+      ]
+    `);
   });
 });

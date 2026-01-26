@@ -1,5 +1,75 @@
 # @ai-sdk/gateway
 
+## 2.0.29
+
+### Patch Changes
+
+- 5253b83: chore(provider/gateway): update gateway model settings files
+
+## 2.0.28
+
+### Patch Changes
+
+- 9158228: chore(provider/gateway): update gateway model settings files
+
+## 2.0.27
+
+### Patch Changes
+
+- 74676fa: feat (provider/gateway): add'l perplexity search tool params
+
+## 2.0.26
+
+### Patch Changes
+
+- 655377e: fix(gateway): bump `@vercel/oidc` to 3.1.0
+
+## 2.0.25
+
+### Patch Changes
+
+- f6b46d2: feat (provider/gateway): add provider-defined perplexity search
+
+## 2.0.24
+
+### Patch Changes
+
+- 526fe8d: fix: trigger new release for `@ai-v5` dist-tag
+- Updated dependencies [526fe8d]
+  - @ai-sdk/provider@2.0.1
+  - @ai-sdk/provider-utils@3.0.20
+
+## 2.0.23
+
+### Patch Changes
+
+- e3de981: feat (provider/gateway): add zero data retention provider option
+
+## 2.0.22
+
+### Patch Changes
+
+- 1bcc2d7: feat(google): gemini-3-flash
+
+## 2.0.21
+
+### Patch Changes
+
+- 041a4fc: feat(openai): add gpt-5.2 models
+
+## 2.0.20
+
+### Patch Changes
+
+- Updated dependencies [ef6d784]
+  - @ai-sdk/provider-utils@3.0.19
+
+## 2.0.19
+
+### Patch Changes
+
+- 51bbaa1: feat (provider/gateway): add support for request-scoped byok
+
 ## 2.0.18
 
 ### Patch Changes

@@ -1,5 +1,109 @@
 # @ai-sdk/xai
 
+## 2.0.55
+
+### Patch Changes
+
+- ef70614: fix(xai): make usage nullable in responses schema for streaming compatibility
+
+## 2.0.54
+
+### Patch Changes
+
+- Updated dependencies [fcb9d27]
+  - @ai-sdk/openai-compatible@1.0.31
+
+## 2.0.53
+
+### Patch Changes
+
+- c23ae93: feat(provider/xai): add image support to responses api
+
+## 2.0.52
+
+### Patch Changes
+
+- a2b5824: feat (provider/xai): add support for encrypted reasoning content
+
+## 2.0.51
+
+### Patch Changes
+
+- c635580: fix (provider/xai): set response format to allow object generation
+
+## 2.0.50
+
+### Patch Changes
+
+- 13a913c: fix(provider/xai): send reasoning-end before text-start in streaming
+
+## 2.0.49
+
+### Patch Changes
+
+- 0c419f8: fix(provider/xai): handle error responses returned with 200 status
+
+## 2.0.48
+
+### Patch Changes
+
+- c7d45b4: fixed streaming tool input for custom_tool_call types (x_search, view_x_video) which were incorrectly returning empty input values
+- 547e0c2: fix (provider/xai): no duplicate text delta in responses api
+
+## 2.0.47
+
+### Patch Changes
+
+- 6e3beb1: added support for streaming custom tool input chunks in xAI
+
+## 2.0.46
+
+### Patch Changes
+
+- eed2ef1: fix(xai): add missing stream response schema and provider tool name parsing
+
+## 2.0.45
+
+### Patch Changes
+
+- 9d16e4e: fix (provider/xai): use correct format for function tools
+
+## 2.0.44
+
+### Patch Changes
+
+- 08bffe4: feat (provider/xai): include cached input token metrics in responses api usage
+
+## 2.0.43
+
+### Patch Changes
+
+- 526fe8d: fix: trigger new release for `@ai-v5` dist-tag
+- Updated dependencies [526fe8d]
+  - @ai-sdk/openai-compatible@1.0.30
+  - @ai-sdk/provider@2.0.1
+  - @ai-sdk/provider-utils@3.0.20
+
+## 2.0.42
+
+### Patch Changes
+
+- 3c6f4e1: fix(provider/xai): correct sources format in searchParameters
+
+## 2.0.41
+
+### Patch Changes
+
+- f4a85f7: fix(xai): use correct parameter names for maxOutputTokens
+
+## 2.0.40
+
+### Patch Changes
+
+- Updated dependencies [ef6d784]
+  - @ai-sdk/provider-utils@3.0.19
+  - @ai-sdk/openai-compatible@1.0.29
+
 ## 2.0.39
 
 ### Patch Changes

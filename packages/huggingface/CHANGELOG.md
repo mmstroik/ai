@@ -1,5 +1,30 @@
 # @ai-sdk/huggingface
 
+## 0.0.14
+
+### Patch Changes
+
+- Updated dependencies [fcb9d27]
+  - @ai-sdk/openai-compatible@1.0.31
+
+## 0.0.13
+
+### Patch Changes
+
+- 526fe8d: fix: trigger new release for `@ai-v5` dist-tag
+- Updated dependencies [526fe8d]
+  - @ai-sdk/openai-compatible@1.0.30
+  - @ai-sdk/provider@2.0.1
+  - @ai-sdk/provider-utils@3.0.20
+
+## 0.0.12
+
+### Patch Changes
+
+- Updated dependencies [ef6d784]
+  - @ai-sdk/provider-utils@3.0.19
+  - @ai-sdk/openai-compatible@1.0.29
+
 ## 0.0.11
 
 ### Patch Changes

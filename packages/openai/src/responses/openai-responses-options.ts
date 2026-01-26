@@ -42,6 +42,10 @@ export const openaiResponsesReasoningModelIds = [
   'gpt-5.1-chat-latest',
   'gpt-5.1-codex-mini',
   'gpt-5.1-codex',
+  'gpt-5.1-codex-max',
+  'gpt-5.2',
+  'gpt-5.2-chat-latest',
+  'gpt-5.2-pro',
 ] as const;
 
 export const openaiResponsesModelIds = [
@@ -106,6 +110,10 @@ export type OpenAIResponsesModelId =
   | 'gpt-5.1-chat-latest'
   | 'gpt-5.1-codex-mini'
   | 'gpt-5.1-codex'
+  | 'gpt-5.1-codex-max'
+  | 'gpt-5.2'
+  | 'gpt-5.2-chat-latest'
+  | 'gpt-5.2-pro'
   | 'gpt-5-2025-08-07'
   | 'gpt-5-chat-latest'
   | 'gpt-5-codex'
@@ -177,6 +185,17 @@ export const openaiResponsesProviderOptionsSchema = lazyValidator(() =>
        * @default 'in_memory'
        */
       promptCacheRetention: z.enum(['in_memory', '24h']).nullish(),
+
+      /**
+       * Reasoning effort for reasoning models. Defaults to `medium`. If you use
+       * `providerOptions` to set the `reasoningEffort` option, this model setting will be ignored.
+       * Valid values: 'none' | 'minimal' | 'low' | 'medium' | 'high' | 'xhigh'
+       *
+       * The 'none' type for `reasoningEffort` is only available for OpenAI's GPT-5.1
+       * models. Also, the 'xhigh' type for `reasoningEffort` is only available for
+       * OpenAI's GPT-5.1-Codex-Max model. Setting `reasoningEffort` to 'none' or 'xhigh' with unsupported models will result in
+       * an error.
+       */
       reasoningEffort: z.string().nullish(),
       reasoningSummary: z.string().nullish(),
       safetyIdentifier: z.string().nullish(),

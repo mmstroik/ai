@@ -1,5 +1,57 @@
 # @ai-sdk/google
 
+## 2.0.52
+
+### Patch Changes
+
+- 526fe8d: fix: trigger new release for `@ai-v5` dist-tag
+- Updated dependencies [526fe8d]
+  - @ai-sdk/provider@2.0.1
+  - @ai-sdk/provider-utils@3.0.20
+
+## 2.0.51
+
+### Patch Changes
+
+- cbc2dba: fix(provider/google): preserve nested empty object schemas and descriptions in tool parameters
+
+## 2.0.50
+
+### Patch Changes
+
+- 7c30c1d: fix(provider/google): preserve nested empty object schemas in tool parameters to fix "property is not defined" validation errors when using required properties with empty object types
+
+## 2.0.49
+
+### Patch Changes
+
+- 3ea80e7: feat(provider/google): add enterpriseWebSearch tool
+
+## 2.0.48
+
+### Patch Changes
+
+- 1bcc2d7: feat(google): gemini-3-flash
+
+## 2.0.47
+
+### Patch Changes
+
+- 0e182c5: Add Google Maps grounding tool support for location-aware Gemini responses
+
+## 2.0.46
+
+### Patch Changes
+
+- Updated dependencies [ef6d784]
+  - @ai-sdk/provider-utils@3.0.19
+
+## 2.0.45
+
+### Patch Changes
+
+- 363b1f5: fix(google,google-vertex): update known model IDs
+
 ## 2.0.44
 
 ### Patch Changes

@@ -1,5 +1,100 @@
 # @ai-sdk/azure
 
+## 2.0.91
+
+### Patch Changes
+
+- 526fe8d: fix: trigger new release for `@ai-v5` dist-tag
+- Updated dependencies [526fe8d]
+  - @ai-sdk/openai@2.0.89
+  - @ai-sdk/provider@2.0.1
+  - @ai-sdk/provider-utils@3.0.20
+
+## 2.0.90
+
+### Patch Changes
+
+- Updated dependencies [2352cdf]
+  - @ai-sdk/openai@2.0.88
+
+## 2.0.89
+
+### Patch Changes
+
+- Updated dependencies [72d76cc]
+  - @ai-sdk/openai@2.0.87
+
+## 2.0.88
+
+### Patch Changes
+
+- Updated dependencies [a909bcf]
+  - @ai-sdk/openai@2.0.86
+
+## 2.0.87
+
+### Patch Changes
+
+- Updated dependencies [e79430b]
+  - @ai-sdk/openai@2.0.85
+
+## 2.0.86
+
+### Patch Changes
+
+- Updated dependencies [041a4fc]
+  - @ai-sdk/openai@2.0.84
+
+## 2.0.85
+
+### Patch Changes
+
+- Updated dependencies [edc807f]
+  - @ai-sdk/openai@2.0.83
+
+## 2.0.84
+
+### Patch Changes
+
+- Updated dependencies [e31dfa4]
+  - @ai-sdk/openai@2.0.82
+
+## 2.0.83
+
+### Patch Changes
+
+- Updated dependencies [ef6d784]
+  - @ai-sdk/provider-utils@3.0.19
+  - @ai-sdk/openai@2.0.81
+
+## 2.0.82
+
+### Patch Changes
+
+- Updated dependencies [707a163]
+  - @ai-sdk/openai@2.0.80
+
+## 2.0.81
+
+### Patch Changes
+
+- Updated dependencies [5b6aa88]
+  - @ai-sdk/openai@2.0.79
+
+## 2.0.80
+
+### Patch Changes
+
+- Updated dependencies [e245b61]
+  - @ai-sdk/openai@2.0.78
+
+## 2.0.79
+
+### Patch Changes
+
+- Updated dependencies [31f6c20]
+  - @ai-sdk/openai@2.0.77
+
 ## 2.0.78
 
 ### Patch Changes

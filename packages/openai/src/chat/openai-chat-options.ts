@@ -44,6 +44,9 @@ export type OpenAIChatModelId =
   | 'gpt-5-chat-latest'
   | 'gpt-5.1'
   | 'gpt-5.1-chat-latest'
+  | 'gpt-5.2'
+  | 'gpt-5.2-chat-latest'
+  | 'gpt-5.2-pro'
   | (string & {});
 
 export const openaiChatLanguageModelOptions = lazyValidator(() =>
@@ -83,7 +86,7 @@ export const openaiChatLanguageModelOptions = lazyValidator(() =>
        * Reasoning effort for reasoning models. Defaults to `medium`.
        */
       reasoningEffort: z
-        .enum(['none', 'minimal', 'low', 'medium', 'high'])
+        .enum(['none', 'minimal', 'low', 'medium', 'high', 'xhigh'])
         .optional(),
 
       /**
