@@ -3,6 +3,7 @@ import {
   ProviderMetadata,
   providerMetadataSchema,
 } from '../types/provider-metadata';
+import { FinishReason } from '../types/language-model';
 import {
   InferUIMessageData,
   InferUIMessageMetadata,
@@ -40,7 +41,9 @@ export const uiMessageChunkSchema = lazySchema(() =>
         toolCallId: z.string(),
         toolName: z.string(),
         providerExecuted: z.boolean().optional(),
+        providerMetadata: providerMetadataSchema.optional(),
         dynamic: z.boolean().optional(),
+        title: z.string().optional(),
       }),
       z.strictObject({
         type: z.literal('tool-input-delta'),
@@ -55,6 +58,7 @@ export const uiMessageChunkSchema = lazySchema(() =>
         providerExecuted: z.boolean().optional(),
         providerMetadata: providerMetadataSchema.optional(),
         dynamic: z.boolean().optional(),
+        title: z.string().optional(),
       }),
       z.strictObject({
         type: z.literal('tool-input-error'),
@@ -65,6 +69,7 @@ export const uiMessageChunkSchema = lazySchema(() =>
         providerMetadata: providerMetadataSchema.optional(),
         dynamic: z.boolean().optional(),
         errorText: z.string(),
+        title: z.string().optional(),
       }),
       z.strictObject({
         type: z.literal('tool-approval-request'),
@@ -150,10 +155,21 @@ export const uiMessageChunkSchema = lazySchema(() =>
       }),
       z.strictObject({
         type: z.literal('finish'),
+        finishReason: z
+          .enum([
+            'stop',
+            'length',
+            'content-filter',
+            'tool-calls',
+            'error',
+            'other',
+          ] as const satisfies readonly FinishReason[])
+          .optional(),
         messageMetadata: z.unknown().optional(),
       }),
       z.strictObject({
         type: z.literal('abort'),
+        reason: z.string().optional(),
       }),
       z.strictObject({
         type: z.literal('message-metadata'),
@@ -220,6 +236,7 @@ export type UIMessageChunk<
       providerExecuted?: boolean;
       providerMetadata?: ProviderMetadata;
       dynamic?: boolean;
+      title?: string;
     }
   | {
       type: 'tool-input-error';
@@ -230,6 +247,7 @@ export type UIMessageChunk<
       providerMetadata?: ProviderMetadata;
       dynamic?: boolean;
       errorText: string;
+      title?: string;
     }
   | {
       type: 'tool-approval-request';
@@ -260,7 +278,9 @@ export type UIMessageChunk<
       toolCallId: string;
       toolName: string;
       providerExecuted?: boolean;
+      providerMetadata?: ProviderMetadata;
       dynamic?: boolean;
+      title?: string;
     }
   | {
       type: 'tool-input-delta';
@@ -302,10 +322,12 @@ export type UIMessageChunk<
     }
   | {
       type: 'finish';
+      finishReason?: FinishReason;
       messageMetadata?: METADATA;
     }
   | {
       type: 'abort';
+      reason?: string;
     }
   | {
       type: 'message-metadata';

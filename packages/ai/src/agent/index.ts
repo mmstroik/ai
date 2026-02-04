@@ -1,4 +1,8 @@
-export { type Agent } from './agent';
+export {
+  type Agent,
+  type AgentCallParameters,
+  type AgentStreamParameters,
+} from './agent';
 export { type ToolLoopAgentOnFinishCallback } from './tool-loop-agent-on-finish-callback';
 export { type ToolLoopAgentOnStepFinishCallback } from './tool-loop-agent-on-step-finish-callback';
 export {
@@ -25,3 +29,5 @@ export {
   type InferAgentUIMessage,
 } from './infer-agent-ui-message';
 export { createAgentUIStreamResponse } from './create-agent-ui-stream-response';
+export { createAgentUIStream } from './create-agent-ui-stream';
+export { pipeAgentUIStreamToResponse } from './pipe-agent-ui-stream-to-response';

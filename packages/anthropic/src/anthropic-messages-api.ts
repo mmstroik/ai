@@ -36,6 +36,7 @@ export interface AnthropicAssistantMessage {
     | AnthropicCodeExecutionToolResultContent
     | AnthropicWebFetchToolResultContent
     | AnthropicWebSearchToolResultContent
+    | AnthropicToolSearchToolResultContent
     | AnthropicBashCodeExecutionToolResultContent
     | AnthropicTextEditorCodeExecutionToolResultContent
     | AnthropicMcpToolUseContent
@@ -106,11 +107,29 @@ export interface AnthropicSearchResultContent {
   cache_control: AnthropicCacheControl | undefined;
 }
 
+/**
+ * The caller information for programmatic tool calling.
+ * Present when a tool is called from within code execution.
+ */
+export type AnthropicToolCallCaller =
+  | {
+      type: 'code_execution_20250825';
+      tool_id: string;
+    }
+  | {
+      type: 'direct';
+    };
+
 export interface AnthropicToolCallContent {
   type: 'tool_use';
   id: string;
   name: string;
   input: unknown;
+  /**
+   * Present when this tool call was triggered by a server-executed tool
+   * (e.g., code execution calling a user-defined tool programmatically).
+   */
+  caller?: AnthropicToolCallCaller;
   cache_control: AnthropicCacheControl | undefined;
 }
 
@@ -124,7 +143,10 @@ export interface AnthropicServerToolUseContent {
     | 'code_execution'
     // code execution 20250825:
     | 'bash_code_execution'
-    | 'text_editor_code_execution';
+    | 'text_editor_code_execution'
+    // tool search:
+    | 'tool_search_tool_regex'
+    | 'tool_search_tool_bm25';
   input: unknown;
   cache_control: AnthropicCacheControl | undefined;
 }
@@ -160,6 +182,11 @@ type AnthropicNestedSearchResultContent = Omit<
   cache_control?: never;
 };
 
+export interface AnthropicToolReferenceContent {
+  type: 'tool_reference';
+  tool_name: string;
+}
+
 export interface AnthropicToolResultContent {
   type: 'tool_result';
   tool_use_id: string;
@@ -170,6 +197,7 @@ export interface AnthropicToolResultContent {
         | AnthropicNestedImageContent
         | AnthropicNestedDocumentContent
         | AnthropicNestedSearchResultContent
+        | AnthropicToolReferenceContent
       >;
   is_error: boolean | undefined;
   cache_control: AnthropicCacheControl | undefined;
@@ -180,7 +208,7 @@ export interface AnthropicWebSearchToolResultContent {
   tool_use_id: string;
   content: Array<{
     url: string;
-    title: string;
+    title: string | null;
     page_age: string | null;
     encrypted_content: string;
     type: string;
@@ -188,16 +216,40 @@ export interface AnthropicWebSearchToolResultContent {
   cache_control: AnthropicCacheControl | undefined;
 }
 
+export interface AnthropicToolSearchToolResultContent {
+  type: 'tool_search_tool_result';
+  tool_use_id: string;
+  content:
+    | {
+        type: 'tool_search_tool_search_result';
+        tool_references: Array<{
+          type: 'tool_reference';
+          tool_name: string;
+        }>;
+      }
+    | {
+        type: 'tool_search_tool_result_error';
+        error_code: string;
+      };
+  cache_control: AnthropicCacheControl | undefined;
+}
+
 // code execution results for code_execution_20250522 tool:
 export interface AnthropicCodeExecutionToolResultContent {
   type: 'code_execution_tool_result';
   tool_use_id: string;
-  content: {
-    type: 'code_execution_result';
-    stdout: string;
-    stderr: string;
-    return_code: number;
-  };
+  content:
+    | {
+        type: 'code_execution_result';
+        stdout: string;
+        stderr: string;
+        return_code: number;
+        content: Array<{ type: 'code_execution_output'; file_id: string }>;
+      }
+    | {
+        type: 'code_execution_tool_result_error';
+        error_code: string;
+      };
   cache_control: AnthropicCacheControl | undefined;
 }
 
@@ -258,22 +310,26 @@ export interface AnthropicBashCodeExecutionToolResultContent {
 export interface AnthropicWebFetchToolResultContent {
   type: 'web_fetch_tool_result';
   tool_use_id: string;
-  content: {
-    type: 'web_fetch_result';
-    url: string;
-    retrieved_at: string | null;
-    content: {
-      type: 'document';
-      title: string | null;
-      citations?: { enabled: boolean };
-      source:
-        | { type: 'base64'; media_type: 'application/pdf'; data: string }
-        | { type: 'text'; media_type: 'text/plain'; data: string };
-    };
-  };
+  content:
+    | {
+        type: 'web_fetch_result';
+        url: string;
+        retrieved_at: string | null;
+        content: {
+          type: 'document';
+          title: string | null;
+          citations?: { enabled: boolean };
+          source:
+            | { type: 'base64'; media_type: 'application/pdf'; data: string }
+            | { type: 'text'; media_type: 'text/plain'; data: string };
+        };
+      }
+    | {
+        type: 'web_fetch_tool_result_error';
+        error_code: string;
+      };
   cache_control: AnthropicCacheControl | undefined;
 }
-
 export interface AnthropicMcpToolUseContent {
   type: 'mcp_tool_use';
   id: string;
@@ -297,6 +353,20 @@ export type AnthropicTool =
       description: string | undefined;
       input_schema: JSONSchema7;
       cache_control: AnthropicCacheControl | undefined;
+      strict?: boolean;
+      /**
+       * When true, this tool is deferred and will only be loaded when
+       * discovered via the tool search tool.
+       */
+      defer_loading?: boolean;
+      /**
+       * Programmatic tool calling: specifies which server-executed tools
+       * are allowed to call this tool. When set, only the specified callers
+       * can invoke this tool programmatically.
+       *
+       * @example ['code_execution_20250825']
+       */
+      allowed_callers?: Array<'code_execution_20250825'>;
     }
   | {
       type: 'code_execution_20250522';
@@ -313,6 +383,15 @@ export type AnthropicTool =
       display_width_px: number;
       display_height_px: number;
       display_number: number;
+      cache_control: AnthropicCacheControl | undefined;
+    }
+  | {
+      name: string;
+      type: 'computer_20251124';
+      display_width_px: number;
+      display_height_px: number;
+      display_number: number;
+      enable_zoom?: boolean;
       cache_control: AnthropicCacheControl | undefined;
     }
   | {
@@ -362,6 +441,14 @@ export type AnthropicTool =
         timezone?: string;
       };
       cache_control: AnthropicCacheControl | undefined;
+    }
+  | {
+      type: 'tool_search_tool_regex_20251119';
+      name: string;
+    }
+  | {
+      type: 'tool_search_tool_bm25_20251119';
+      name: string;
     };
 
 export type AnthropicToolChoice =
@@ -375,6 +462,68 @@ export type AnthropicContainer = {
     skill_id: string;
     version?: string;
   }> | null;
+};
+
+export type AnthropicInputTokensTrigger = {
+  type: 'input_tokens';
+  value: number;
+};
+
+export type AnthropicToolUsesTrigger = {
+  type: 'tool_uses';
+  value: number;
+};
+
+export type AnthropicContextManagementTrigger =
+  | AnthropicInputTokensTrigger
+  | AnthropicToolUsesTrigger;
+
+export type AnthropicClearToolUsesEdit = {
+  type: 'clear_tool_uses_20250919';
+  trigger?: AnthropicContextManagementTrigger;
+  keep?: {
+    type: 'tool_uses';
+    value: number;
+  };
+  clear_at_least?: {
+    type: 'input_tokens';
+    value: number;
+  };
+  clear_tool_inputs?: boolean;
+  exclude_tools?: string[];
+};
+
+export type AnthropicClearThinkingBlockEdit = {
+  type: 'clear_thinking_20251015';
+  keep?: 'all' | { type: 'thinking_turns'; value: number };
+};
+
+export type AnthropicContextManagementEdit =
+  | AnthropicClearToolUsesEdit
+  | AnthropicClearThinkingBlockEdit;
+
+export type AnthropicContextManagementConfig = {
+  edits: AnthropicContextManagementEdit[];
+};
+
+export type AnthropicResponseClearToolUsesEdit = {
+  type: 'clear_tool_uses_20250919';
+  cleared_tool_uses: number;
+  cleared_input_tokens: number;
+};
+
+export type AnthropicResponseClearThinkingBlockEdit = {
+  type: 'clear_thinking_20251015';
+  cleared_thinking_turns: number;
+  cleared_input_tokens: number;
+};
+
+export type AnthropicResponseContextManagementEdit =
+  | AnthropicResponseClearToolUsesEdit
+  | AnthropicResponseClearThinkingBlockEdit;
+
+export type AnthropicResponseContextManagement = {
+  applied_edits: AnthropicResponseContextManagementEdit[];
 };
 
 // limited version of the schema, focussed on what is needed for the implementation
@@ -443,6 +592,18 @@ export const anthropicMessagesResponseSchema = lazySchema(() =>
             id: z.string(),
             name: z.string(),
             input: z.unknown(),
+            // Programmatic tool calling: caller info when triggered from code execution
+            caller: z
+              .union([
+                z.object({
+                  type: z.literal('code_execution_20250825'),
+                  tool_id: z.string(),
+                }),
+                z.object({
+                  type: z.literal('direct'),
+                }),
+              ])
+              .optional(),
           }),
           z.object({
             type: z.literal('server_tool_use'),
@@ -480,11 +641,18 @@ export const anthropicMessagesResponseSchema = lazySchema(() =>
                   type: z.literal('document'),
                   title: z.string().nullable(),
                   citations: z.object({ enabled: z.boolean() }).optional(),
-                  source: z.object({
-                    type: z.literal('text'),
-                    media_type: z.string(),
-                    data: z.string(),
-                  }),
+                  source: z.union([
+                    z.object({
+                      type: z.literal('base64'),
+                      media_type: z.literal('application/pdf'),
+                      data: z.string(),
+                    }),
+                    z.object({
+                      type: z.literal('text'),
+                      media_type: z.literal('text/plain'),
+                      data: z.string(),
+                    }),
+                  ]),
                 }),
               }),
               z.object({
@@ -522,6 +690,15 @@ export const anthropicMessagesResponseSchema = lazySchema(() =>
                 stdout: z.string(),
                 stderr: z.string(),
                 return_code: z.number(),
+                content: z
+                  .array(
+                    z.object({
+                      type: z.literal('code_execution_output'),
+                      file_id: z.string(),
+                    }),
+                  )
+                  .optional()
+                  .default([]),
               }),
               z.object({
                 type: z.literal('code_execution_tool_result_error'),
@@ -585,6 +762,26 @@ export const anthropicMessagesResponseSchema = lazySchema(() =>
               }),
             ]),
           }),
+          // tool search tool results for tool_search_tool_regex_20251119 and tool_search_tool_bm25_20251119:
+          z.object({
+            type: z.literal('tool_search_tool_result'),
+            tool_use_id: z.string(),
+            content: z.union([
+              z.object({
+                type: z.literal('tool_search_tool_search_result'),
+                tool_references: z.array(
+                  z.object({
+                    type: z.literal('tool_reference'),
+                    tool_name: z.string(),
+                  }),
+                ),
+              }),
+              z.object({
+                type: z.literal('tool_search_tool_result_error'),
+                error_code: z.string(),
+              }),
+            ]),
+          }),
         ]),
       ),
       stop_reason: z.string().nullish(),
@@ -595,6 +792,39 @@ export const anthropicMessagesResponseSchema = lazySchema(() =>
         cache_creation_input_tokens: z.number().nullish(),
         cache_read_input_tokens: z.number().nullish(),
       }),
+      container: z
+        .object({
+          expires_at: z.string(),
+          id: z.string(),
+          skills: z
+            .array(
+              z.object({
+                type: z.union([z.literal('anthropic'), z.literal('custom')]),
+                skill_id: z.string(),
+                version: z.string(),
+              }),
+            )
+            .nullish(),
+        })
+        .nullish(),
+      context_management: z
+        .object({
+          applied_edits: z.array(
+            z.union([
+              z.object({
+                type: z.literal('clear_tool_uses_20250919'),
+                cleared_tool_uses: z.number(),
+                cleared_input_tokens: z.number(),
+              }),
+              z.object({
+                type: z.literal('clear_thinking_20251015'),
+                cleared_thinking_turns: z.number(),
+                cleared_input_tokens: z.number(),
+              }),
+            ]),
+          ),
+        })
+        .nullish(),
     }),
   ),
 );
@@ -609,11 +839,43 @@ export const anthropicMessagesChunkSchema = lazySchema(() =>
         message: z.object({
           id: z.string().nullish(),
           model: z.string().nullish(),
+          role: z.string().nullish(),
           usage: z.looseObject({
             input_tokens: z.number(),
             cache_creation_input_tokens: z.number().nullish(),
             cache_read_input_tokens: z.number().nullish(),
           }),
+          // Programmatic tool calling: content may be pre-populated for deferred tool calls
+          content: z
+            .array(
+              z.discriminatedUnion('type', [
+                z.object({
+                  type: z.literal('tool_use'),
+                  id: z.string(),
+                  name: z.string(),
+                  input: z.unknown(),
+                  caller: z
+                    .union([
+                      z.object({
+                        type: z.literal('code_execution_20250825'),
+                        tool_id: z.string(),
+                      }),
+                      z.object({
+                        type: z.literal('direct'),
+                      }),
+                    ])
+                    .optional(),
+                }),
+              ]),
+            )
+            .nullish(),
+          stop_reason: z.string().nullish(),
+          container: z
+            .object({
+              expires_at: z.string(),
+              id: z.string(),
+            })
+            .nullish(),
         }),
       }),
       z.object({
@@ -632,6 +894,20 @@ export const anthropicMessagesChunkSchema = lazySchema(() =>
             type: z.literal('tool_use'),
             id: z.string(),
             name: z.string(),
+            // Programmatic tool calling: input may be present directly for deferred tool calls
+            input: z.record(z.string(), z.unknown()).optional(),
+            // Programmatic tool calling: caller info when triggered from code execution
+            caller: z
+              .union([
+                z.object({
+                  type: z.literal('code_execution_20250825'),
+                  tool_id: z.string(),
+                }),
+                z.object({
+                  type: z.literal('direct'),
+                }),
+              ])
+              .optional(),
           }),
           z.object({
             type: z.literal('redacted_thinking'),
@@ -673,11 +949,18 @@ export const anthropicMessagesChunkSchema = lazySchema(() =>
                   type: z.literal('document'),
                   title: z.string().nullable(),
                   citations: z.object({ enabled: z.boolean() }).optional(),
-                  source: z.object({
-                    type: z.literal('text'),
-                    media_type: z.string(),
-                    data: z.string(),
-                  }),
+                  source: z.union([
+                    z.object({
+                      type: z.literal('base64'),
+                      media_type: z.literal('application/pdf'),
+                      data: z.string(),
+                    }),
+                    z.object({
+                      type: z.literal('text'),
+                      media_type: z.literal('text/plain'),
+                      data: z.string(),
+                    }),
+                  ]),
                 }),
               }),
               z.object({
@@ -715,6 +998,15 @@ export const anthropicMessagesChunkSchema = lazySchema(() =>
                 stdout: z.string(),
                 stderr: z.string(),
                 return_code: z.number(),
+                content: z
+                  .array(
+                    z.object({
+                      type: z.literal('code_execution_output'),
+                      file_id: z.string(),
+                    }),
+                  )
+                  .optional()
+                  .default([]),
               }),
               z.object({
                 type: z.literal('code_execution_tool_result_error'),
@@ -775,6 +1067,26 @@ export const anthropicMessagesChunkSchema = lazySchema(() =>
                 new_start: z.number().nullable(),
                 old_lines: z.number().nullable(),
                 old_start: z.number().nullable(),
+              }),
+            ]),
+          }),
+          // tool search tool results for tool_search_tool_regex_20251119 and tool_search_tool_bm25_20251119:
+          z.object({
+            type: z.literal('tool_search_tool_result'),
+            tool_use_id: z.string(),
+            content: z.union([
+              z.object({
+                type: z.literal('tool_search_tool_search_result'),
+                tool_references: z.array(
+                  z.object({
+                    type: z.literal('tool_reference'),
+                    tool_name: z.string(),
+                  }),
+                ),
+              }),
+              z.object({
+                type: z.literal('tool_search_tool_result_error'),
+                error_code: z.string(),
               }),
             ]),
           }),
@@ -855,11 +1167,49 @@ export const anthropicMessagesChunkSchema = lazySchema(() =>
         delta: z.object({
           stop_reason: z.string().nullish(),
           stop_sequence: z.string().nullish(),
+          container: z
+            .object({
+              expires_at: z.string(),
+              id: z.string(),
+              skills: z
+                .array(
+                  z.object({
+                    type: z.union([
+                      z.literal('anthropic'),
+                      z.literal('custom'),
+                    ]),
+                    skill_id: z.string(),
+                    version: z.string(),
+                  }),
+                )
+                .nullish(),
+            })
+            .nullish(),
         }),
         usage: z.looseObject({
+          input_tokens: z.number().nullish(),
           output_tokens: z.number(),
           cache_creation_input_tokens: z.number().nullish(),
+          cache_read_input_tokens: z.number().nullish(),
         }),
+        context_management: z
+          .object({
+            applied_edits: z.array(
+              z.union([
+                z.object({
+                  type: z.literal('clear_tool_uses_20250919'),
+                  cleared_tool_uses: z.number(),
+                  cleared_input_tokens: z.number(),
+                }),
+                z.object({
+                  type: z.literal('clear_thinking_20251015'),
+                  cleared_thinking_turns: z.number(),
+                  cleared_input_tokens: z.number(),
+                }),
+              ]),
+            ),
+          })
+          .nullish(),
       }),
       z.object({
         type: z.literal('message_stop'),

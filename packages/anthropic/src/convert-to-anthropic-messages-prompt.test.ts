@@ -1,7 +1,14 @@
 import { describe, it, expect } from 'vitest';
-import { LanguageModelV3CallWarning } from '@ai-sdk/provider';
+import { SharedV3Warning } from '@ai-sdk/provider';
+import { createToolNameMapping } from '@ai-sdk/provider-utils';
 import { convertToAnthropicMessagesPrompt } from './convert-to-anthropic-messages-prompt';
 import { CacheControlValidator } from './get-cache-control';
+
+// Create a default identity tool name mapping for tests (no tools = no mapping)
+const defaultToolNameMapping = createToolNameMapping({
+  tools: [],
+  providerToolNames: {},
+});
 
 describe('system messages', () => {
   it('should convert a single system message into an anthropic system message', async () => {
@@ -9,6 +16,7 @@ describe('system messages', () => {
       prompt: [{ role: 'system', content: 'This is a system message' }],
       sendReasoning: true,
       warnings: [],
+      toolNameMapping: defaultToolNameMapping,
     });
 
     expect(result).toEqual({
@@ -28,6 +36,7 @@ describe('system messages', () => {
       ],
       sendReasoning: true,
       warnings: [],
+      toolNameMapping: defaultToolNameMapping,
     });
 
     expect(result).toEqual({
@@ -60,6 +69,7 @@ describe('user messages', () => {
       ],
       sendReasoning: true,
       warnings: [],
+      toolNameMapping: defaultToolNameMapping,
     });
 
     expect(result).toEqual({
@@ -101,6 +111,7 @@ describe('user messages', () => {
       ],
       sendReasoning: true,
       warnings: [],
+      toolNameMapping: defaultToolNameMapping,
     });
 
     expect(result).toEqual({
@@ -125,6 +136,88 @@ describe('user messages', () => {
     });
   });
 
+  it('should treat URL strings in image file data as URLs, not base64)', async () => {
+    const result = await convertToAnthropicMessagesPrompt({
+      prompt: [
+        {
+          role: 'user',
+          content: [
+            {
+              type: 'file',
+              data: 'https://example.com/image.png', // String URL (as if after JSON deserialization)
+              mediaType: 'image/png',
+            },
+          ],
+        },
+      ],
+      sendReasoning: true,
+      warnings: [],
+      toolNameMapping: defaultToolNameMapping,
+    });
+
+    expect(result).toEqual({
+      prompt: {
+        messages: [
+          {
+            role: 'user',
+            content: [
+              {
+                type: 'image',
+                source: {
+                  type: 'url',
+                  url: 'https://example.com/image.png',
+                },
+              },
+            ],
+          },
+        ],
+        system: undefined,
+      },
+      betas: new Set(),
+    });
+  });
+
+  it('should treat URL strings in PDF file data as URLs, not base64)', async () => {
+    const result = await convertToAnthropicMessagesPrompt({
+      prompt: [
+        {
+          role: 'user',
+          content: [
+            {
+              type: 'file',
+              data: 'https://example.com/document.pdf',
+              mediaType: 'application/pdf',
+            },
+          ],
+        },
+      ],
+      sendReasoning: true,
+      warnings: [],
+      toolNameMapping: defaultToolNameMapping,
+    });
+
+    expect(result).toEqual({
+      prompt: {
+        messages: [
+          {
+            role: 'user',
+            content: [
+              {
+                type: 'document',
+                source: {
+                  type: 'url',
+                  url: 'https://example.com/document.pdf',
+                },
+              },
+            ],
+          },
+        ],
+        system: undefined,
+      },
+      betas: new Set(['pdfs-2024-09-25']),
+    });
+  });
+
   it('should add PDF file parts for base64 PDFs', async () => {
     const result = await convertToAnthropicMessagesPrompt({
       prompt: [
@@ -141,6 +234,7 @@ describe('user messages', () => {
       ],
       sendReasoning: true,
       warnings: [],
+      toolNameMapping: defaultToolNameMapping,
     });
 
     expect(result).toEqual({
@@ -182,6 +276,7 @@ describe('user messages', () => {
       ],
       sendReasoning: true,
       warnings: [],
+      toolNameMapping: defaultToolNameMapping,
     });
 
     expect(result).toEqual({
@@ -225,6 +320,7 @@ describe('user messages', () => {
       ],
       sendReasoning: true,
       warnings: [],
+      toolNameMapping: defaultToolNameMapping,
     });
 
     expect(result).toEqual({
@@ -269,6 +365,7 @@ describe('user messages', () => {
         ],
         sendReasoning: true,
         warnings: [],
+        toolNameMapping: defaultToolNameMapping,
       }),
     ).rejects.toThrow('media type: video/mp4');
   });
@@ -295,6 +392,7 @@ describe('tool messages', () => {
       ],
       sendReasoning: true,
       warnings: [],
+      toolNameMapping: defaultToolNameMapping,
     });
 
     expect(result).toEqual({
@@ -344,6 +442,7 @@ describe('tool messages', () => {
       ],
       sendReasoning: true,
       warnings: [],
+      toolNameMapping: defaultToolNameMapping,
     });
 
     expect(result).toEqual({
@@ -397,6 +496,7 @@ describe('tool messages', () => {
       ],
       sendReasoning: true,
       warnings: [],
+      toolNameMapping: defaultToolNameMapping,
     });
 
     expect(result).toEqual({
@@ -451,6 +551,7 @@ describe('tool messages', () => {
       ],
       sendReasoning: true,
       warnings: [],
+      toolNameMapping: defaultToolNameMapping,
     });
 
     expect(result).toMatchInlineSnapshot(`
@@ -654,6 +755,7 @@ describe('tool messages', () => {
       ],
       sendReasoning: true,
       warnings: [],
+      toolNameMapping: defaultToolNameMapping,
     });
 
     expect(result).toMatchInlineSnapshot(`
@@ -694,6 +796,201 @@ describe('tool messages', () => {
       }
     `);
   });
+
+  it('should handle tool result with custom tool-reference content for custom tool search', async () => {
+    const result = await convertToAnthropicMessagesPrompt({
+      prompt: [
+        {
+          role: 'tool',
+          content: [
+            {
+              type: 'tool-result',
+              toolName: 'searchTools',
+              toolCallId: 'search-1',
+              output: {
+                type: 'content',
+                value: [
+                  {
+                    type: 'custom',
+                    providerOptions: {
+                      anthropic: {
+                        type: 'tool-reference',
+                        toolName: 'get_weather',
+                      },
+                    },
+                  },
+                  {
+                    type: 'custom',
+                    providerOptions: {
+                      anthropic: {
+                        type: 'tool-reference',
+                        toolName: 'get_forecast',
+                      },
+                    },
+                  },
+                ],
+              },
+            },
+          ],
+        },
+      ],
+      sendReasoning: true,
+      warnings: [],
+      toolNameMapping: defaultToolNameMapping,
+    });
+
+    expect(result).toMatchInlineSnapshot(`
+      {
+        "betas": Set {},
+        "prompt": {
+          "messages": [
+            {
+              "content": [
+                {
+                  "cache_control": undefined,
+                  "content": [
+                    {
+                      "tool_name": "get_weather",
+                      "type": "tool_reference",
+                    },
+                    {
+                      "tool_name": "get_forecast",
+                      "type": "tool_reference",
+                    },
+                  ],
+                  "is_error": undefined,
+                  "tool_use_id": "search-1",
+                  "type": "tool_result",
+                },
+              ],
+              "role": "user",
+            },
+          ],
+          "system": undefined,
+        },
+      }
+    `);
+  });
+
+  it('should handle tool result with url-based PDF content', async () => {
+    const result = await convertToAnthropicMessagesPrompt({
+      prompt: [
+        {
+          role: 'tool',
+          content: [
+            {
+              type: 'tool-result',
+              toolName: 'get-pdf',
+              toolCallId: 'get-pdf-1',
+              output: {
+                type: 'content',
+                value: [
+                  {
+                    type: 'file-url',
+                    url: 'https://example.com/document.pdf',
+                  },
+                ],
+              },
+            },
+          ],
+        },
+      ],
+      sendReasoning: true,
+      warnings: [],
+      toolNameMapping: defaultToolNameMapping,
+    });
+
+    expect(result).toMatchInlineSnapshot(`
+      {
+        "betas": Set {},
+        "prompt": {
+          "messages": [
+            {
+              "content": [
+                {
+                  "cache_control": undefined,
+                  "content": [
+                    {
+                      "source": {
+                        "type": "url",
+                        "url": "https://example.com/document.pdf",
+                      },
+                      "type": "document",
+                    },
+                  ],
+                  "is_error": undefined,
+                  "tool_use_id": "get-pdf-1",
+                  "type": "tool_result",
+                },
+              ],
+              "role": "user",
+            },
+          ],
+          "system": undefined,
+        },
+      }
+    `);
+  });
+
+  it('should handle tool result with url-based image content', async () => {
+    const result = await convertToAnthropicMessagesPrompt({
+      prompt: [
+        {
+          role: 'tool',
+          content: [
+            {
+              type: 'tool-result',
+              toolName: 'image-generator',
+              toolCallId: 'image-gen-1',
+              output: {
+                type: 'content',
+                value: [
+                  {
+                    type: 'image-url',
+                    url: 'https://example.com/image.png',
+                  },
+                ],
+              },
+            },
+          ],
+        },
+      ],
+      sendReasoning: true,
+      warnings: [],
+      toolNameMapping: defaultToolNameMapping,
+    });
+
+    expect(result).toMatchInlineSnapshot(`
+      {
+        "betas": Set {},
+        "prompt": {
+          "messages": [
+            {
+              "content": [
+                {
+                  "cache_control": undefined,
+                  "content": [
+                    {
+                      "source": {
+                        "type": "url",
+                        "url": "https://example.com/image.png",
+                      },
+                      "type": "image",
+                    },
+                  ],
+                  "is_error": undefined,
+                  "tool_use_id": "image-gen-1",
+                  "type": "tool_result",
+                },
+              ],
+              "role": "user",
+            },
+          ],
+          "system": undefined,
+        },
+      }
+    `);
+  });
 });
 
 describe('assistant messages', () => {
@@ -711,6 +1008,7 @@ describe('assistant messages', () => {
       ],
       sendReasoning: true,
       warnings: [],
+      toolNameMapping: defaultToolNameMapping,
     });
 
     expect(result).toEqual({
@@ -747,6 +1045,7 @@ describe('assistant messages', () => {
       ],
       sendReasoning: true,
       warnings: [],
+      toolNameMapping: defaultToolNameMapping,
     });
 
     expect(result).toEqual({
@@ -787,6 +1086,7 @@ describe('assistant messages', () => {
       ],
       sendReasoning: true,
       warnings: [],
+      toolNameMapping: defaultToolNameMapping,
     });
 
     expect(result).toEqual({
@@ -820,6 +1120,7 @@ describe('assistant messages', () => {
       ],
       sendReasoning: true,
       warnings: [],
+      toolNameMapping: defaultToolNameMapping,
     });
 
     expect(result).toEqual({
@@ -841,7 +1142,7 @@ describe('assistant messages', () => {
   });
 
   it('should convert assistant message reasoning parts with signature into thinking parts when sendReasoning is true', async () => {
-    const warnings: LanguageModelV3CallWarning[] = [];
+    const warnings: SharedV3Warning[] = [];
     const result = await convertToAnthropicMessagesPrompt({
       prompt: [
         {
@@ -865,6 +1166,7 @@ describe('assistant messages', () => {
       ],
       sendReasoning: true,
       warnings,
+      toolNameMapping: defaultToolNameMapping,
     });
 
     expect(result).toEqual({
@@ -893,7 +1195,7 @@ describe('assistant messages', () => {
   });
 
   it('should ignore reasoning parts without signature into thinking parts when sendReasoning is true', async () => {
-    const warnings: LanguageModelV3CallWarning[] = [];
+    const warnings: SharedV3Warning[] = [];
     const result = await convertToAnthropicMessagesPrompt({
       prompt: [
         {
@@ -912,6 +1214,7 @@ describe('assistant messages', () => {
       ],
       sendReasoning: true,
       warnings,
+      toolNameMapping: defaultToolNameMapping,
     });
 
     expect(result).toMatchInlineSnapshot(`
@@ -945,7 +1248,7 @@ describe('assistant messages', () => {
   });
 
   it('should omit assistant message reasoning parts with signature when sendReasoning is false', async () => {
-    const warnings: LanguageModelV3CallWarning[] = [];
+    const warnings: SharedV3Warning[] = [];
     const result = await convertToAnthropicMessagesPrompt({
       prompt: [
         {
@@ -969,6 +1272,7 @@ describe('assistant messages', () => {
       ],
       sendReasoning: false,
       warnings,
+      toolNameMapping: defaultToolNameMapping,
     });
 
     expect(result).toEqual({
@@ -996,7 +1300,7 @@ describe('assistant messages', () => {
   });
 
   it('should omit reasoning parts without signature when sendReasoning is false', async () => {
-    const warnings: LanguageModelV3CallWarning[] = [];
+    const warnings: SharedV3Warning[] = [];
     const result = await convertToAnthropicMessagesPrompt({
       prompt: [
         {
@@ -1015,6 +1319,7 @@ describe('assistant messages', () => {
       ],
       sendReasoning: false,
       warnings,
+      toolNameMapping: defaultToolNameMapping,
     });
 
     expect(result).toEqual({
@@ -1042,7 +1347,7 @@ describe('assistant messages', () => {
   });
 
   it('should convert anthropic web_search tool call and result parts', async () => {
-    const warnings: LanguageModelV3CallWarning[] = [];
+    const warnings: SharedV3Warning[] = [];
     const result = await convertToAnthropicMessagesPrompt({
       prompt: [
         {
@@ -1079,6 +1384,7 @@ describe('assistant messages', () => {
       ],
       sendReasoning: false,
       warnings,
+      toolNameMapping: defaultToolNameMapping,
     });
 
     expect(result).toMatchInlineSnapshot(`
@@ -1123,7 +1429,7 @@ describe('assistant messages', () => {
   });
 
   it('should convert anthropic web_fetch tool call and result parts', async () => {
-    const warnings: LanguageModelV3CallWarning[] = [];
+    const warnings: SharedV3Warning[] = [];
     const result = await convertToAnthropicMessagesPrompt({
       prompt: [
         {
@@ -1131,7 +1437,7 @@ describe('assistant messages', () => {
           content: [
             {
               input: {
-                url: 'https://raw.githubusercontent.com/vercel/ai/blob/main/examples/ai-core/data/ai.pdf',
+                url: 'https://raw.githubusercontent.com/vercel/ai/blob/main/examples/ai-functions/data/ai.pdf',
               },
               providerExecuted: true,
               toolCallId: 'srvtoolu_011cNtbtzFARKPcAcp7w4nh9',
@@ -1143,7 +1449,7 @@ describe('assistant messages', () => {
                 type: 'json',
                 value: {
                   type: 'web_fetch_result',
-                  url: 'https://raw.githubusercontent.com/vercel/ai/blob/main/examples/ai-core/data/ai.pdf',
+                  url: 'https://raw.githubusercontent.com/vercel/ai/blob/main/examples/ai-functions/data/ai.pdf',
                   retrievedAt: '2025-01-01T00:00:00.000Z',
                   content: {
                     type: 'document',
@@ -1166,6 +1472,7 @@ describe('assistant messages', () => {
       ],
       sendReasoning: false,
       warnings,
+      toolNameMapping: defaultToolNameMapping,
     });
 
     expect(result).toMatchInlineSnapshot(`
@@ -1179,7 +1486,7 @@ describe('assistant messages', () => {
                   "cache_control": undefined,
                   "id": "srvtoolu_011cNtbtzFARKPcAcp7w4nh9",
                   "input": {
-                    "url": "https://raw.githubusercontent.com/vercel/ai/blob/main/examples/ai-core/data/ai.pdf",
+                    "url": "https://raw.githubusercontent.com/vercel/ai/blob/main/examples/ai-functions/data/ai.pdf",
                   },
                   "name": "web_fetch",
                   "type": "server_tool_use",
@@ -1201,7 +1508,7 @@ describe('assistant messages', () => {
                     },
                     "retrieved_at": "2025-01-01T00:00:00.000Z",
                     "type": "web_fetch_result",
-                    "url": "https://raw.githubusercontent.com/vercel/ai/blob/main/examples/ai-core/data/ai.pdf",
+                    "url": "https://raw.githubusercontent.com/vercel/ai/blob/main/examples/ai-functions/data/ai.pdf",
                   },
                   "tool_use_id": "srvtoolu_011cNtbtzFARKPcAcp7w4nh9",
                   "type": "web_fetch_tool_result",
@@ -1217,9 +1524,281 @@ describe('assistant messages', () => {
     expect(warnings).toMatchInlineSnapshot(`[]`);
   });
 
+  it('should convert anthropic web_fetch tool call with error result', async () => {
+    const warnings: SharedV3Warning[] = [];
+    const result = await convertToAnthropicMessagesPrompt({
+      prompt: [
+        {
+          role: 'assistant',
+          content: [
+            {
+              input: {
+                url: 'https://httpbin.org/status/500',
+              },
+              providerExecuted: true,
+              toolCallId: 'srvtoolu_016yTvwN6L1sDdjdPUzPbZRV',
+              toolName: 'web_fetch',
+              type: 'tool-call',
+            },
+            {
+              output: {
+                type: 'error-json',
+                value: JSON.stringify({
+                  type: 'web_fetch_tool_result_error',
+                  errorCode: 'url_not_accessible',
+                }),
+              },
+              toolCallId: 'srvtoolu_016yTvwN6L1sDdjdPUzPbZRV',
+              toolName: 'web_fetch',
+              type: 'tool-result',
+            },
+          ],
+        },
+      ],
+      sendReasoning: false,
+      warnings,
+      toolNameMapping: defaultToolNameMapping,
+    });
+
+    expect(result).toMatchInlineSnapshot(`
+      {
+        "betas": Set {},
+        "prompt": {
+          "messages": [
+            {
+              "content": [
+                {
+                  "cache_control": undefined,
+                  "id": "srvtoolu_016yTvwN6L1sDdjdPUzPbZRV",
+                  "input": {
+                    "url": "https://httpbin.org/status/500",
+                  },
+                  "name": "web_fetch",
+                  "type": "server_tool_use",
+                },
+                {
+                  "cache_control": undefined,
+                  "content": {
+                    "error_code": "url_not_accessible",
+                    "type": "web_fetch_tool_result_error",
+                  },
+                  "tool_use_id": "srvtoolu_016yTvwN6L1sDdjdPUzPbZRV",
+                  "type": "web_fetch_tool_result",
+                },
+              ],
+              "role": "assistant",
+            },
+          ],
+          "system": undefined,
+        },
+      }
+    `);
+    expect(warnings).toMatchInlineSnapshot(`[]`);
+  });
+
+  it('should convert anthropic web_fetch tool call with error result as object', async () => {
+    const warnings: SharedV3Warning[] = [];
+    const result = await convertToAnthropicMessagesPrompt({
+      prompt: [
+        {
+          role: 'assistant',
+          content: [
+            {
+              input: {
+                url: 'https://www.fotball.no/fotballdata/turnering/hjem/?fiksId=193156',
+              },
+              providerExecuted: true,
+              toolCallId: 'srvtoolu_01JteKo9VRHDKZ1rdMXywnwD',
+              toolName: 'web_fetch',
+              type: 'tool-call',
+            },
+            {
+              output: {
+                type: 'error-json',
+                value: {
+                  type: 'web_fetch_tool_result_error',
+                  errorCode: 'url_not_allowed',
+                },
+              },
+              toolCallId: 'srvtoolu_01JteKo9VRHDKZ1rdMXywnwD',
+              toolName: 'web_fetch',
+              type: 'tool-result',
+            },
+          ],
+        },
+      ],
+      sendReasoning: false,
+      warnings,
+      toolNameMapping: defaultToolNameMapping,
+    });
+
+    expect(result).toMatchInlineSnapshot(`
+      {
+        "betas": Set {},
+        "prompt": {
+          "messages": [
+            {
+              "content": [
+                {
+                  "cache_control": undefined,
+                  "id": "srvtoolu_01JteKo9VRHDKZ1rdMXywnwD",
+                  "input": {
+                    "url": "https://www.fotball.no/fotballdata/turnering/hjem/?fiksId=193156",
+                  },
+                  "name": "web_fetch",
+                  "type": "server_tool_use",
+                },
+                {
+                  "cache_control": undefined,
+                  "content": {
+                    "error_code": "url_not_allowed",
+                    "type": "web_fetch_tool_result_error",
+                  },
+                  "tool_use_id": "srvtoolu_01JteKo9VRHDKZ1rdMXywnwD",
+                  "type": "web_fetch_tool_result",
+                },
+              ],
+              "role": "assistant",
+            },
+          ],
+          "system": undefined,
+        },
+      }
+    `);
+    expect(warnings).toMatchInlineSnapshot(`[]`);
+  });
+
+  it('should convert anthropic web_fetch tool call with error result as malformed string', async () => {
+    const warnings: SharedV3Warning[] = [];
+    const result = await convertToAnthropicMessagesPrompt({
+      prompt: [
+        {
+          role: 'assistant',
+          content: [
+            {
+              input: {
+                url: 'https://example.com',
+              },
+              providerExecuted: true,
+              toolCallId: 'srvtoolu_test123',
+              toolName: 'web_fetch',
+              type: 'tool-call',
+            },
+            {
+              output: {
+                type: 'error-json',
+                value: 'not valid json at all',
+              },
+              toolCallId: 'srvtoolu_test123',
+              toolName: 'web_fetch',
+              type: 'tool-result',
+            },
+          ],
+        },
+      ],
+      sendReasoning: false,
+      warnings,
+      toolNameMapping: defaultToolNameMapping,
+    });
+
+    expect(result.prompt.messages[0].content[1]).toMatchInlineSnapshot(`
+      {
+        "cache_control": undefined,
+        "content": {
+          "error_code": "unknown",
+          "type": "web_fetch_tool_result_error",
+        },
+        "tool_use_id": "srvtoolu_test123",
+        "type": "web_fetch_tool_result",
+      }
+    `);
+    expect(warnings).toMatchInlineSnapshot(`[]`);
+  });
+
+  it('should convert anthropic tool_search_tool_regex tool call and result parts', async () => {
+    const warnings: SharedV3Warning[] = [];
+    const result = await convertToAnthropicMessagesPrompt({
+      prompt: [
+        {
+          role: 'assistant',
+          content: [
+            {
+              input: {
+                pattern: 'weather|forecast',
+                limit: 10,
+              },
+              providerExecuted: true,
+              toolCallId: 'srvtoolu_01SACvPAnp6ucMJsstB5qb3f',
+              toolName: 'tool_search_tool_regex',
+              type: 'tool-call',
+            },
+            {
+              output: {
+                type: 'json',
+                value: [
+                  {
+                    type: 'tool_reference',
+                    toolName: 'get_weather',
+                  },
+                ],
+              },
+              toolCallId: 'srvtoolu_01SACvPAnp6ucMJsstB5qb3f',
+              toolName: 'tool_search_tool_regex',
+              type: 'tool-result',
+            },
+          ],
+        },
+      ],
+      sendReasoning: false,
+      warnings,
+      toolNameMapping: defaultToolNameMapping,
+    });
+
+    expect(result).toMatchInlineSnapshot(`
+      {
+        "betas": Set {},
+        "prompt": {
+          "messages": [
+            {
+              "content": [
+                {
+                  "cache_control": undefined,
+                  "id": "srvtoolu_01SACvPAnp6ucMJsstB5qb3f",
+                  "input": {
+                    "limit": 10,
+                    "pattern": "weather|forecast",
+                  },
+                  "name": "tool_search_tool_regex",
+                  "type": "server_tool_use",
+                },
+                {
+                  "cache_control": undefined,
+                  "content": {
+                    "tool_references": [
+                      {
+                        "tool_name": "get_weather",
+                        "type": "tool_reference",
+                      },
+                    ],
+                    "type": "tool_search_tool_search_result",
+                  },
+                  "tool_use_id": "srvtoolu_01SACvPAnp6ucMJsstB5qb3f",
+                  "type": "tool_search_tool_result",
+                },
+              ],
+              "role": "assistant",
+            },
+          ],
+          "system": undefined,
+        },
+      }
+    `);
+    expect(warnings).toMatchInlineSnapshot(`[]`);
+  });
+
   describe('code_execution 20250522', () => {
     it('should convert anthropic code_execution tool call and result parts', async () => {
-      const warnings: LanguageModelV3CallWarning[] = [];
+      const warnings: SharedV3Warning[] = [];
       const result = await convertToAnthropicMessagesPrompt({
         prompt: [
           {
@@ -1253,50 +1832,52 @@ describe('assistant messages', () => {
         ],
         sendReasoning: false,
         warnings,
+        toolNameMapping: defaultToolNameMapping,
       });
 
       expect(result).toMatchInlineSnapshot(`
-      {
-        "betas": Set {},
-        "prompt": {
-          "messages": [
-            {
-              "content": [
-                {
-                  "cache_control": undefined,
-                  "id": "srvtoolu_01XyZ1234567890",
-                  "input": {
-                    "code": "print(\"Hello, world!\")",
+        {
+          "betas": Set {},
+          "prompt": {
+            "messages": [
+              {
+                "content": [
+                  {
+                    "cache_control": undefined,
+                    "id": "srvtoolu_01XyZ1234567890",
+                    "input": {
+                      "code": "print("Hello, world!")",
+                    },
+                    "name": "code_execution",
+                    "type": "server_tool_use",
                   },
-                  "name": "code_execution",
-                  "type": "server_tool_use",
-                },
-                {
-                  "cache_control": undefined,
-                  "content": {
-                    "return_code": 0,
-                    "stderr": "",
-                    "stdout": "Hello, world!\",
-                    "type": "code_execution_result",
+                  {
+                    "cache_control": undefined,
+                    "content": {
+                      "content": [],
+                      "return_code": 0,
+                      "stderr": "",
+                      "stdout": "Hello, world!",
+                      "type": "code_execution_result",
+                    },
+                    "tool_use_id": "srvtoolu_01XyZ1234567890",
+                    "type": "code_execution_tool_result",
                   },
-                  "tool_use_id": "srvtoolu_01XyZ1234567890",
-                  "type": "code_execution_tool_result",
-                },
-              ],
-              "role": "assistant",
-            },
-          ],
-          "system": undefined,
-        },
-      }
-    `);
+                ],
+                "role": "assistant",
+              },
+            ],
+            "system": undefined,
+          },
+        }
+      `);
       expect(warnings).toMatchInlineSnapshot(`[]`);
     });
   });
 
   describe('code_execution 20250825', () => {
     it('should convert anthropic code_execution tool call and result parts', async () => {
-      const warnings: LanguageModelV3CallWarning[] = [];
+      const warnings: SharedV3Warning[] = [];
       const result = await convertToAnthropicMessagesPrompt({
         prompt: [
           {
@@ -1356,6 +1937,7 @@ describe('assistant messages', () => {
         ],
         sendReasoning: false,
         warnings,
+        toolNameMapping: defaultToolNameMapping,
       });
 
       expect(result).toMatchInlineSnapshot(`
@@ -1423,7 +2005,7 @@ describe('assistant messages', () => {
 
   describe('mcp tool use', () => {
     it('should convert anthropic mcp tool use parts', async () => {
-      const warnings: LanguageModelV3CallWarning[] = [];
+      const warnings: SharedV3Warning[] = [];
       const result = await convertToAnthropicMessagesPrompt({
         prompt: [
           {
@@ -1460,6 +2042,7 @@ describe('assistant messages', () => {
         ],
         sendReasoning: false,
         warnings,
+        toolNameMapping: defaultToolNameMapping,
       });
 
       expect(result).toMatchInlineSnapshot(`
@@ -1529,6 +2112,7 @@ describe('cache control', () => {
         ],
         sendReasoning: true,
         warnings: [],
+        toolNameMapping: defaultToolNameMapping,
       });
 
       expect(result).toEqual({
@@ -1568,6 +2152,7 @@ describe('cache control', () => {
         ],
         sendReasoning: true,
         warnings: [],
+        toolNameMapping: defaultToolNameMapping,
       });
 
       expect(result).toEqual({
@@ -1607,6 +2192,7 @@ describe('cache control', () => {
         ],
         sendReasoning: true,
         warnings: [],
+        toolNameMapping: defaultToolNameMapping,
       });
 
       expect(result).toEqual({
@@ -1656,6 +2242,7 @@ describe('cache control', () => {
         ],
         sendReasoning: true,
         warnings: [],
+        toolNameMapping: defaultToolNameMapping,
       });
 
       expect(result).toEqual({
@@ -1701,6 +2288,7 @@ describe('cache control', () => {
         ],
         sendReasoning: true,
         warnings: [],
+        toolNameMapping: defaultToolNameMapping,
       });
 
       expect(result).toEqual({
@@ -1744,6 +2332,7 @@ describe('cache control', () => {
         ],
         sendReasoning: true,
         warnings: [],
+        toolNameMapping: defaultToolNameMapping,
       });
 
       expect(result).toEqual({
@@ -1795,6 +2384,7 @@ describe('cache control', () => {
         ],
         sendReasoning: true,
         warnings: [],
+        toolNameMapping: defaultToolNameMapping,
       });
 
       expect(result).toEqual({
@@ -1846,6 +2436,7 @@ describe('cache control', () => {
         ],
         sendReasoning: true,
         warnings: [],
+        toolNameMapping: defaultToolNameMapping,
       });
 
       expect(result).toEqual({
@@ -1879,7 +2470,7 @@ describe('cache control', () => {
 
   describe('cache control validation', () => {
     it('should reject cache_control on thinking blocks', async () => {
-      const warnings: LanguageModelV3CallWarning[] = [];
+      const warnings: SharedV3Warning[] = [];
       const cacheControlValidator = new CacheControlValidator();
       const result = await convertToAnthropicMessagesPrompt({
         prompt: [
@@ -1902,6 +2493,7 @@ describe('cache control', () => {
         sendReasoning: true,
         warnings,
         cacheControlValidator,
+        toolNameMapping: defaultToolNameMapping,
       });
 
       expect(result).toEqual({
@@ -1922,16 +2514,19 @@ describe('cache control', () => {
         betas: new Set(),
       });
 
-      expect(cacheControlValidator.getWarnings()).toContainEqual({
-        type: 'unsupported-setting',
-        setting: 'cacheControl',
-        details:
-          'cache_control cannot be set on thinking block. It will be ignored.',
-      });
+      expect(cacheControlValidator.getWarnings()).toMatchInlineSnapshot(`
+        [
+          {
+            "details": "cache_control cannot be set on thinking block. It will be ignored.",
+            "feature": "cache_control on non-cacheable context",
+            "type": "unsupported",
+          },
+        ]
+      `);
     });
 
     it('should reject cache_control on redacted thinking blocks', async () => {
-      const warnings: LanguageModelV3CallWarning[] = [];
+      const warnings: SharedV3Warning[] = [];
       const cacheControlValidator = new CacheControlValidator();
       const result = await convertToAnthropicMessagesPrompt({
         prompt: [
@@ -1954,23 +2549,27 @@ describe('cache control', () => {
         sendReasoning: true,
         warnings,
         cacheControlValidator,
+        toolNameMapping: defaultToolNameMapping,
       });
 
       expect(result.prompt.messages[0].content[0]).not.toHaveProperty(
         'cache_control',
       );
 
-      expect(cacheControlValidator.getWarnings()).toContainEqual({
-        type: 'unsupported-setting',
-        setting: 'cacheControl',
-        details:
-          'cache_control cannot be set on redacted thinking block. It will be ignored.',
-      });
+      expect(cacheControlValidator.getWarnings()).toMatchInlineSnapshot(`
+        [
+          {
+            "details": "cache_control cannot be set on redacted thinking block. It will be ignored.",
+            "feature": "cache_control on non-cacheable context",
+            "type": "unsupported",
+          },
+        ]
+      `);
     });
   });
 
   it('should limit cache breakpoints to 4', async () => {
-    const warnings: LanguageModelV3CallWarning[] = [];
+    const warnings: SharedV3Warning[] = [];
     const cacheControlValidator = new CacheControlValidator();
     const result = await convertToAnthropicMessagesPrompt({
       prompt: [
@@ -2028,6 +2627,7 @@ describe('cache control', () => {
       sendReasoning: true,
       warnings,
       cacheControlValidator,
+      toolNameMapping: defaultToolNameMapping,
     });
 
     // First 4 should have cache_control
@@ -2048,11 +2648,15 @@ describe('cache control', () => {
     expect(result.prompt.messages[2].content[0].cache_control).toBeUndefined();
 
     // Should have warning about exceeding limit
-    expect(cacheControlValidator.getWarnings()).toContainEqual({
-      type: 'unsupported-setting',
-      setting: 'cacheControl',
-      details: expect.stringContaining('Maximum 4 cache breakpoints exceeded'),
-    });
+    expect(cacheControlValidator.getWarnings()).toMatchInlineSnapshot(`
+      [
+        {
+          "details": "Maximum 4 cache breakpoints exceeded (found 5). This breakpoint will be ignored.",
+          "feature": "cacheControl breakpoint limit",
+          "type": "unsupported",
+        },
+      ]
+    `);
   });
 });
 
@@ -2073,6 +2677,7 @@ describe('citations', () => {
       ],
       sendReasoning: true,
       warnings: [],
+      toolNameMapping: defaultToolNameMapping,
     });
 
     expect(result).toMatchInlineSnapshot(`
@@ -2125,6 +2730,7 @@ describe('citations', () => {
       ],
       sendReasoning: true,
       warnings: [],
+      toolNameMapping: defaultToolNameMapping,
     });
 
     expect(result).toMatchInlineSnapshot(`
@@ -2183,6 +2789,7 @@ describe('citations', () => {
       ],
       sendReasoning: true,
       warnings: [],
+      toolNameMapping: defaultToolNameMapping,
     });
 
     expect(result).toMatchInlineSnapshot(`
@@ -2258,6 +2865,7 @@ describe('citations', () => {
       ],
       sendReasoning: true,
       warnings: [],
+      toolNameMapping: defaultToolNameMapping,
     });
 
     expect(result).toMatchInlineSnapshot(`
@@ -2309,5 +2917,196 @@ describe('citations', () => {
         },
       }
     `);
+  });
+
+  describe('message sequences', () => {
+    it('should convert user-assistant-tool-assistant-user message sequence with multiple tool calls', async () => {
+      const result = await convertToAnthropicMessagesPrompt({
+        prompt: [
+          {
+            role: 'user',
+            content: [
+              { type: 'text', text: 'weather for berlin, london and paris' },
+            ],
+          },
+          {
+            role: 'assistant',
+            content: [
+              {
+                type: 'text',
+                text: 'I will use the weather tool to get the weather for berlin, london and paris',
+              },
+              {
+                type: 'tool-call',
+                toolName: 'weather',
+                toolCallId: 'weather-call-1',
+                input: { location: 'berlin' },
+              },
+              {
+                type: 'tool-call',
+                toolName: 'weather',
+                toolCallId: 'weather-call-2',
+                input: { location: 'london' },
+              },
+              {
+                type: 'tool-call',
+                toolName: 'weather',
+                toolCallId: 'weather-call-3',
+                input: { location: 'paris' },
+              },
+            ],
+          },
+          {
+            role: 'tool',
+            content: [
+              {
+                type: 'tool-result',
+                toolName: 'weather',
+                toolCallId: 'weather-call-1',
+                output: {
+                  type: 'json',
+                  value: { weather: 'sunny' },
+                },
+              },
+              {
+                type: 'tool-result',
+                toolName: 'weather',
+                toolCallId: 'weather-call-2',
+                output: {
+                  type: 'json',
+                  value: { weather: 'cloudy' },
+                },
+              },
+              {
+                type: 'tool-result',
+                toolName: 'weather',
+                toolCallId: 'weather-call-3',
+                output: {
+                  type: 'json',
+                  value: { weather: 'rainy' },
+                },
+              },
+            ],
+          },
+          {
+            role: 'assistant',
+            content: [
+              {
+                type: 'text',
+                text: 'The weather for berlin is sunny, the weather for london is cloudy, and the weather for paris is rainy',
+              },
+            ],
+          },
+          {
+            role: 'user',
+            content: [{ type: 'text', text: 'and for new york?' }],
+          },
+        ],
+        sendReasoning: true,
+        warnings: [],
+        toolNameMapping: defaultToolNameMapping,
+      });
+
+      expect(result.prompt).toMatchInlineSnapshot(`
+        {
+          "messages": [
+            {
+              "content": [
+                {
+                  "cache_control": undefined,
+                  "text": "weather for berlin, london and paris",
+                  "type": "text",
+                },
+              ],
+              "role": "user",
+            },
+            {
+              "content": [
+                {
+                  "cache_control": undefined,
+                  "text": "I will use the weather tool to get the weather for berlin, london and paris",
+                  "type": "text",
+                },
+                {
+                  "cache_control": undefined,
+                  "id": "weather-call-1",
+                  "input": {
+                    "location": "berlin",
+                  },
+                  "name": "weather",
+                  "type": "tool_use",
+                },
+                {
+                  "cache_control": undefined,
+                  "id": "weather-call-2",
+                  "input": {
+                    "location": "london",
+                  },
+                  "name": "weather",
+                  "type": "tool_use",
+                },
+                {
+                  "cache_control": undefined,
+                  "id": "weather-call-3",
+                  "input": {
+                    "location": "paris",
+                  },
+                  "name": "weather",
+                  "type": "tool_use",
+                },
+              ],
+              "role": "assistant",
+            },
+            {
+              "content": [
+                {
+                  "cache_control": undefined,
+                  "content": "{"weather":"sunny"}",
+                  "is_error": undefined,
+                  "tool_use_id": "weather-call-1",
+                  "type": "tool_result",
+                },
+                {
+                  "cache_control": undefined,
+                  "content": "{"weather":"cloudy"}",
+                  "is_error": undefined,
+                  "tool_use_id": "weather-call-2",
+                  "type": "tool_result",
+                },
+                {
+                  "cache_control": undefined,
+                  "content": "{"weather":"rainy"}",
+                  "is_error": undefined,
+                  "tool_use_id": "weather-call-3",
+                  "type": "tool_result",
+                },
+              ],
+              "role": "user",
+            },
+            {
+              "content": [
+                {
+                  "cache_control": undefined,
+                  "text": "The weather for berlin is sunny, the weather for london is cloudy, and the weather for paris is rainy",
+                  "type": "text",
+                },
+              ],
+              "role": "assistant",
+            },
+            {
+              "content": [
+                {
+                  "cache_control": undefined,
+                  "text": "and for new york?",
+                  "type": "text",
+                },
+              ],
+              "role": "user",
+            },
+          ],
+          "system": undefined,
+        }
+      `);
+    });
   });
 });
