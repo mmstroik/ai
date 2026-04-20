@@ -1,5 +1,72 @@
 # @ai-sdk/provider-utils
 
+## 4.0.23
+
+### Patch Changes
+
+- 6247886: chore(provider-utils,google): fix grammar errors in error and warning messages
+
+## 4.0.22
+
+### Patch Changes
+
+- 0469aed: fix: allow inline data URLs in download validation
+
+## 4.0.21
+
+### Patch Changes
+
+- 055cd68: fix: publish v6 to latest npm dist tag
+
+## 4.0.20
+
+### Patch Changes
+
+- 64ac0fd: fix(security): validate redirect targets in download functions to prevent SSRF bypass
+
+  Both `downloadBlob` and `download` now validate the final URL after following HTTP redirects, preventing attackers from bypassing SSRF protections via open redirects to internal/private addresses.
+
+## 4.0.19
+
+### Patch Changes
+
+- ad4cfc2: Add URL validation to `downloadBlob` and `download` to prevent blind SSRF attacks. Private/internal IP addresses, localhost, and non-HTTP protocols are now rejected before fetching.
+
+## 4.0.18
+
+### Patch Changes
+
+- 824b295: fix(provider-utils): prevent unicode escape bypass in secureJsonParse
+
+## 4.0.17
+
+### Patch Changes
+
+- 08336f1: fix(bedrock): strip file extensions from filename
+
+## 4.0.16
+
+### Patch Changes
+
+- 58bc42d: feat(provider/openai): support custom tools with alias mapping
+
+## 4.0.15
+
+### Patch Changes
+
+- 4024a3a: security: prevent unbounded memory growth in download functions
+
+  The `download()` and `downloadBlob()` functions now enforce a default 2 GiB size limit when downloading from user-provided URLs. Downloads that exceed this limit are aborted with a `DownloadError` instead of consuming unbounded memory and crashing the process. The `abortSignal` parameter is now passed through to `fetch()` in all download call sites.
+
+  Added `download` option to `transcribe()` and `experimental_generateVideo()` for providing a custom download function. Use the new `createDownload({ maxBytes })` factory to configure download size limits.
+
+## 4.0.14
+
+### Patch Changes
+
+- Updated dependencies [7168375]
+  - @ai-sdk/provider@3.0.8
+
 ## 4.0.13
 
 ### Patch Changes

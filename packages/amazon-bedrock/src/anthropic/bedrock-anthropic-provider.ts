@@ -47,6 +47,10 @@ const BEDROCK_TOOL_BETA_MAP: Record<string, string> = {
   text_editor_20250728: 'computer-use-2025-01-24',
   computer_20250124: 'computer-use-2025-01-24',
   computer_20241022: 'computer-use-2024-10-22',
+  tool_search_tool_regex_20251119: 'tool-search-tool-2025-10-19',
+  // BM25 is not currently supported on Bedrock, but including the beta flag
+  // so that Bedrock returns a more useful error message if it's used.
+  tool_search_tool_bm25_20251119: 'tool-search-tool-2025-10-19',
 };
 
 export interface BedrockAnthropicProvider extends ProviderV3 {
@@ -256,7 +260,7 @@ export function createBedrockAnthropic(
           isStreaming ? 'invoke-with-response-stream' : 'invoke'
         }`,
 
-      transformRequestBody: args => {
+      transformRequestBody: (args, betas) => {
         const { model, stream, tool_choice, tools, ...rest } = args;
 
         const transformedToolChoice =
@@ -267,7 +271,7 @@ export function createBedrockAnthropic(
               }
             : undefined;
 
-        const requiredBetas = new Set<string>();
+        const requiredBetas = new Set<string>(betas);
         const transformedTools = tools?.map((tool: Record<string, unknown>) => {
           const toolType = tool.type as string | undefined;
 
@@ -319,8 +323,8 @@ export function createBedrockAnthropic(
 
       // Bedrock Anthropic doesn't support URL sources, force download and base64 conversion
       supportedUrls: () => ({}),
-      // force the use of JSON tool fallback for structured outputs since beta header isn't supported
-      supportsNativeStructuredOutput: false,
+      // native structured output via output_config.format is supported on Bedrock
+      supportsNativeStructuredOutput: true,
     });
 
   const provider = function (modelId: BedrockAnthropicModelId) {

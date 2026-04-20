@@ -4,6 +4,10 @@ import {
   ProviderOptions,
   SystemModelMessage,
 } from '@ai-sdk/provider-utils';
+import type {
+  OnFinishEvent,
+  OnStepFinishEvent,
+} from '../generate-text/callback-events';
 import { Output } from '../generate-text/output';
 import { PrepareStepFunction } from '../generate-text/prepare-step';
 import { StopCondition } from '../generate-text/stop-condition';
@@ -15,8 +19,14 @@ import { TelemetrySettings } from '../telemetry/telemetry-settings';
 import { LanguageModel, ToolChoice } from '../types/language-model';
 import { DownloadFunction } from '../util/download/download-function';
 import { AgentCallParameters } from './agent';
-import { ToolLoopAgentOnFinishCallback } from './tool-loop-agent-on-finish-callback';
-import { ToolLoopAgentOnStepFinishCallback } from './tool-loop-agent-on-step-finish-callback';
+
+export type ToolLoopAgentOnStepFinishCallback<TOOLS extends ToolSet = {}> = (
+  stepResult: OnStepFinishEvent<TOOLS>,
+) => Promise<void> | void;
+
+export type ToolLoopAgentOnFinishCallback<TOOLS extends ToolSet = {}> = (
+  event: OnFinishEvent<TOOLS>,
+) => PromiseLike<void> | void;
 
 /**
  * Configuration options for an agent.

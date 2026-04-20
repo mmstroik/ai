@@ -27,7 +27,7 @@ This is a **monorepo** using pnpm workspaces and Turborepo.
 | `examples/`               | Example applications (ai-functions, next-openai, etc.)                               |
 | `content/`                | Documentation source files (MDX)                                                     |
 | `contributing/`           | Contributor guides and documentation                                                 |
-| `tools/`                  | Internal tooling (eslint-config, tsconfig)                                           |
+| `tools/`                  | Internal tooling (tsconfig)                                                          |
 
 ### Core Package Dependencies
 
@@ -60,9 +60,8 @@ pnpm build          # Build all packages
 | `pnpm install`           | Install dependencies                                              |
 | `pnpm build`             | Build all packages                                                |
 | `pnpm test`              | Run all tests (excludes examples)                                 |
-| `pnpm lint`              | Run linting                                                       |
-| `pnpm prettier-fix`      | Fix formatting issues                                             |
-| `pnpm prettier-check`    | Check formatting                                                  |
+| `pnpm check`             | Run linting (oxlint) and formatting (oxfmt) checks               |
+| `pnpm fix`               | Fix linting and formatting issues                                 |
 | `pnpm type-check:full`   | TypeScript type checking (includes examples)                      |
 | `pnpm changeset`         | Add a changeset for your PR                                       |
 | `pnpm update-references` | Update tsconfig.json references after adding package dependencies |
@@ -84,8 +83,15 @@ Run these from within a package directory (e.g., `packages/ai`):
 
 ```bash
 cd examples/ai-functions
-pnpm tsx src/stream-text/openai.ts    # Run a specific example
+pnpm tsx src/stream-text/openai/basic.ts    # Run a specific example
 ```
+
+### AI Functions Example Layout
+
+- Place examples under `examples/ai-functions/src/<function>/<provider>/`
+- Use `basic.ts` for the provider entry example file
+- Place all other examples in the same provider folder using descriptive `kebab-case` file names
+- Do not create flat top-level provider files like `src/stream-text/openai.ts`
 
 ## Core APIs
 
@@ -115,10 +121,10 @@ pnpm tsx src/stream-text/openai.ts    # Run a specific example
 
 ### Formatting
 
-- **Tool**: Prettier
-- **Config**: Defined in root `package.json`
-- **Settings**: Single quotes, trailing commas, 2-space indentation, no tabs
-- **Pre-commit hook**: Automatically formats staged files on commit via `lint-staged`. If `package.json` changes are staged, `pnpm install` runs automatically
+- **Formatter**: oxfmt (via `pnpm fix` or `ultracite fix`)
+- **Linter**: oxlint (via `pnpm check` or `ultracite check`)
+- **Config**: `.oxfmtrc.jsonc` (formatter) and `.oxlintrc.json` (linter)
+- **Pre-commit hook**: Runs `pnpm install` if `package.json` changes are staged
 
 ### Testing
 
@@ -187,6 +193,10 @@ export class MyError extends AISDKError {
 }
 ```
 
+## Project Philosophies
+
+For an overview of the project's key philosophies that guide decision making, see `contributing/project-philosophies.md`.
+
 ## Architecture
 
 ### Provider Pattern
@@ -197,6 +207,8 @@ The SDK uses a layered provider architecture following the adapter pattern:
 2. **Utilities** (`@ai-sdk/provider-utils`): Shared code for implementing providers
 3. **Providers** (`@ai-sdk/<provider>`): Concrete implementations for each AI service
 4. **Core** (`ai`): High-level functions like `generateText`, `streamText`, `generateObject`
+
+For a focused conceptual walkthrough of AI functions, model specifications, and provider implementations, see `architecture/provider-abstraction.md`.
 
 ### Provider Development
 
@@ -281,3 +293,4 @@ When uncertain about expected artifacts, ask for clarification.
 - Change public APIs without updating documentation
 - Use `require()` for imports
 - Add new dependencies without running `pnpm update-references`
+- Modify `content/docs/08-migration-guides` or `packages/codemod` as part of broader codebase changes

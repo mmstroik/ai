@@ -1,5 +1,216 @@
 # @ai-sdk/azure
 
+## 3.0.54
+
+### Patch Changes
+
+- Updated dependencies [953385d]
+  - @ai-sdk/openai@3.0.53
+
+## 3.0.53
+
+### Patch Changes
+
+- d42076d: Add AI Gateway hint to provider READMEs
+- Updated dependencies [d42076d]
+  - @ai-sdk/openai@3.0.52
+
+## 3.0.52
+
+### Patch Changes
+
+- Updated dependencies [6247886]
+  - @ai-sdk/provider-utils@4.0.23
+  - @ai-sdk/openai@3.0.51
+
+## 3.0.51
+
+### Patch Changes
+
+- Updated dependencies [0469aed]
+  - @ai-sdk/provider-utils@4.0.22
+  - @ai-sdk/openai@3.0.50
+
+## 3.0.50
+
+### Patch Changes
+
+- Updated dependencies [bc01093]
+  - @ai-sdk/openai@3.0.49
+
+## 3.0.49
+
+### Patch Changes
+
+- Updated dependencies [9c548de]
+- Updated dependencies [bcb04df]
+  - @ai-sdk/openai@3.0.48
+
+## 3.0.48
+
+### Patch Changes
+
+- 055cd68: fix: publish v6 to latest npm dist tag
+- Updated dependencies [055cd68]
+  - @ai-sdk/provider-utils@4.0.21
+  - @ai-sdk/openai@3.0.47
+
+## 3.0.47
+
+### Patch Changes
+
+- Updated dependencies [75fc0e7]
+  - @ai-sdk/openai@3.0.46
+
+## 3.0.46
+
+### Patch Changes
+
+- Updated dependencies [023088c]
+  - @ai-sdk/openai@3.0.45
+
+## 3.0.45
+
+### Patch Changes
+
+- Updated dependencies [f4a734a]
+  - @ai-sdk/openai@3.0.44
+
+## 3.0.44
+
+### Patch Changes
+
+- Updated dependencies [64ac0fd]
+  - @ai-sdk/provider-utils@4.0.20
+  - @ai-sdk/openai@3.0.43
+
+## 3.0.43
+
+### Patch Changes
+
+- Updated dependencies [2589004]
+  - @ai-sdk/openai@3.0.42
+
+## 3.0.42
+
+### Patch Changes
+
+- Updated dependencies [ad4cfc2]
+  - @ai-sdk/provider-utils@4.0.19
+  - @ai-sdk/openai@3.0.41
+
+## 3.0.41
+
+### Patch Changes
+
+- Updated dependencies [824b295]
+  - @ai-sdk/provider-utils@4.0.18
+  - @ai-sdk/openai@3.0.40
+
+## 3.0.40
+
+### Patch Changes
+
+- Updated dependencies [08336f1]
+  - @ai-sdk/provider-utils@4.0.17
+  - @ai-sdk/openai@3.0.39
+
+## 3.0.39
+
+### Patch Changes
+
+- Updated dependencies [64a8fae]
+  - @ai-sdk/openai@3.0.38
+
+## 3.0.38
+
+### Patch Changes
+
+- Updated dependencies [58bc42d]
+  - @ai-sdk/openai@3.0.37
+  - @ai-sdk/provider-utils@4.0.16
+
+## 3.0.37
+
+### Patch Changes
+
+- Updated dependencies [53bdfa5]
+  - @ai-sdk/openai@3.0.36
+
+## 3.0.36
+
+### Patch Changes
+
+- Updated dependencies [5e18272]
+  - @ai-sdk/openai@3.0.35
+
+## 3.0.35
+
+### Patch Changes
+
+- Updated dependencies [66a374c]
+  - @ai-sdk/openai@3.0.34
+
+## 3.0.34
+
+### Patch Changes
+
+- Updated dependencies [624e651]
+  - @ai-sdk/openai@3.0.33
+
+## 3.0.33
+
+### Patch Changes
+
+- Updated dependencies [0c9395b]
+  - @ai-sdk/openai@3.0.32
+
+## 3.0.32
+
+### Patch Changes
+
+- Updated dependencies [d5f7312]
+  - @ai-sdk/openai@3.0.31
+
+## 3.0.31
+
+### Patch Changes
+
+- Updated dependencies [ff12133]
+  - @ai-sdk/openai@3.0.30
+
+## 3.0.30
+
+### Patch Changes
+
+- Updated dependencies [e2ee705]
+  - @ai-sdk/openai@3.0.29
+
+## 3.0.29
+
+### Patch Changes
+
+- Updated dependencies [4024a3a]
+  - @ai-sdk/provider-utils@4.0.15
+  - @ai-sdk/openai@3.0.28
+
+## 3.0.28
+
+### Patch Changes
+
+- 99fbed8: feat: normalize provider specific model options type names and ensure they are exported
+- Updated dependencies [99fbed8]
+  - @ai-sdk/openai@3.0.27
+
+## 3.0.27
+
+### Patch Changes
+
+- Updated dependencies [7168375]
+  - @ai-sdk/provider@3.0.8
+  - @ai-sdk/openai@3.0.26
+  - @ai-sdk/provider-utils@4.0.14
+
 ## 3.0.26
 
 ### Patch Changes
@@ -244,13 +455,13 @@
   Before
 
   ```ts
-  model.textEmbeddingModel('my-model-id');
+  model.textEmbeddingModel("my-model-id");
   ```
 
   After
 
   ```ts
-  model.embeddingModel('my-model-id');
+  model.embeddingModel("my-model-id");
   ```
 
 - d64ece9: enables image_generation capabilities in the Azure provider through the Responses API.
@@ -637,13 +848,13 @@
   Before
 
   ```ts
-  model.textEmbeddingModel('my-model-id');
+  model.textEmbeddingModel("my-model-id");
   ```
 
   After
 
   ```ts
-  model.embeddingModel('my-model-id');
+  model.embeddingModel("my-model-id");
   ```
 
 - Updated dependencies [8d9e8ad]
@@ -1474,7 +1685,7 @@
 
   ```js
   await generateImage({
-    model: luma.image('photon-flash-1', {
+    model: luma.image("photon-flash-1", {
       maxImagesPerCall: 5,
       pollIntervalMillis: 500,
     }),
@@ -1487,7 +1698,7 @@
 
   ```js
   await generateImage({
-    model: luma.image('photon-flash-1'),
+    model: luma.image("photon-flash-1"),
     prompt,
     n: 10,
     maxImagesPerCall: 5,
@@ -1801,7 +2012,7 @@
 
   ```js
   await generateImage({
-    model: luma.image('photon-flash-1', {
+    model: luma.image("photon-flash-1", {
       maxImagesPerCall: 5,
       pollIntervalMillis: 500,
     }),
@@ -1814,7 +2025,7 @@
 
   ```js
   await generateImage({
-    model: luma.image('photon-flash-1'),
+    model: luma.image("photon-flash-1"),
     prompt,
     n: 10,
     maxImagesPerCall: 5,

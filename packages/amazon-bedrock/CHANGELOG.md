@@ -1,5 +1,352 @@
 # @ai-sdk/amazon-bedrock
 
+## 4.0.96
+
+### Patch Changes
+
+- fd0f097: fix(provider/amazon-bedrock): fix Anthropic reasoning behavior related to Opus 4.7
+
+## 4.0.95
+
+### Patch Changes
+
+- Updated dependencies [95b4fe0]
+  - @ai-sdk/anthropic@3.0.71
+
+## 4.0.94
+
+### Patch Changes
+
+- 2ff8d57: feat(provider/anthropic): add support for Opus 4.7 and relevant API enhancements
+- Updated dependencies [2ff8d57]
+  - @ai-sdk/anthropic@3.0.70
+
+## 4.0.93
+
+### Patch Changes
+
+- Updated dependencies [61f1a61]
+  - @ai-sdk/anthropic@3.0.69
+
+## 4.0.92
+
+### Patch Changes
+
+- d42076d: Add AI Gateway hint to provider READMEs
+- Updated dependencies [d42076d]
+  - @ai-sdk/anthropic@3.0.68
+
+## 4.0.91
+
+### Patch Changes
+
+- ac80bc7: fix(amazon-bedrock): preserve empty text blocks when reasoning content is present
+
+## 4.0.90
+
+### Patch Changes
+
+- Updated dependencies [6247886]
+  - @ai-sdk/provider-utils@4.0.23
+  - @ai-sdk/anthropic@3.0.67
+
+## 4.0.89
+
+### Patch Changes
+
+- Updated dependencies [0469aed]
+  - @ai-sdk/provider-utils@4.0.22
+  - @ai-sdk/anthropic@3.0.66
+
+## 4.0.88
+
+### Patch Changes
+
+- Updated dependencies [94aed06]
+  - @ai-sdk/anthropic@3.0.65
+
+## 4.0.87
+
+### Patch Changes
+
+- df099b9: feat(bedrock): add support for service tier for model inference
+
+## 4.0.86
+
+### Patch Changes
+
+- 086c3f9: fix(provider/amazon-bedrock): transform bedrock/anthropic error responses to anthropic format
+
+## 4.0.85
+
+### Patch Changes
+
+- 4918dda: fix(amazon-bedrock): preserve reasoning text when signature is present
+
+## 4.0.84
+
+### Patch Changes
+
+- ff854a2: fix(provider/amazon-bedrock): add tool search beta for Anthropic
+
+## 4.0.83
+
+### Patch Changes
+
+- Updated dependencies [05b8ca2]
+  - @ai-sdk/anthropic@3.0.64
+
+## 4.0.82
+
+### Patch Changes
+
+- 055cd68: fix: publish v6 to latest npm dist tag
+- Updated dependencies [055cd68]
+  - @ai-sdk/provider-utils@4.0.21
+  - @ai-sdk/anthropic@3.0.63
+
+## 4.0.81
+
+### Patch Changes
+
+- Updated dependencies [41c6a56]
+  - @ai-sdk/anthropic@3.0.62
+
+## 4.0.80
+
+### Patch Changes
+
+- 2381567: fix(vertex): throw warning when strict: true for vertexAnthropic
+- Updated dependencies [2381567]
+  - @ai-sdk/anthropic@3.0.61
+
+## 4.0.79
+
+### Patch Changes
+
+- Updated dependencies [ffe0f90]
+  - @ai-sdk/anthropic@3.0.60
+
+## 4.0.78
+
+### Patch Changes
+
+- Updated dependencies [64ac0fd]
+  - @ai-sdk/provider-utils@4.0.20
+  - @ai-sdk/anthropic@3.0.59
+
+## 4.0.77
+
+### Patch Changes
+
+- Updated dependencies [ad4cfc2]
+- Updated dependencies [3fb4e70]
+  - @ai-sdk/provider-utils@4.0.19
+  - @ai-sdk/anthropic@3.0.58
+
+## 4.0.76
+
+### Patch Changes
+
+- Updated dependencies [824b295]
+  - @ai-sdk/provider-utils@4.0.18
+  - @ai-sdk/anthropic@3.0.57
+
+## 4.0.75
+
+### Patch Changes
+
+- e49c34d: feat(anthropic): expose anthropic.anthropicBeta to downstream providers
+- e49c34d: feat(anthropic): expose anthropic.anthropicBeta to downstream provider
+- Updated dependencies [e49c34d]
+- Updated dependencies [e49c34d]
+  - @ai-sdk/anthropic@3.0.56
+
+## 4.0.74
+
+### Patch Changes
+
+- Updated dependencies [7531e72]
+  - @ai-sdk/anthropic@3.0.55
+
+## 4.0.73
+
+### Patch Changes
+
+- Updated dependencies [56c67d5]
+  - @ai-sdk/anthropic@3.0.54
+
+## 4.0.72
+
+### Patch Changes
+
+- Updated dependencies [89caf28]
+  - @ai-sdk/anthropic@3.0.53
+
+## 4.0.71
+
+### Patch Changes
+
+- 08336f1: fix(bedrock): strip file extensions from filename
+- Updated dependencies [08336f1]
+  - @ai-sdk/provider-utils@4.0.17
+  - @ai-sdk/anthropic@3.0.52
+
+## 4.0.70
+
+### Patch Changes
+
+- Updated dependencies [64a8fae]
+  - @ai-sdk/anthropic@3.0.51
+
+## 4.0.69
+
+### Patch Changes
+
+- Updated dependencies [58bc42d]
+  - @ai-sdk/provider-utils@4.0.16
+  - @ai-sdk/anthropic@3.0.50
+
+## 4.0.68
+
+### Patch Changes
+
+- d98d9ba: Migrated deprecated `output_format` parameter to `output_config.format` for structured outputs + Enabled native structured output support for Bedrock Anthropic models via `output_config.format`.
+- Updated dependencies [d98d9ba]
+  - @ai-sdk/anthropic@3.0.49
+
+## 4.0.67
+
+### Patch Changes
+
+- Updated dependencies [2164cdf]
+  - @ai-sdk/anthropic@3.0.48
+
+## 4.0.66
+
+### Patch Changes
+
+- 91f8777: fix(bedrock/groq): pass strict mode for tools
+
+## 4.0.65
+
+### Patch Changes
+
+- a1a8091: fix(bedrock): ensure tool choice option is enforced
+
+## 4.0.64
+
+### Patch Changes
+
+- Updated dependencies [17978c6]
+  - @ai-sdk/anthropic@3.0.47
+
+## 4.0.63
+
+### Patch Changes
+
+- dc34ced: fix(provider/amazon-bedrock): add missing latest Anthropic model IDs to `BedrockChatModelId`
+
+## 4.0.62
+
+### Patch Changes
+
+- Updated dependencies [b094c07]
+  - @ai-sdk/anthropic@3.0.46
+
+## 4.0.61
+
+### Patch Changes
+
+- 2a1c664: feat(provider/anthropic): add support for new Claude Sonnet 4.6 model
+- Updated dependencies [2a1c664]
+  - @ai-sdk/anthropic@3.0.45
+
+## 4.0.60
+
+### Patch Changes
+
+- Updated dependencies [23ac4a3]
+  - @ai-sdk/anthropic@3.0.44
+
+## 4.0.59
+
+### Patch Changes
+
+- Updated dependencies [4024a3a]
+  - @ai-sdk/provider-utils@4.0.15
+  - @ai-sdk/anthropic@3.0.43
+
+## 4.0.58
+
+### Patch Changes
+
+- 242696c: feat: normalize and export provider specific model options type names for existing schemas
+
+## 4.0.57
+
+### Patch Changes
+
+- 61d25a9: fix(provider/amazon-bedrock): extract response metadata from api headers
+- 08f54fc: feat(provider/amazon-bedrock): add performanceConfig, serviceTier, and cacheDetails to provider metadata
+
+## 4.0.56
+
+### Patch Changes
+
+- 99fbed8: feat: normalize provider specific model options type names and ensure they are exported
+- Updated dependencies [99fbed8]
+  - @ai-sdk/anthropic@3.0.42
+
+## 4.0.55
+
+### Patch Changes
+
+- Updated dependencies [c60b393]
+  - @ai-sdk/anthropic@3.0.41
+
+## 4.0.54
+
+### Patch Changes
+
+- Updated dependencies [8c2b1e1]
+  - @ai-sdk/anthropic@3.0.40
+
+## 4.0.53
+
+### Patch Changes
+
+- aebbebd: Remove misleading warning when mixing Anthropic provider-defined tools and standard function tools on Bedrock. The warning incorrectly stated that only Anthropic tools would be used, but both tool types are sent to Bedrock and work correctly together.
+
+## 4.0.52
+
+### Patch Changes
+
+- Updated dependencies [0a0d29c]
+  - @ai-sdk/anthropic@3.0.39
+
+## 4.0.51
+
+### Patch Changes
+
+- Updated dependencies [7168375]
+  - @ai-sdk/provider@3.0.8
+  - @ai-sdk/anthropic@3.0.38
+  - @ai-sdk/provider-utils@4.0.14
+
+## 4.0.50
+
+### Patch Changes
+
+- 632ab10: feat(amazon-bedrock): add support for new Anthropic adaptive thinking and reasoning effort including max
+
+## 4.0.49
+
+### Patch Changes
+
+- Updated dependencies [e288302]
+  - @ai-sdk/anthropic@3.0.37
+
 ## 4.0.48
 
 ### Patch Changes
@@ -379,13 +726,13 @@
   Before
 
   ```ts
-  model.textEmbeddingModel('my-model-id');
+  model.textEmbeddingModel("my-model-id");
   ```
 
   After
 
   ```ts
-  model.embeddingModel('my-model-id');
+  model.embeddingModel("my-model-id");
   ```
 
 - 2625a04: feat(openai); update spec for mcp approval
@@ -777,13 +1124,13 @@
   Before
 
   ```ts
-  model.textEmbeddingModel('my-model-id');
+  model.textEmbeddingModel("my-model-id");
   ```
 
   After
 
   ```ts
-  model.embeddingModel('my-model-id');
+  model.embeddingModel("my-model-id");
   ```
 
 - Updated dependencies [8d9e8ad]

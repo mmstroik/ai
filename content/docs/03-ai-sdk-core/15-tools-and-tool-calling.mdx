@@ -226,6 +226,14 @@ When using `useChat`, the approval flow is handled through UI state. See [Chatbo
 
 With the `stopWhen` setting, you can enable multi-step calls in `generateText` and `streamText`. When `stopWhen` is set and the model generates a tool call, the AI SDK will trigger a new generation passing in the tool result until there are no further tool calls or the stopping condition is met.
 
+The AI SDK provides several built-in stopping conditions:
+
+- `stepCountIs(count)` — stops after a specified number of steps (default: `stepCountIs(20)`)
+- `hasToolCall(toolName)` — stops when a specific tool is called
+- `isLoopFinished()` — never triggers, letting the loop run until naturally finished
+
+You can also combine multiple conditions in an array or create custom conditions. See [Loop Control](/docs/agents/loop-control) for more details.
+
 <Note>
   The `stopWhen` conditions are only evaluated when the last step contains tool
   results.
@@ -304,16 +312,58 @@ is triggered when a step is finished,
 i.e. all text deltas, tool calls, and tool results for the step are available.
 When you have multiple steps, the callback is triggered for each step.
 
-```tsx highlight="5-7"
+The callback receives a `stepNumber` (zero-based) to identify which step just completed:
+
+```tsx highlight="5-8"
 import { generateText } from 'ai';
 
 const result = await generateText({
   // ...
-  onStepFinish({ text, toolCalls, toolResults, finishReason, usage }) {
+  onStepFinish({
+    stepNumber,
+    text,
+    toolCalls,
+    toolResults,
+    finishReason,
+    usage,
+  }) {
+    console.log(`Step ${stepNumber} finished (${finishReason})`);
     // your own logic, e.g. for saving the chat history or recording usage
   },
 });
 ```
+
+### Tool execution lifecycle callbacks
+
+You can use `experimental_onToolCallStart` and `experimental_onToolCallFinish` to observe tool execution.
+These callbacks are called right before and after each tool's `execute` function, giving you
+visibility into tool execution timing, inputs, outputs, and errors:
+
+```tsx highlight="5-14"
+import { generateText } from 'ai';
+
+const result = await generateText({
+  // ... model, tools, prompt
+  experimental_onToolCallStart({ toolName, toolCallId, input }) {
+    console.log(`Calling tool: ${toolName}`, { toolCallId, input });
+  },
+  experimental_onToolCallFinish({
+    toolName,
+    toolCallId,
+    output,
+    error,
+    durationMs,
+  }) {
+    if (error) {
+      console.error(`Tool ${toolName} failed after ${durationMs}ms:`, error);
+    } else {
+      console.log(`Tool ${toolName} completed in ${durationMs}ms`, { output });
+    }
+  },
+});
+```
+
+Errors thrown inside these callbacks are silently caught and do not break the generation flow.
 
 ### `prepareStep` callback
 
@@ -859,7 +909,7 @@ You can use different strategies to repair the tool call:
 
 ```ts
 import { openai } from '@ai-sdk/openai';
-import { generateObject, generateText, NoSuchToolError, tool } from 'ai';
+import { generateText, NoSuchToolError, Output, tool } from 'ai';
 
 const result = await generateText({
   model,
@@ -878,9 +928,9 @@ const result = await generateText({
 
     const tool = tools[toolCall.toolName as keyof typeof tools];
 
-    const { object: repairedArgs } = await generateObject({
+    const { output: repairedArgs } = await generateText({
       model: __MODEL__,
-      schema: tool.inputSchema,
+      output: Output.object({ schema: tool.inputSchema }),
       prompt: [
         `The model tried to call the tool "${toolCall.toolName}"` +
           ` with the following inputs:`,
@@ -900,7 +950,7 @@ const result = await generateText({
 
 ```ts
 import { openai } from '@ai-sdk/openai';
-import { generateObject, generateText, NoSuchToolError, tool } from 'ai';
+import { generateText, NoSuchToolError, tool } from 'ai';
 
 const result = await generateText({
   model,
@@ -985,9 +1035,13 @@ const { text } = await generateText({
 ## Multi-modal Tool Results
 
 <Note type="warning">
-  Multi-modal tool results are experimental and only supported by Anthropic and
-  OpenAI.
+  Multi-modal tool results are experimental and supported by Anthropic, OpenAI,
+  and Google (Gemini 3 models).
 </Note>
+
+For Google, use base64 media parts (`image-data` / `file-data`) or base64
+`data:` URLs in URL-style parts. Remote HTTP(S) URLs in tool-result URL parts
+are not supported.
 
 In order to send multi-modal tool results, e.g. screenshots, back to the model,
 they need to be converted into a specific format.

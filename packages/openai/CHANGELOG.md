@@ -1,5 +1,207 @@
 # @ai-sdk/openai
 
+## 3.0.53
+
+### Patch Changes
+
+- 953385d: fix(openai): default undefined tool-call input to empty object before serializing tool arguments
+
+## 3.0.52
+
+### Patch Changes
+
+- d42076d: Add AI Gateway hint to provider READMEs
+
+## 3.0.51
+
+### Patch Changes
+
+- Updated dependencies [6247886]
+  - @ai-sdk/provider-utils@4.0.23
+
+## 3.0.50
+
+### Patch Changes
+
+- Updated dependencies [0469aed]
+  - @ai-sdk/provider-utils@4.0.22
+
+## 3.0.49
+
+### Patch Changes
+
+- bc01093: fix(openai): support file-url parts in tool output content
+
+## 3.0.48
+
+### Patch Changes
+
+- 9c548de: Add `gpt-5.4-mini`, `gpt-5.4-mini-2026-03-17`, `gpt-5.4-nano`, and `gpt-5.4-nano-2026-03-17` models.
+- bcb04df: fix(openai): preserve raw finish reason for failed responses stream events
+
+  Handle `response.failed` chunks in Responses API streaming so `finishReason.raw` is preserved from `incomplete_details.reason` (e.g. `max_output_tokens`), and map failed-without-reason cases to unified `error` instead of `other`.
+
+## 3.0.47
+
+### Patch Changes
+
+- 055cd68: fix: publish v6 to latest npm dist tag
+- Updated dependencies [055cd68]
+  - @ai-sdk/provider-utils@4.0.21
+
+## 3.0.46
+
+### Patch Changes
+
+- 75fc0e7: feat(openai): add new tool search tool
+
+## 3.0.45
+
+### Patch Changes
+
+- 023088c: feat(provider/openai): add `gpt-5.3-chat-latest`
+
+## 3.0.44
+
+### Patch Changes
+
+- f4a734a: fix(provider/openai): drop reasoning parts without encrypted content when store: false
+
+## 3.0.43
+
+### Patch Changes
+
+- Updated dependencies [64ac0fd]
+  - @ai-sdk/provider-utils@4.0.20
+
+## 3.0.42
+
+### Patch Changes
+
+- 2589004: feat(provider/openai): add GPT-5.4 model support
+
+## 3.0.41
+
+### Patch Changes
+
+- Updated dependencies [ad4cfc2]
+  - @ai-sdk/provider-utils@4.0.19
+
+## 3.0.40
+
+### Patch Changes
+
+- Updated dependencies [824b295]
+  - @ai-sdk/provider-utils@4.0.18
+
+## 3.0.39
+
+### Patch Changes
+
+- Updated dependencies [08336f1]
+  - @ai-sdk/provider-utils@4.0.17
+
+## 3.0.38
+
+### Patch Changes
+
+- 64a8fae: chore: remove obsolete model IDs for Anthropic, Google, OpenAI, xAI
+
+## 3.0.37
+
+### Patch Changes
+
+- 58bc42d: feat(provider/openai): support custom tools with alias mapping
+- Updated dependencies [58bc42d]
+  - @ai-sdk/provider-utils@4.0.16
+
+## 3.0.36
+
+### Patch Changes
+
+- 53bdfa5: fix(openai): allow null/undefined type in streaming tool call deltas
+
+  Azure AI Foundry and Mistral deployed on Azure omit the `type` field in
+  streaming tool_calls deltas. The chat stream parser now accepts a missing
+  `type` field (treating it as `"function"`) instead of throwing
+  `InvalidResponseDataError: Expected 'function' type.`
+
+  Fixes #12770
+
+## 3.0.35
+
+### Patch Changes
+
+- 5e18272: fix(openai): include reasoning parts without itemId when encrypted_content is present
+
+  When `providerOptions.openai.itemId` is absent on a reasoning content part,
+  the converter now uses `encrypted_content` as a fallback instead of silently
+  skipping the part with a warning. The OpenAI Responses API accepts reasoning
+  items without an `id` when `encrypted_content` is supplied, enabling
+  multi-turn reasoning even when item IDs are stripped from provider options.
+
+  Also makes the `id` field optional on the `OpenAIResponsesReasoning` type to
+  reflect that the API does not require it.
+
+  Fixes #12853
+
+## 3.0.34
+
+### Patch Changes
+
+- 66a374c: Support `phase` parameter on Responses API message items. The `phase` field (`'commentary'` or `'final_answer'`) is returned by models like `gpt-5.3-codex` on assistant message output items and must be preserved when sending follow-up requests. The phase value is available in `providerMetadata.openai.phase` on text parts and is automatically included on assistant messages sent back to the API.
+
+## 3.0.33
+
+### Patch Changes
+
+- 624e651: Added missing model IDs to OpenAIChatModelId, OpenAIResponsesModelId, OpenAIImageModelId, OpenAISpeechModelId, OpenAITranscriptionModelId, and OpenAICompletionModelId types for better autocomplete support.
+
+## 3.0.32
+
+### Patch Changes
+
+- 0c9395b: feat(provider/openai): add `gpt-5.3-codex`
+
+## 3.0.31
+
+### Patch Changes
+
+- d5f7312: fix(openai): change web search tool action to be optional
+
+## 3.0.30
+
+### Patch Changes
+
+- ff12133: feat(provider/openai): support native skills and hosted shell
+
+## 3.0.29
+
+### Patch Changes
+
+- e2ee705: feat: differentiate text vs image input tokens
+
+## 3.0.28
+
+### Patch Changes
+
+- Updated dependencies [4024a3a]
+  - @ai-sdk/provider-utils@4.0.15
+
+## 3.0.27
+
+### Patch Changes
+
+- 99fbed8: feat: normalize provider specific model options type names and ensure they are exported
+
+## 3.0.26
+
+### Patch Changes
+
+- Updated dependencies [7168375]
+  - @ai-sdk/provider@3.0.8
+  - @ai-sdk/provider-utils@4.0.14
+
 ## 3.0.25
 
 ### Patch Changes
@@ -213,13 +415,13 @@
   Before
 
   ```ts
-  model.textEmbeddingModel('my-model-id');
+  model.textEmbeddingModel("my-model-id");
   ```
 
   After
 
   ```ts
-  model.embeddingModel('my-model-id');
+  model.embeddingModel("my-model-id");
   ```
 
 - 60f4775: fix: remove code for unsuported o1-mini and o1-preview models
@@ -229,15 +431,15 @@
 - 2e86082: feat(provider/openai): `OpenAIChatLanguageModelOptions` type
 
   ```ts
-  import { openai, type OpenAIChatLanguageModelOptions } from '@ai-sdk/openai';
-  import { generateText } from 'ai';
+  import { openai, type OpenAIChatLanguageModelOptions } from "@ai-sdk/openai";
+  import { generateText } from "ai";
 
   await generateText({
-    model: openai.chat('gpt-4o'),
-    prompt: 'Invent a new holiday and describe its traditions.',
+    model: openai.chat("gpt-4o"),
+    prompt: "Invent a new holiday and describe its traditions.",
     providerOptions: {
       openai: {
-        user: 'user-123',
+        user: "user-123",
       } satisfies OpenAIChatLanguageModelOptions,
     },
   });
@@ -638,13 +840,13 @@
   Before
 
   ```ts
-  model.textEmbeddingModel('my-model-id');
+  model.textEmbeddingModel("my-model-id");
   ```
 
   After
 
   ```ts
-  model.embeddingModel('my-model-id');
+  model.embeddingModel("my-model-id");
   ```
 
 - Updated dependencies [8d9e8ad]
@@ -1114,15 +1316,15 @@
 - 2e86082: feat(provider/openai): `OpenAIChatLanguageModelOptions` type
 
   ```ts
-  import { openai, type OpenAIChatLanguageModelOptions } from '@ai-sdk/openai';
-  import { generateText } from 'ai';
+  import { openai, type OpenAIChatLanguageModelOptions } from "@ai-sdk/openai";
+  import { generateText } from "ai";
 
   await generateText({
-    model: openai.chat('gpt-4o'),
-    prompt: 'Invent a new holiday and describe its traditions.',
+    model: openai.chat("gpt-4o"),
+    prompt: "Invent a new holiday and describe its traditions.",
     providerOptions: {
       openai: {
-        user: 'user-123',
+        user: "user-123",
       } satisfies OpenAIChatLanguageModelOptions,
     },
   });
@@ -1418,7 +1620,7 @@
 
   ```js
   await generateImage({
-    model: luma.image('photon-flash-1', {
+    model: luma.image("photon-flash-1", {
       maxImagesPerCall: 5,
       pollIntervalMillis: 500,
     }),
@@ -1431,7 +1633,7 @@
 
   ```js
   await generateImage({
-    model: luma.image('photon-flash-1'),
+    model: luma.image("photon-flash-1"),
     prompt,
     n: 10,
     maxImagesPerCall: 5,
@@ -1493,10 +1695,10 @@
   The `experimental_generateImage` method from the `ai` package now returnes revised prompts for OpenAI's image models.
 
   ```js
-  const prompt = 'Santa Claus driving a Cadillac';
+  const prompt = "Santa Claus driving a Cadillac";
 
   const { providerMetadata } = await experimental_generateImage({
-    model: openai.image('dall-e-3'),
+    model: openai.image("dall-e-3"),
     prompt,
   });
 
@@ -1795,7 +1997,7 @@
 
   ```js
   await generateImage({
-    model: luma.image('photon-flash-1', {
+    model: luma.image("photon-flash-1", {
       maxImagesPerCall: 5,
       pollIntervalMillis: 500,
     }),
@@ -1808,7 +2010,7 @@
 
   ```js
   await generateImage({
-    model: luma.image('photon-flash-1'),
+    model: luma.image("photon-flash-1"),
     prompt,
     n: 10,
     maxImagesPerCall: 5,
@@ -1853,10 +2055,10 @@
   The `experimental_generateImage` method from the `ai` package now returnes revised prompts for OpenAI's image models.
 
   ```js
-  const prompt = 'Santa Claus driving a Cadillac';
+  const prompt = "Santa Claus driving a Cadillac";
 
   const { providerMetadata } = await experimental_generateImage({
-    model: openai.image('dall-e-3'),
+    model: openai.image("dall-e-3"),
     prompt,
   });
 

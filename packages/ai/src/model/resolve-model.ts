@@ -5,6 +5,7 @@ import {
   ImageModelV3,
   LanguageModelV3,
   ProviderV3,
+  RerankingModelV3,
   SpeechModelV3,
   TranscriptionModelV3,
 } from '@ai-sdk/provider';
@@ -19,6 +20,7 @@ import { asLanguageModelV3 } from './as-language-model-v3';
 import { asSpeechModelV3 } from './as-speech-model-v3';
 import { asTranscriptionModelV3 } from './as-transcription-model-v3';
 import { ImageModel } from '../types/image-model';
+import { RerankingModel } from '../types/reranking-model';
 import { VideoModel } from '../types/video-model';
 
 export function resolveLanguageModel(model: LanguageModel): LanguageModelV3 {
@@ -127,10 +129,46 @@ export function resolveVideoModel(
   model: VideoModel,
 ): Experimental_VideoModelV3 {
   if (typeof model === 'string') {
-    throw new Error(
-      'Video models cannot be resolved from strings. ' +
-        'Please use a Experimental_VideoModelV3 object from a provider (e.g., fal.video("model-id")).',
-    );
+    const provider = getGlobalProvider();
+    // TODO AI SDK v7
+    // @ts-expect-error - videoModel support is experimental
+    const videoModel = provider.videoModel;
+
+    if (!videoModel) {
+      throw new Error(
+        'The default provider does not support video models. ' +
+          'Please use a Experimental_VideoModelV3 object from a provider (e.g., vertex.video("model-id")).',
+      );
+    }
+
+    return videoModel(model);
+  }
+
+  if (model.specificationVersion !== 'v3') {
+    const unsupportedModel: any = model;
+    throw new UnsupportedModelVersionError({
+      version: unsupportedModel.specificationVersion,
+      provider: unsupportedModel.provider,
+      modelId: unsupportedModel.modelId,
+    });
+  }
+
+  return model;
+}
+
+export function resolveRerankingModel(model: RerankingModel): RerankingModelV3 {
+  if (typeof model === 'string') {
+    const provider = getGlobalProvider();
+    const rerankingModel = provider.rerankingModel;
+
+    if (!rerankingModel) {
+      throw new Error(
+        'The default provider does not support reranking models. ' +
+          'Please use a RerankingModel object from a provider (e.g., gateway.rerankingModel("model-id")).',
+      );
+    }
+
+    return rerankingModel(model);
   }
 
   if (model.specificationVersion !== 'v3') {

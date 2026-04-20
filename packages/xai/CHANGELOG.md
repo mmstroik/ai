@@ -1,5 +1,256 @@
 # @ai-sdk/xai
 
+## 3.0.83
+
+### Patch Changes
+
+- b937f3e: fix(xai): support encrypted reasoning round-trip for ZDR
+
+## 3.0.82
+
+### Patch Changes
+
+- 72ebb54: fix (provider/xai): handle mid-stream error chunks
+
+## 3.0.81
+
+### Patch Changes
+
+- c1cc97f: fix (provider/xai): add response.incomplete and response.failed streaming event handling
+
+## 3.0.80
+
+### Patch Changes
+
+- d42076d: Add AI Gateway hint to provider READMEs
+- Updated dependencies [d42076d]
+  - @ai-sdk/openai-compatible@2.0.41
+
+## 3.0.79
+
+### Patch Changes
+
+- Updated dependencies [01c9c16]
+  - @ai-sdk/openai-compatible@2.0.40
+
+## 3.0.78
+
+### Patch Changes
+
+- Updated dependencies [6247886]
+  - @ai-sdk/provider-utils@4.0.23
+  - @ai-sdk/openai-compatible@2.0.39
+
+## 3.0.77
+
+### Patch Changes
+
+- bacdae4: feat(provider/xai): add video extension and reference-to-video (R2V) support
+
+## 3.0.76
+
+### Patch Changes
+
+- Updated dependencies [0469aed]
+  - @ai-sdk/provider-utils@4.0.22
+  - @ai-sdk/openai-compatible@2.0.38
+
+## 3.0.75
+
+### Patch Changes
+
+- 5d61547: fix(provider/xai): correct finish reason for tool calls
+
+## 3.0.74
+
+### Patch Changes
+
+- 3caa544: chore(provider/xai): update Grok 4.20 model IDs to their non-beta versions
+
+## 3.0.73
+
+### Patch Changes
+
+- 12e972c: feat(provider/xai): add moderation error, and costInUsdTicks to video model
+
+## 3.0.72
+
+### Patch Changes
+
+- 055cd68: fix: publish v6 to latest npm dist tag
+- Updated dependencies [055cd68]
+  - @ai-sdk/openai-compatible@2.0.37
+  - @ai-sdk/provider-utils@4.0.21
+
+## 3.0.71
+
+### Patch Changes
+
+- 55ccbe2: chore(provider/xai): remove obsolete Grok 2 models now that they are shut down in their API
+
+## 3.0.70
+
+### Patch Changes
+
+- 49ae502: feat(xai): add b64_json response format, usage cost tracking, and quality/user parameters for image models
+
+## 3.0.69
+
+### Patch Changes
+
+- e7664a4: feat(provider/xai): support multiple input images for image editing
+
+## 3.0.68
+
+### Patch Changes
+
+- Updated dependencies [64ac0fd]
+  - @ai-sdk/provider-utils@4.0.20
+  - @ai-sdk/openai-compatible@2.0.36
+
+## 3.0.67
+
+### Patch Changes
+
+- Updated dependencies [ad4cfc2]
+  - @ai-sdk/provider-utils@4.0.19
+  - @ai-sdk/openai-compatible@2.0.35
+
+## 3.0.66
+
+### Patch Changes
+
+- Updated dependencies [824b295]
+  - @ai-sdk/provider-utils@4.0.18
+  - @ai-sdk/openai-compatible@2.0.34
+
+## 3.0.65
+
+### Patch Changes
+
+- d5801fe: fix(xai): ensure strict mode for tools
+
+## 3.0.64
+
+### Patch Changes
+
+- Updated dependencies [89caf28]
+  - @ai-sdk/openai-compatible@2.0.33
+
+## 3.0.63
+
+### Patch Changes
+
+- Updated dependencies [08336f1]
+  - @ai-sdk/provider-utils@4.0.17
+  - @ai-sdk/openai-compatible@2.0.32
+
+## 3.0.62
+
+### Patch Changes
+
+- 64a8fae: chore: remove obsolete model IDs for Anthropic, Google, OpenAI, xAI
+
+## 3.0.61
+
+### Patch Changes
+
+- 2e00e03: add support for `logprobs` and `topLogprobs` in xai chat and responses provider options
+
+## 3.0.60
+
+### Patch Changes
+
+- Updated dependencies [58bc42d]
+  - @ai-sdk/provider-utils@4.0.16
+  - @ai-sdk/openai-compatible@2.0.31
+
+## 3.0.59
+
+### Patch Changes
+
+- 8641667: Added `resolution` provider option (`"1k"` or `"2k"`) for xAI image models, enabling higher resolution output for grok-imagine models.
+
+## 3.0.58
+
+### Patch Changes
+
+- 6af6c5c: Added `grok-imagine-image-pro` and `grok-2-image-1212` to XaiImageModelId type for better autocomplete support.
+
+## 3.0.57
+
+### Patch Changes
+
+- 56dfdf6: feat (provider/xai): add video support
+
+## 3.0.56
+
+### Patch Changes
+
+- 7ccb902: fix(provider/xai): handle inconsistent cached token reporting
+
+## 3.0.55
+
+### Patch Changes
+
+- Updated dependencies [4024a3a]
+  - @ai-sdk/provider-utils@4.0.15
+  - @ai-sdk/openai-compatible@2.0.30
+
+## 3.0.54
+
+### Patch Changes
+
+- 902e93b: Add support for `response.function_call_arguments.delta` and `response.function_call_arguments.done` streaming events in the xAI Responses API provider. Previously, xAI Grok models using function tools would fail with `AI_TypeValidationError` because these standard Responses API events were missing from the Zod schema and stream handler.
+
+## 3.0.53
+
+### Patch Changes
+
+- 99fbed8: feat: normalize provider specific model options type names and ensure they are exported
+- Updated dependencies [99fbed8]
+  - @ai-sdk/openai-compatible@2.0.29
+
+## 3.0.52
+
+### Patch Changes
+
+- c781168: feat(provider/xai): add dedicated XaiImageModel with JSON-based image editing
+
+## 3.0.51
+
+### Patch Changes
+
+- e1d5111: fix(provider/xai): correct usage token calculation for reasoning models
+
+## 3.0.50
+
+### Patch Changes
+
+- de16a00: fix(xai): add dummy usage data when response.usage is missing
+
+## 3.0.49
+
+### Patch Changes
+
+- 8b3e72d: fix (provider/xai): handle new reasoning text chunk parts
+
+## 3.0.48
+
+### Patch Changes
+
+- Updated dependencies [7168375]
+  - @ai-sdk/provider@3.0.8
+  - @ai-sdk/openai-compatible@2.0.28
+  - @ai-sdk/provider-utils@4.0.14
+
+## 3.0.47
+
+### Patch Changes
+
+- Updated dependencies [9e490ad]
+  - @ai-sdk/openai-compatible@2.0.27
+
 ## 3.0.46
 
 ### Patch Changes
@@ -352,13 +603,13 @@
   Before
 
   ```ts
-  model.textEmbeddingModel('my-model-id');
+  model.textEmbeddingModel("my-model-id");
   ```
 
   After
 
   ```ts
-  model.embeddingModel('my-model-id');
+  model.embeddingModel("my-model-id");
   ```
 
 - 2625a04: feat(openai); update spec for mcp approval
@@ -616,13 +867,13 @@
   Before
 
   ```ts
-  model.textEmbeddingModel('my-model-id');
+  model.textEmbeddingModel("my-model-id");
   ```
 
   After
 
   ```ts
-  model.embeddingModel('my-model-id');
+  model.embeddingModel("my-model-id");
   ```
 
 - 8514146: add grok-4-1 model IDs
@@ -1165,7 +1416,7 @@
 
   ```js
   await generateImage({
-    model: luma.image('photon-flash-1', {
+    model: luma.image("photon-flash-1", {
       maxImagesPerCall: 5,
       pollIntervalMillis: 500,
     }),
@@ -1178,7 +1429,7 @@
 
   ```js
   await generateImage({
-    model: luma.image('photon-flash-1'),
+    model: luma.image("photon-flash-1"),
     prompt,
     n: 10,
     maxImagesPerCall: 5,
@@ -1494,7 +1745,7 @@
 
   ```js
   await generateImage({
-    model: luma.image('photon-flash-1', {
+    model: luma.image("photon-flash-1", {
       maxImagesPerCall: 5,
       pollIntervalMillis: 500,
     }),
@@ -1507,7 +1758,7 @@
 
   ```js
   await generateImage({
-    model: luma.image('photon-flash-1'),
+    model: luma.image("photon-flash-1"),
     prompt,
     n: 10,
     maxImagesPerCall: 5,

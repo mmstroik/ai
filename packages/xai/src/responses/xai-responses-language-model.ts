@@ -31,7 +31,7 @@ import {
 } from './xai-responses-api';
 import {
   XaiResponsesModelId,
-  xaiResponsesProviderOptions,
+  xaiLanguageModelResponsesOptions,
 } from './xai-responses-options';
 import { prepareResponsesTools } from './xai-responses-prepare-tools';
 
@@ -81,7 +81,7 @@ export class XaiResponsesLanguageModel implements LanguageModelV3 {
       (await parseProviderOptions({
         provider: 'xai',
         providerOptions,
-        schema: xaiResponsesProviderOptions,
+        schema: xaiLanguageModelResponsesOptions,
       })) ?? {};
 
     if (stopSequences != null) {
@@ -110,7 +110,7 @@ export class XaiResponsesLanguageModel implements LanguageModelV3 {
 
     const { input, inputWarnings } = await convertToXaiResponsesInput({
       prompt,
-      store: true,
+      store: options.store ?? true,
     });
     warnings.push(...inputWarnings);
 
@@ -142,6 +142,11 @@ export class XaiResponsesLanguageModel implements LanguageModelV3 {
     const baseArgs: Record<string, unknown> = {
       model: this.modelId,
       input,
+      logprobs:
+        options.logprobs === true || options.topLogprobs != null
+          ? true
+          : undefined,
+      top_logprobs: options.topLogprobs,
       max_output_tokens: maxOutputTokens,
       temperature,
       top_p: topP,
@@ -223,6 +228,7 @@ export class XaiResponsesLanguageModel implements LanguageModelV3 {
     });
 
     const content: Array<LanguageModelV3Content> = [];
+    let hasFunctionCall = false;
 
     const webSearchSubTools = [
       'web_search',
@@ -345,6 +351,7 @@ export class XaiResponsesLanguageModel implements LanguageModelV3 {
         }
 
         case 'function_call': {
+          hasFunctionCall = true;
           content.push({
             type: 'tool-call',
             toolCallId: part.call_id,
@@ -359,12 +366,15 @@ export class XaiResponsesLanguageModel implements LanguageModelV3 {
             .map(s => s.text)
             .filter(text => text && text.length > 0);
 
-          if (summaryTexts.length > 0) {
-            const reasoningText = summaryTexts.join('');
-            if (part.encrypted_content || part.id) {
-              content.push({
-                type: 'reasoning',
-                text: reasoningText,
+          const reasoningText = summaryTexts.join('');
+
+          // condition changed here since encrypted content can now come with empty reasoning text
+          if (reasoningText || part.encrypted_content) {
+            const hasMetadata = part.encrypted_content || part.id;
+            content.push({
+              type: 'reasoning',
+              text: reasoningText,
+              ...(hasMetadata && {
                 providerMetadata: {
                   xai: {
                     ...(part.encrypted_content && {
@@ -373,13 +383,8 @@ export class XaiResponsesLanguageModel implements LanguageModelV3 {
                     ...(part.id && { itemId: part.id }),
                   },
                 },
-              });
-            } else {
-              content.push({
-                type: 'reasoning',
-                text: reasoningText,
-              });
-            }
+              }),
+            });
           }
           break;
         }
@@ -393,7 +398,9 @@ export class XaiResponsesLanguageModel implements LanguageModelV3 {
     return {
       content,
       finishReason: {
-        unified: mapXaiResponsesFinishReason(response.status),
+        unified: hasFunctionCall
+          ? 'tool-calls'
+          : mapXaiResponsesFinishReason(response.status),
         raw: response.status ?? undefined,
       },
       usage: response.usage
@@ -445,10 +452,18 @@ export class XaiResponsesLanguageModel implements LanguageModelV3 {
       unified: 'other',
       raw: undefined,
     };
+    let hasFunctionCall = false;
     let usage: LanguageModelV3Usage | undefined = undefined;
     let isFirstChunk = true;
     const contentBlocks: Record<string, { type: 'text' }> = {};
     const seenToolCalls = new Set<string>();
+
+    // Track ongoing function calls by output_index so we can stream
+    // arguments via response.function_call_arguments.delta events.
+    const ongoingToolCalls: Record<
+      number,
+      { toolName: string; toolCallId: string } | undefined
+    > = {};
 
     const activeReasoning: Record<
       string,
@@ -529,6 +544,40 @@ export class XaiResponsesLanguageModel implements LanguageModelV3 {
               return;
             }
 
+            if (event.type === 'response.reasoning_text.delta') {
+              const blockId = `reasoning-${event.item_id}`;
+
+              if (activeReasoning[event.item_id] == null) {
+                activeReasoning[event.item_id] = {};
+                controller.enqueue({
+                  type: 'reasoning-start',
+                  id: blockId,
+                  providerMetadata: {
+                    xai: {
+                      itemId: event.item_id,
+                    },
+                  },
+                });
+              }
+
+              controller.enqueue({
+                type: 'reasoning-delta',
+                id: blockId,
+                delta: event.delta,
+                providerMetadata: {
+                  xai: {
+                    itemId: event.item_id,
+                  },
+                },
+              });
+
+              return;
+            }
+
+            if (event.type === 'response.reasoning_text.done') {
+              return;
+            }
+
             if (event.type === 'response.output_text.delta') {
               const blockId = `text-${event.item_id}`;
 
@@ -587,7 +636,8 @@ export class XaiResponsesLanguageModel implements LanguageModelV3 {
 
             if (
               event.type === 'response.done' ||
-              event.type === 'response.completed'
+              event.type === 'response.completed' ||
+              event.type === 'response.incomplete'
             ) {
               const response = event.response;
 
@@ -595,13 +645,45 @@ export class XaiResponsesLanguageModel implements LanguageModelV3 {
                 usage = convertXaiResponsesUsage(response.usage);
               }
 
-              if (response.status) {
+              if (event.type === 'response.incomplete') {
+                const reason =
+                  'incomplete_details' in response
+                    ? response.incomplete_details?.reason
+                    : undefined;
                 finishReason = {
-                  unified: mapXaiResponsesFinishReason(response.status),
+                  unified: reason
+                    ? mapXaiResponsesFinishReason(reason)
+                    : 'other',
+                  raw: reason ?? 'incomplete',
+                };
+              } else if ('status' in response && response.status) {
+                finishReason = {
+                  unified: hasFunctionCall
+                    ? 'tool-calls'
+                    : mapXaiResponsesFinishReason(response.status),
                   raw: response.status,
                 };
               }
 
+              return;
+            }
+
+            if (event.type === 'response.failed') {
+              const reason = event.response.incomplete_details?.reason;
+              finishReason = {
+                unified: reason ? mapXaiResponsesFinishReason(reason) : 'error',
+                raw: reason ?? 'error',
+              };
+
+              if (event.response.usage) {
+                usage = convertXaiResponsesUsage(event.response.usage);
+              }
+
+              return;
+            }
+
+            if (event.type === 'error') {
+              controller.enqueue({ type: 'error', error: event });
               return;
             }
 
@@ -610,6 +692,24 @@ export class XaiResponsesLanguageModel implements LanguageModelV3 {
               event.type === 'response.custom_tool_call_input.delta' ||
               event.type === 'response.custom_tool_call_input.done'
             ) {
+              return;
+            }
+
+            // Function call arguments streaming (standard function tools)
+            if (event.type === 'response.function_call_arguments.delta') {
+              const toolCall = ongoingToolCalls[event.output_index];
+              if (toolCall != null) {
+                controller.enqueue({
+                  type: 'tool-input-delta',
+                  id: toolCall.toolCallId,
+                  delta: event.delta,
+                });
+              }
+              return;
+            }
+            if (event.type === 'response.function_call_arguments.done') {
+              // Arguments are fully received; output_item.done will
+              // emit tool-input-end and tool-call with the final arguments.
               return;
             }
 
@@ -833,20 +933,22 @@ export class XaiResponsesLanguageModel implements LanguageModelV3 {
                   }
                 }
               } else if (part.type === 'function_call') {
-                if (!seenToolCalls.has(part.call_id)) {
-                  seenToolCalls.add(part.call_id);
+                if (event.type === 'response.output_item.added') {
+                  // Track the call so function_call_arguments.delta events
+                  // can stream the arguments incrementally.
+                  ongoingToolCalls[event.output_index] = {
+                    toolName: part.name,
+                    toolCallId: part.call_id,
+                  };
 
                   controller.enqueue({
                     type: 'tool-input-start',
                     id: part.call_id,
                     toolName: part.name,
                   });
-
-                  controller.enqueue({
-                    type: 'tool-input-delta',
-                    id: part.call_id,
-                    delta: part.arguments,
-                  });
+                } else if (event.type === 'response.output_item.done') {
+                  hasFunctionCall = true;
+                  ongoingToolCalls[event.output_index] = undefined;
 
                   controller.enqueue({
                     type: 'tool-input-end',
@@ -874,7 +976,19 @@ export class XaiResponsesLanguageModel implements LanguageModelV3 {
               }
             }
 
-            controller.enqueue({ type: 'finish', finishReason, usage: usage! });
+            controller.enqueue({
+              type: 'finish',
+              finishReason,
+              usage: usage ?? {
+                inputTokens: {
+                  total: 0,
+                  noCache: 0,
+                  cacheRead: 0,
+                  cacheWrite: 0,
+                },
+                outputTokens: { total: 0, text: 0, reasoning: 0 },
+              },
+            });
           },
         }),
       ),

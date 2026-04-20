@@ -1,5 +1,231 @@
 # @ai-sdk/anthropic
 
+## 3.0.71
+
+### Patch Changes
+
+- 95b4fe0: fix(provider/anthropic): stop adding `fine-grained-tool-streaming-2025-05-14` beta for `claude-opus-4-7`
+
+## 3.0.70
+
+### Patch Changes
+
+- 2ff8d57: feat(provider/anthropic): add support for Opus 4.7 and relevant API enhancements
+
+## 3.0.69
+
+### Patch Changes
+
+- 61f1a61: feat (provider/anthropic): add support for inference_geo provider option
+
+## 3.0.68
+
+### Patch Changes
+
+- d42076d: Add AI Gateway hint to provider READMEs
+
+## 3.0.67
+
+### Patch Changes
+
+- Updated dependencies [6247886]
+  - @ai-sdk/provider-utils@4.0.23
+
+## 3.0.66
+
+### Patch Changes
+
+- Updated dependencies [0469aed]
+  - @ai-sdk/provider-utils@4.0.22
+
+## 3.0.65
+
+### Patch Changes
+
+- 94aed06: fix(anthropic): allow both temperature and topP for non-Anthropic models using the Anthropic-compatible API
+
+  The temperature/topP mutual exclusivity check now only applies to known Anthropic models (model IDs starting with `claude-`). Non-Anthropic models using the Anthropic-compatible API (e.g. Minimax) can now send both parameters as required by their APIs.
+
+## 3.0.64
+
+### Patch Changes
+
+- 05b8ca2: feat (provider/anthropic): support passing metadata.user_id
+
+## 3.0.63
+
+### Patch Changes
+
+- 055cd68: fix: publish v6 to latest npm dist tag
+- Updated dependencies [055cd68]
+  - @ai-sdk/provider-utils@4.0.21
+
+## 3.0.62
+
+### Patch Changes
+
+- 41c6a56: fix(anthropic): skip passing beta header for tool search tools
+
+## 3.0.61
+
+### Patch Changes
+
+- 2381567: fix(vertex): throw warning when strict: true for vertexAnthropic
+
+## 3.0.60
+
+### Patch Changes
+
+- ffe0f90: fix(anthropic): preserve the error code returned by model
+
+## 3.0.59
+
+### Patch Changes
+
+- Updated dependencies [64ac0fd]
+  - @ai-sdk/provider-utils@4.0.20
+
+## 3.0.58
+
+### Patch Changes
+
+- 3fb4e70: feat(anthropic): support eagerInputStreaming option for fine-grained tool streaming
+- Updated dependencies [ad4cfc2]
+  - @ai-sdk/provider-utils@4.0.19
+
+## 3.0.57
+
+### Patch Changes
+
+- Updated dependencies [824b295]
+  - @ai-sdk/provider-utils@4.0.18
+
+## 3.0.56
+
+### Patch Changes
+
+- e49c34d: feat(anthropic): expose anthropic.anthropicBeta to downstream providers
+- e49c34d: feat(anthropic): expose anthropic.anthropicBeta to downstream provider
+
+## 3.0.55
+
+### Patch Changes
+
+- 7531e72: fix(provider/anthropic): handle encrypted_code_execution_result for multi-turn with web_fetch/web_search 20260209
+
+## 3.0.54
+
+### Patch Changes
+
+- 56c67d5: feat(provider/anthropic): add support for Anthropic web tools `web_fetch_20260209` and `web_search_20260209`
+
+## 3.0.53
+
+### Patch Changes
+
+- 89caf28: fix(openai-compat): decode base64 string data
+
+## 3.0.52
+
+### Patch Changes
+
+- Updated dependencies [08336f1]
+  - @ai-sdk/provider-utils@4.0.17
+
+## 3.0.51
+
+### Patch Changes
+
+- 64a8fae: chore: remove obsolete model IDs for Anthropic, Google, OpenAI, xAI
+
+## 3.0.50
+
+### Patch Changes
+
+- Updated dependencies [58bc42d]
+  - @ai-sdk/provider-utils@4.0.16
+
+## 3.0.49
+
+### Patch Changes
+
+- d98d9ba: Migrated deprecated `output_format` parameter to `output_config.format` for structured outputs + Enabled native structured output support for Bedrock Anthropic models via `output_config.format`.
+
+## 3.0.48
+
+### Patch Changes
+
+- 2164cdf: feat(anthropic): add the new code_execution tool
+
+## 3.0.47
+
+### Patch Changes
+
+- 17978c6: Pass `cacheControl` provider option as top-level `cache_control` in Anthropic API request body to support automatic caching.
+
+## 3.0.46
+
+### Patch Changes
+
+- b094c07: fix compaction_delta streaming schema to allow null content
+
+## 3.0.45
+
+### Patch Changes
+
+- 2a1c664: feat(provider/anthropic): add support for new Claude Sonnet 4.6 model
+
+## 3.0.44
+
+### Patch Changes
+
+- 23ac4a3: fix(provider/anthropic): minor follow up to support no-op speed standard
+
+## 3.0.43
+
+### Patch Changes
+
+- Updated dependencies [4024a3a]
+  - @ai-sdk/provider-utils@4.0.15
+
+## 3.0.42
+
+### Patch Changes
+
+- 99fbed8: feat: normalize provider specific model options type names and ensure they are exported
+
+## 3.0.41
+
+### Patch Changes
+
+- c60b393: feat(anthropic): add the new compaction feature
+
+## 3.0.40
+
+### Patch Changes
+
+- 8c2b1e1: fix(provider/anthropic): include actual raw usage data for `response.usage.raw` when streaming
+
+## 3.0.39
+
+### Patch Changes
+
+- 0a0d29c: feat(anthropic): add support for Opus 4.6 fast mode
+
+## 3.0.38
+
+### Patch Changes
+
+- Updated dependencies [7168375]
+  - @ai-sdk/provider@3.0.8
+  - @ai-sdk/provider-utils@4.0.14
+
+## 3.0.37
+
+### Patch Changes
+
+- e288302: feat(anthropic): add support for Opus 4.6
+
 ## 3.0.36
 
 ### Patch Changes
@@ -274,13 +500,13 @@
   Before
 
   ```ts
-  model.textEmbeddingModel('my-model-id');
+  model.textEmbeddingModel("my-model-id");
   ```
 
   After
 
   ```ts
-  model.embeddingModel('my-model-id');
+  model.embeddingModel("my-model-id");
   ```
 
 - f33a018: chore: add model ID for Haiku 4.5
@@ -620,13 +846,13 @@
   Before
 
   ```ts
-  model.textEmbeddingModel('my-model-id');
+  model.textEmbeddingModel("my-model-id");
   ```
 
   After
 
   ```ts
-  model.embeddingModel('my-model-id');
+  model.embeddingModel("my-model-id");
   ```
 
 - Updated dependencies [8d9e8ad]

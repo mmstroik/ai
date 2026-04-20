@@ -8,8 +8,10 @@ import { StreamTextResult } from '../generate-text/stream-text-result';
 import { ToolSet } from '../generate-text/tool-set';
 import { Prompt } from '../prompt';
 import { Agent, AgentCallParameters, AgentStreamParameters } from './agent';
-import { ToolLoopAgentOnStepFinishCallback } from './tool-loop-agent-on-step-finish-callback';
-import { ToolLoopAgentSettings } from './tool-loop-agent-settings';
+import {
+  ToolLoopAgentOnStepFinishCallback,
+  ToolLoopAgentSettings,
+} from './tool-loop-agent-settings';
 
 /**
  * A tool loop agent is an agent that runs tools in a loop. In each step,
@@ -26,8 +28,7 @@ export class ToolLoopAgent<
   CALL_OPTIONS = never,
   TOOLS extends ToolSet = {},
   OUTPUT extends Output = never,
-> implements Agent<CALL_OPTIONS, TOOLS, OUTPUT>
-{
+> implements Agent<CALL_OPTIONS, TOOLS, OUTPUT> {
   readonly version = 'agent-v1';
 
   private readonly settings: ToolLoopAgentSettings<CALL_OPTIONS, TOOLS, OUTPUT>;
@@ -63,7 +64,6 @@ export class ToolLoopAgent<
   > {
     const { onStepFinish: _settingsOnStepFinish, ...settingsWithoutCallback } =
       this.settings;
-
     const baseCallArgs = {
       ...settingsWithoutCallback,
       stopWhen: this.settings.stopWhen ?? stepCountIs(20),

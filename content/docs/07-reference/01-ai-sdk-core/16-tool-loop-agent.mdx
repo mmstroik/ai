@@ -106,17 +106,17 @@ To see `ToolLoopAgent` in action, check out [these examples](#examples).
     },
     {
       name: 'onStepFinish',
-      type: 'GenerateTextOnStepFinishCallback',
+      type: 'ToolLoopAgentOnStepFinishCallback',
       isOptional: true,
       description:
-        'Callback invoked after each agent step (LLM/tool call) completes.',
+        'Callback invoked after each agent step (LLM/tool call) completes. If also specified in `generate()` or `stream()`, both callbacks are called (constructor first).',
     },
     {
       name: 'onFinish',
       type: 'ToolLoopAgentOnFinishCallback',
       isOptional: true,
       description:
-        'Callback that is called when all agent steps are finished and the response is complete. Receives { steps, result, experimental_context }.',
+        'Callback that is called when all agent steps are finished and the response is complete. Receives step results, total usage, experimental_context, functionId, and metadata. If also specified in `generate()` or `stream()`, both callbacks are called (constructor first).',
     },
     {
       name: 'experimental_context',

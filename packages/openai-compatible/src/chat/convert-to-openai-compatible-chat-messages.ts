@@ -4,7 +4,10 @@ import {
   UnsupportedFunctionalityError,
 } from '@ai-sdk/provider';
 import { OpenAICompatibleChatPrompt } from './openai-compatible-api-types';
-import { convertToBase64 } from '@ai-sdk/provider-utils';
+import {
+  convertBase64ToUint8Array,
+  convertToBase64,
+} from '@ai-sdk/provider-utils';
 
 function getOpenAIMetadata(message: {
   providerOptions?: SharedV3ProviderMetadata;
@@ -119,7 +122,9 @@ export function convertToOpenAICompatibleChatMessages(
                     part.data instanceof URL
                       ? part.data.toString()
                       : typeof part.data === 'string'
-                        ? part.data
+                        ? new TextDecoder().decode(
+                            convertBase64ToUint8Array(part.data),
+                          )
                         : new TextDecoder().decode(part.data);
 
                   return {
@@ -197,7 +202,7 @@ export function convertToOpenAICompatibleChatMessages(
 
         messages.push({
           role: 'assistant',
-          content: text,
+          content: text || null,
           ...(reasoning.length > 0 ? { reasoning_content: reasoning } : {}),
           tool_calls: toolCalls.length > 0 ? toolCalls : undefined,
           ...metadata,

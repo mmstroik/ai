@@ -1,5 +1,286 @@
 # @ai-sdk/google
 
+## 3.0.64
+
+### Patch Changes
+
+- 71c52e0: chore(provider/google): update available models
+
+## 3.0.63
+
+### Patch Changes
+
+- 1e1a5ab: fix(google): fix `serviceTier` to be correctly formatted for Vertex API
+
+## 3.0.62
+
+### Patch Changes
+
+- 46a3584: fix(google-vertex): don't send streamFunctionCallArguments for unary API calls and change default to false
+
+## 3.0.61
+
+### Patch Changes
+
+- 03a04f6: feat(google-vertex): add support for streaming tool arguments input
+
+## 3.0.60
+
+### Patch Changes
+
+- d42076d: Add AI Gateway hint to provider READMEs
+
+## 3.0.59
+
+### Patch Changes
+
+- 6247886: chore(provider-utils,google): fix grammar errors in error and warning messages
+- Updated dependencies [6247886]
+  - @ai-sdk/provider-utils@4.0.23
+
+## 3.0.58
+
+### Patch Changes
+
+- f20ba77: feat(provider/google): preserve per-modality token details in usage data
+
+## 3.0.57
+
+### Patch Changes
+
+- 0f2b2f1: fix(provider/google): fix Gemini service tier enum after upstream update
+
+## 3.0.56
+
+### Patch Changes
+
+- Updated dependencies [0469aed]
+  - @ai-sdk/provider-utils@4.0.22
+
+## 3.0.55
+
+### Patch Changes
+
+- bdde9d4: feat(provider/google): support combining built-in tools with function calling on Gemini 3
+
+## 3.0.54
+
+### Patch Changes
+
+- 4e22c2c: feat(provider/google): add support for service tier parameter
+
+## 3.0.53
+
+### Patch Changes
+
+- 2e5adff: chore(provider/google): remove obsolete Google image model
+
+## 3.0.52
+
+### Patch Changes
+
+- 055cd68: fix: publish v6 to latest npm dist tag
+- 47114a3: feat(provider/google): Add multimodal tool-result support for Google function responses.
+
+  Tool results with `output.type = 'content'` now map media parts into
+  `functionResponse.parts` for Google models, including `image-data`,
+  `file-data`, and base64 `data:` URLs in URL-style content parts.
+  Remote HTTP(S) URLs in URL-style tool-result parts are not supported.
+
+- Updated dependencies [055cd68]
+  - @ai-sdk/provider-utils@4.0.21
+
+## 3.0.51
+
+### Patch Changes
+
+- 8901054: feat(google): add new finishMessage field in providerMetadata
+
+## 3.0.50
+
+### Patch Changes
+
+- 5ffb1ad: feat(provider/google): add `gemini-embedding-2-preview` and fix multimodal embedding support with `embedMany`
+
+## 3.0.49
+
+### Patch Changes
+
+- 85f4bb4: fix(provider/google): correct JSDoc for multimodal embedding content option
+
+## 3.0.48
+
+### Patch Changes
+
+- 35c46d1: feat(provider/google): support multimodal content parts in embedding provider options
+
+## 3.0.47
+
+### Patch Changes
+
+- 9d46b93: fix(provider/google): correctly mark reasoning files as such and fix related multi-turn errors
+
+## 3.0.46
+
+### Patch Changes
+
+- Updated dependencies [64ac0fd]
+  - @ai-sdk/provider-utils@4.0.20
+
+## 3.0.45
+
+### Patch Changes
+
+- e2a59ef: fix(provider/google): preserve groundingMetadata and urlContextMetadata when they arrive in a stream chunk before the finishReason chunk
+
+## 3.0.44
+
+### Patch Changes
+
+- 45d71c3: fix(google): use VALIDATED function calling mode when any tool has strict:true
+
+## 3.0.43
+
+### Patch Changes
+
+- 7ba09a4: Fix gateway failover losing thoughtSignature when failing over from Vertex to Google AI Studio. The Google provider now falls back to checking the vertex namespace for thoughtSignature, matching the existing Vertex-to-Google fallback behavior.
+
+## 3.0.42
+
+### Patch Changes
+
+- Updated dependencies [ad4cfc2]
+  - @ai-sdk/provider-utils@4.0.19
+
+## 3.0.41
+
+### Patch Changes
+
+- Updated dependencies [824b295]
+  - @ai-sdk/provider-utils@4.0.18
+
+## 3.0.40
+
+### Patch Changes
+
+- 89d8b45: fix(google): make urlMetadata optional in urlContextMetadata schema
+
+## 3.0.39
+
+### Patch Changes
+
+- 2565e70: feat(google): add support for image search, replace obsolete google_search_retrieval implementation
+
+## 3.0.38
+
+### Patch Changes
+
+- 2291047: fix(ai): fix missing support for image thought signatures (e.g. for Gemini image models)
+
+## 3.0.37
+
+### Patch Changes
+
+- 10bec50: feat(provider/google): add `gemini-3.1-flash-lite-preview`
+
+## 3.0.36
+
+### Patch Changes
+
+- Updated dependencies [08336f1]
+  - @ai-sdk/provider-utils@4.0.17
+
+## 3.0.35
+
+### Patch Changes
+
+- 64a8fae: chore: remove obsolete model IDs for Anthropic, Google, OpenAI, xAI
+
+## 3.0.34
+
+### Patch Changes
+
+- Updated dependencies [58bc42d]
+  - @ai-sdk/provider-utils@4.0.16
+
+## 3.0.33
+
+### Patch Changes
+
+- 1ece97a: feat(provider/google): add support for new Google image model aspect ratios and sizes
+
+## 3.0.32
+
+### Patch Changes
+
+- 45f0a7f: feat(provider/google): add support for gemini-3.1-flash-image-preview
+
+## 3.0.31
+
+### Patch Changes
+
+- 2fa3ca8: Added missing model IDs to GoogleGenerativeAIModelId and GoogleGenerativeAIVideoModelId types for better autocomplete support.
+
+## 3.0.30
+
+### Patch Changes
+
+- 765b013: feat(provider/google): add support for `gemini-3.1-pro-preview`
+
+## 3.0.29
+
+### Patch Changes
+
+- Updated dependencies [4024a3a]
+  - @ai-sdk/provider-utils@4.0.15
+
+## 3.0.28
+
+### Patch Changes
+
+- 5a307f5: feat(provider/google-vertex): allow using Gemini image models with `generateImage`
+
+## 3.0.27
+
+### Patch Changes
+
+- 051361b: fix(vertex): add fallback for providerOptions keyname
+
+## 3.0.26
+
+### Patch Changes
+
+- 4c27179: feat(google): allow using Gemini image models with `generateImage`
+
+## 3.0.25
+
+### Patch Changes
+
+- 99fbed8: feat: normalize provider specific model options type names and ensure they are exported
+
+## 3.0.24
+
+### Patch Changes
+
+- 3b3e32f: fix(google): handle thoughtSignature on empty-text parts in doGenerate and doStream
+
+## 3.0.23
+
+### Patch Changes
+
+- ba98c56: fix(google): make `codeExecutionResult.output` optional in response schema
+
+  Gemini 3 Flash omits the `output` field in `codeExecutionResult` when code execution produces no text output (e.g., only saves files). The Zod response schema now accepts a missing `output` field and defaults it to an empty string.
+
+## 3.0.22
+
+### Patch Changes
+
+- 7168375: feat (ai, provider): default global provider video model resolution
+- Updated dependencies [7168375]
+  - @ai-sdk/provider@3.0.8
+  - @ai-sdk/provider-utils@4.0.14
+
 ## 3.0.21
 
 ### Patch Changes
@@ -172,13 +453,13 @@
   Before
 
   ```ts
-  model.textEmbeddingModel('my-model-id');
+  model.textEmbeddingModel("my-model-id");
   ```
 
   After
 
   ```ts
-  model.embeddingModel('my-model-id');
+  model.embeddingModel("my-model-id");
   ```
 
 - 2625a04: feat(openai); update spec for mcp approval
@@ -487,13 +768,13 @@
   Before
 
   ```ts
-  model.textEmbeddingModel('my-model-id');
+  model.textEmbeddingModel("my-model-id");
   ```
 
   After
 
   ```ts
-  model.embeddingModel('my-model-id');
+  model.embeddingModel("my-model-id");
   ```
 
 - Updated dependencies [8d9e8ad]
