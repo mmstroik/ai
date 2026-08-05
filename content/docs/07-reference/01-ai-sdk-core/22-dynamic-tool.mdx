@@ -131,7 +131,7 @@ export const customTool = dynamicTool({
               isOptional: true,
               type: '(options: ToolExecutionOptions) => void | PromiseLike<void>',
               description:
-                'Optional function that is called when the argument streaming starts. Only called when the tool is used in a streaming context.'
+                'Optional function that is called when the model starts generating the tool input. In non-streaming contexts, it is called immediately before onInputAvailable.'
             },
             {
               name: 'onInputDelta',
@@ -152,6 +152,13 @@ export const customTool = dynamicTool({
               isOptional: true,
               type: 'ProviderOptions',
               description: 'Additional provider-specific metadata.'
+            },
+            {
+              name: 'metadata',
+              isOptional: true,
+              type: 'JSONObject',
+              description:
+                "Optional metadata about the tool itself (e.g. its source). It is propagated onto the resulting tool call's toolMetadata so consumers can read it from tool call/result parts and UI message parts. Useful for sources of dynamic tools (e.g. an MCP server) to identify themselves."
             }
           ]
         }

@@ -1,4 +1,4 @@
-import {
+import type {
   EmbeddingModelV3,
   Experimental_VideoModelV3,
   ImageModelV3,
@@ -6,26 +6,32 @@ import {
   ProviderV3,
 } from '@ai-sdk/provider';
 import {
-  FetchFunction,
   generateId,
   loadApiKey,
   withoutTrailingSlash,
   withUserAgentSuffix,
+  type FetchFunction,
 } from '@ai-sdk/provider-utils';
 import { VERSION } from './version';
 import { GoogleGenerativeAIEmbeddingModel } from './google-generative-ai-embedding-model';
-import { GoogleGenerativeAIEmbeddingModelId } from './google-generative-ai-embedding-options';
+import type { GoogleGenerativeAIEmbeddingModelId } from './google-generative-ai-embedding-options';
 import { GoogleGenerativeAILanguageModel } from './google-generative-ai-language-model';
-import { GoogleGenerativeAIModelId } from './google-generative-ai-options';
+import type { GoogleGenerativeAIModelId } from './google-generative-ai-options';
 import { googleTools } from './google-tools';
 
-import {
+import type {
   GoogleGenerativeAIImageSettings,
   GoogleGenerativeAIImageModelId,
 } from './google-generative-ai-image-settings';
 import { GoogleGenerativeAIImageModel } from './google-generative-ai-image-model';
 import { GoogleGenerativeAIVideoModel } from './google-generative-ai-video-model';
-import { GoogleGenerativeAIVideoModelId } from './google-generative-ai-video-settings';
+import type { GoogleGenerativeAIVideoModelId } from './google-generative-ai-video-settings';
+import {
+  GoogleInteractionsLanguageModel,
+  type GoogleInteractionsModelInput,
+} from './interactions/google-interactions-language-model';
+import type { GoogleInteractionsModelId } from './interactions/google-interactions-language-model-options';
+import type { GoogleInteractionsAgentName } from './interactions/google-interactions-agent';
 
 export interface GoogleGenerativeAIProvider extends ProviderV3 {
   (modelId: GoogleGenerativeAIModelId): LanguageModelV3;
@@ -81,6 +87,21 @@ export interface GoogleGenerativeAIProvider extends ProviderV3 {
     modelId: GoogleGenerativeAIVideoModelId,
   ): Experimental_VideoModelV3;
 
+  /**
+   * Creates a language model targeting the Gemini Interactions API
+   * (`POST /v1beta/interactions`). Pass:
+   *   - a model ID (string),
+   *   - `{ agent: <name> }` to use a known Gemini agent preset, or
+   *   - `{ managedAgent: <name> }` to use a user-defined agent created via
+   *     the `/v1beta/agents` endpoint.
+   */
+  interactions(
+    modelIdOrAgent:
+      | GoogleInteractionsModelId
+      | { agent: GoogleInteractionsAgentName }
+      | { managedAgent: string },
+  ): LanguageModelV3;
+
   tools: typeof googleTools;
 }
 
@@ -118,6 +139,37 @@ export interface GoogleGenerativeAIProviderSettings {
    * Defaults to 'google.generative-ai'.
    */
   name?: string;
+}
+
+const supportedExternalUrlMediaTypes = [
+  'text/html',
+  'text/css',
+  'text/plain',
+  'text/xml',
+  'text/csv',
+  'text/rtf',
+  'text/javascript',
+  'application/json',
+  'application/pdf',
+  'image/bmp',
+  'image/jpeg',
+  'image/png',
+  'image/webp',
+  'video/mp4',
+  'video/mpeg',
+  'video/quicktime',
+  'video/avi',
+  'video/x-flv',
+  'video/mpg',
+  'video/webm',
+  'video/wmv',
+  'video/3gpp',
+];
+
+const externalHttpsUrlPattern = /^https:\/\/.*$/;
+
+function supportsExternalFileUrls(modelId: string) {
+  return /(^|\/)gemini-/.test(modelId) && !/(^|\/)gemini-2\.0/.test(modelId);
 }
 
 /**
@@ -162,6 +214,14 @@ export function createGoogleGenerativeAI(
           ),
           new RegExp(`^https://youtu\\.be/[\\w-]+(?:\\?[\\w=&.-]*)?$`),
         ],
+        ...(supportsExternalFileUrls(modelId)
+          ? Object.fromEntries(
+              supportedExternalUrlMediaTypes.map(mediaType => [
+                mediaType,
+                [externalHttpsUrlPattern],
+              ]),
+            )
+          : {}),
       }),
       fetch: options.fetch,
     });
@@ -194,6 +254,23 @@ export function createGoogleGenerativeAI(
       generateId: options.generateId ?? generateId,
     });
 
+  const createInteractionsModel = (
+    modelIdOrAgent:
+      | GoogleInteractionsModelId
+      | { agent: GoogleInteractionsAgentName }
+      | { managedAgent: string },
+  ) =>
+    new GoogleInteractionsLanguageModel(
+      modelIdOrAgent as GoogleInteractionsModelInput,
+      {
+        provider: `${providerName}.interactions`,
+        baseURL,
+        headers: getHeaders,
+        generateId: options.generateId ?? generateId,
+        fetch: options.fetch,
+      },
+    );
+
   const provider = function (modelId: GoogleGenerativeAIModelId) {
     if (new.target) {
       throw new Error(
@@ -216,6 +293,7 @@ export function createGoogleGenerativeAI(
   provider.imageModel = createImageModel;
   provider.video = createVideoModel;
   provider.videoModel = createVideoModel;
+  provider.interactions = createInteractionsModel;
   provider.tools = googleTools;
 
   return provider as GoogleGenerativeAIProvider;

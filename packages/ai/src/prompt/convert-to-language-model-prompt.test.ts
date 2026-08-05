@@ -965,6 +965,136 @@ describe('convertToLanguageModelPrompt', () => {
         ]
       `);
     });
+
+    it('should preserve provider options at tool message boundaries when combining consecutive tool messages', async () => {
+      const result = await convertToLanguageModelPrompt({
+        prompt: {
+          messages: [
+            {
+              role: 'assistant',
+              content: [
+                {
+                  type: 'tool-call',
+                  toolCallId: 'toolCallId1',
+                  toolName: 'toolName',
+                  input: {},
+                },
+                {
+                  type: 'tool-call',
+                  toolCallId: 'toolCallId2',
+                  toolName: 'toolName',
+                  input: {},
+                },
+              ],
+            },
+            {
+              role: 'tool',
+              content: [
+                {
+                  type: 'tool-result',
+                  toolName: 'toolName',
+                  toolCallId: 'toolCallId1',
+                  output: { type: 'text', value: 'result1' },
+                  providerOptions: {
+                    test: {
+                      cacheControl: 'part',
+                      partOnly: true,
+                    },
+                  },
+                },
+              ],
+              providerOptions: {
+                test: {
+                  cacheControl: 'first-message',
+                  messageOnly: true,
+                },
+              },
+            },
+            {
+              role: 'tool',
+              content: [
+                {
+                  type: 'tool-result',
+                  toolName: 'toolName',
+                  toolCallId: 'toolCallId2',
+                  output: { type: 'text', value: 'result2' },
+                },
+              ],
+              providerOptions: {
+                test: {
+                  cacheControl: 'second-message',
+                },
+              },
+            },
+          ],
+        },
+        supportedUrls: {},
+        download: undefined,
+      });
+
+      expect(result).toMatchInlineSnapshot(`
+        [
+          {
+            "content": [
+              {
+                "input": {},
+                "providerExecuted": undefined,
+                "providerOptions": undefined,
+                "toolCallId": "toolCallId1",
+                "toolName": "toolName",
+                "type": "tool-call",
+              },
+              {
+                "input": {},
+                "providerExecuted": undefined,
+                "providerOptions": undefined,
+                "toolCallId": "toolCallId2",
+                "toolName": "toolName",
+                "type": "tool-call",
+              },
+            ],
+            "providerOptions": undefined,
+            "role": "assistant",
+          },
+          {
+            "content": [
+              {
+                "output": {
+                  "type": "text",
+                  "value": "result1",
+                },
+                "providerOptions": {
+                  "test": {
+                    "cacheControl": "part",
+                    "messageOnly": true,
+                    "partOnly": true,
+                  },
+                },
+                "toolCallId": "toolCallId1",
+                "toolName": "toolName",
+                "type": "tool-result",
+              },
+              {
+                "output": {
+                  "type": "text",
+                  "value": "result2",
+                },
+                "providerOptions": undefined,
+                "toolCallId": "toolCallId2",
+                "toolName": "toolName",
+                "type": "tool-result",
+              },
+            ],
+            "providerOptions": {
+              "test": {
+                "cacheControl": "second-message",
+              },
+            },
+            "role": "tool",
+          },
+        ]
+      `);
+    });
   });
 
   describe('custom download function', () => {
@@ -1016,6 +1146,177 @@ describe('convertToLanguageModelPrompt', () => {
           ],
         },
       ]);
+    });
+
+    it('should download URL content in tool results', async () => {
+      const mockDownload = vi.fn().mockResolvedValue([
+        {
+          url: new URL('https://example.com/image.png'),
+          data: new Uint8Array([0, 1, 2, 3]),
+          mediaType: 'image/png',
+        },
+      ]);
+
+      const result = await convertToLanguageModelPrompt({
+        prompt: {
+          messages: [
+            {
+              role: 'assistant',
+              content: [
+                {
+                  type: 'tool-call',
+                  toolCallId: 'toolCallId',
+                  toolName: 'toolName',
+                  input: {},
+                },
+              ],
+            },
+            {
+              role: 'tool',
+              content: [
+                {
+                  type: 'tool-result',
+                  toolName: 'toolName',
+                  toolCallId: 'toolCallId',
+                  output: {
+                    type: 'content',
+                    value: [
+                      {
+                        type: 'file-url',
+                        url: 'https://example.com/image.png',
+                      },
+                    ],
+                  },
+                },
+              ],
+            },
+          ],
+        },
+        supportedUrls: {},
+        download: mockDownload,
+      });
+
+      expect(mockDownload).toHaveBeenCalledOnce();
+      expect(mockDownload).toHaveBeenCalledWith([
+        {
+          url: new URL('https://example.com/image.png'),
+          isUrlSupportedByModel: false,
+        },
+      ]);
+
+      expect(result).toEqual([
+        {
+          role: 'assistant',
+          content: [
+            {
+              type: 'tool-call',
+              toolCallId: 'toolCallId',
+              toolName: 'toolName',
+              input: {},
+              providerExecuted: undefined,
+              providerOptions: undefined,
+            },
+          ],
+          providerOptions: undefined,
+        },
+        {
+          role: 'tool',
+          content: [
+            {
+              type: 'tool-result',
+              toolCallId: 'toolCallId',
+              toolName: 'toolName',
+              output: {
+                type: 'content',
+                value: [
+                  {
+                    type: 'file-data',
+                    mediaType: 'image/png',
+                    data: 'AAECAw==',
+                    providerOptions: undefined,
+                  },
+                ],
+              },
+              providerOptions: undefined,
+            },
+          ],
+          providerOptions: undefined,
+        },
+      ]);
+    });
+
+    it('should download URL content in assistant tool results', async () => {
+      const mockDownload = vi.fn().mockResolvedValue([
+        {
+          url: new URL('https://example.com/assistant-image.png'),
+          data: new Uint8Array([4, 5, 6, 7]),
+          mediaType: 'image/png',
+        },
+      ]);
+
+      const result = await convertToLanguageModelPrompt({
+        prompt: {
+          messages: [
+            {
+              role: 'assistant',
+              content: [
+                {
+                  type: 'tool-result',
+                  toolName: 'toolName',
+                  toolCallId: 'toolCallId',
+                  output: {
+                    type: 'content',
+                    value: [
+                      {
+                        type: 'image-url',
+                        url: 'https://example.com/assistant-image.png',
+                      },
+                    ],
+                  },
+                },
+              ],
+            },
+          ],
+        },
+        supportedUrls: {},
+        download: mockDownload,
+      });
+
+      expect(mockDownload).toHaveBeenCalledOnce();
+      expect(mockDownload).toHaveBeenCalledWith([
+        {
+          url: new URL('https://example.com/assistant-image.png'),
+          isUrlSupportedByModel: false,
+        },
+      ]);
+
+      expect(result).toMatchInlineSnapshot(`
+        [
+          {
+            "content": [
+              {
+                "output": {
+                  "type": "content",
+                  "value": [
+                    {
+                      "data": "BAUGBw==",
+                      "mediaType": "image/png",
+                      "providerOptions": undefined,
+                      "type": "image-data",
+                    },
+                  ],
+                },
+                "providerOptions": undefined,
+                "toolCallId": "toolCallId",
+                "toolName": "toolName",
+                "type": "tool-result",
+              },
+            ],
+            "providerOptions": undefined,
+            "role": "assistant",
+          },
+        ]
+      `);
     });
   });
 });

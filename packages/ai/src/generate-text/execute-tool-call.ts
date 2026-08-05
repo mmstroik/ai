@@ -1,20 +1,20 @@
-import { executeTool, ModelMessage } from '@ai-sdk/provider-utils';
-import { Tracer } from '@opentelemetry/api';
+import { executeTool, type ModelMessage } from '@ai-sdk/provider-utils';
+import type { Tracer } from '@opentelemetry/api';
 import { notify } from '../util/notify';
 import { assembleOperationName } from '../telemetry/assemble-operation-name';
 import { recordErrorOnSpan, recordSpan } from '../telemetry/record-span';
 import { selectTelemetryAttributes } from '../telemetry/select-telemetry-attributes';
-import { TelemetrySettings } from '../telemetry/telemetry-settings';
+import type { TelemetrySettings } from '../telemetry/telemetry-settings';
 import { now } from '../util/now';
-import {
+import type {
   GenerateTextOnToolCallFinishCallback,
   GenerateTextOnToolCallStartCallback,
 } from './generate-text';
-import { TypedToolCall } from './tool-call';
-import { ToolOutput } from './tool-output';
-import { ToolSet } from './tool-set';
-import { TypedToolResult } from './tool-result';
-import { TypedToolError } from './tool-error';
+import type { TypedToolCall } from './tool-call';
+import type { ToolOutput } from './tool-output';
+import type { ToolSet } from './tool-set';
+import type { TypedToolResult } from './tool-result';
+import type { TypedToolError } from './tool-error';
 
 /**
  * Executes a single tool call and manages its lifecycle callbacks.
@@ -148,6 +148,9 @@ export async function executeToolCall<TOOLS extends ToolSet>({
           ...(toolCall.providerMetadata != null
             ? { providerMetadata: toolCall.providerMetadata }
             : {}),
+          ...(toolCall.toolMetadata != null
+            ? { toolMetadata: toolCall.toolMetadata }
+            : {}),
         } as TypedToolError<TOOLS>;
       }
 
@@ -190,6 +193,9 @@ export async function executeToolCall<TOOLS extends ToolSet>({
         dynamic: tool.type === 'dynamic',
         ...(toolCall.providerMetadata != null
           ? { providerMetadata: toolCall.providerMetadata }
+          : {}),
+        ...(toolCall.toolMetadata != null
+          ? { toolMetadata: toolCall.toolMetadata }
           : {}),
       } as TypedToolResult<TOOLS>;
     },

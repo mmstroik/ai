@@ -1,5 +1,244 @@
 # @ai-sdk/mcp
 
+## 1.0.66
+
+### Patch Changes
+
+- e8d2654: Honor MCP request deadlines and support bounding or aborting client initialization.
+
+## 1.0.65
+
+### Patch Changes
+
+- Updated dependencies [9ecdefe]
+  - @ai-sdk/provider-utils@4.0.41
+
+## 1.0.64
+
+### Patch Changes
+
+- a3bc948: fix(mcp): accept OAuth metadata without code challenge methods
+
+## 1.0.63
+
+### Patch Changes
+
+- Updated dependencies [19093fd]
+  - @ai-sdk/provider-utils@4.0.40
+
+## 1.0.62
+
+### Patch Changes
+
+- Updated dependencies [06fb54c]
+  - @ai-sdk/provider-utils@4.0.39
+
+## 1.0.61
+
+### Patch Changes
+
+- Updated dependencies [e1af05f]
+  - @ai-sdk/provider@3.0.14
+  - @ai-sdk/provider-utils@4.0.38
+
+## 1.0.60
+
+### Patch Changes
+
+- 937d731: Reject in-flight MCP requests when their abort signal fires and remove the pending response handler.
+- 2b6c67f: Prevent streamable HTTP MCP background SSE disconnects from surfacing as unhandled promise rejections.
+- Updated dependencies [d559de9]
+  - @ai-sdk/provider-utils@4.0.37
+
+## 1.0.59
+
+### Patch Changes
+
+- Updated dependencies [0952964]
+  - @ai-sdk/provider-utils@4.0.36
+
+## 1.0.58
+
+### Patch Changes
+
+- f12f0d3: feat(mcp): expose a json-rpc message validator
+
+## 1.0.57
+
+### Patch Changes
+
+- ea1e95b: feat(mcp): add maxRetries option for failed mcp tool calls
+- Updated dependencies [ea1e95b]
+  - @ai-sdk/provider-utils@4.0.35
+
+## 1.0.56
+
+### Patch Changes
+
+- Updated dependencies [fa850e6]
+  - @ai-sdk/provider@3.0.13
+  - @ai-sdk/provider-utils@4.0.34
+
+## 1.0.55
+
+### Patch Changes
+
+- 3d0bd52: feat(mcp): allow MCP client to use server completions
+- Updated dependencies [b30e43a]
+  - @ai-sdk/provider-utils@4.0.33
+
+## 1.0.54
+
+### Patch Changes
+
+- Updated dependencies [f19334d]
+  - @ai-sdk/provider@3.0.12
+  - @ai-sdk/provider-utils@4.0.32
+
+## 1.0.53
+
+### Patch Changes
+
+- 1b40ac7: Publish all packages under the `@ai-v6` dist tag.
+- Updated dependencies [1b40ac7]
+  - @ai-sdk/provider-utils@4.0.31
+  - @ai-sdk/provider@3.0.11
+
+## 1.0.52
+
+### Patch Changes
+
+- Updated dependencies [779f5cd]
+  - @ai-sdk/provider-utils@4.0.30
+
+## 1.0.51
+
+### Patch Changes
+
+- aa39fc8: fix (mcp): handle SSE messages without explicit event fields
+
+## 1.0.50
+
+### Patch Changes
+
+- ac40275: fix(mcp): validate oauth metadata issuer during discovery
+
+## 1.0.49
+
+### Patch Changes
+
+- 3e8d9ba: fix(mcp): lock first sse endpoint received via event
+- 4fa7354: fix(mcp): prevent prototype-named tools from bypassing the `schemas` allowlist
+
+  When using `client.tools({ schemas })` to expose only an explicitly allowed
+  subset of an MCP server's tools, the allowlist check used the `in` operator,
+  which also matches inherited `Object.prototype` properties. A server-advertised
+  tool named `constructor`, `toString`, `__proto__`, etc. would pass the check
+  even though the developer never defined it in `schemas`, and was then exposed to
+  the model and executable. The check now uses `Object.hasOwn`, so only
+  explicitly defined tools are returned.
+
+- Updated dependencies [bfa5864]
+- Updated dependencies [f42aa79]
+  - @ai-sdk/provider-utils@4.0.29
+
+## 1.0.48
+
+### Patch Changes
+
+- 26d93a4: fix(mcp): add optional hook to validate authorization servers
+- 3c9ad04: fix(mcp): support official sdk protocol version negotiation
+- Updated dependencies [942f2f8]
+  - @ai-sdk/provider-utils@4.0.28
+
+## 1.0.47
+
+### Patch Changes
+
+- bf1d6bd: fix(mcp): prevent mcp oauth credential exfiltration during rediscovery
+
+## 1.0.46
+
+### Patch Changes
+
+- 1f817db: fix(mcp): await addClientAuthentication in token exchange and refresh
+
+## 1.0.45
+
+### Patch Changes
+
+- ec5fceb: fix(mcp): respond to ping requests with an empty result per JSON-RPC spec (closes #6282)
+
+## 1.0.44
+
+### Patch Changes
+
+- 77775a4: feat(mcp): expose `statusCode`, `url`, and `responseBody` on `MCPClientError` for HTTP transport failures
+
+  `MCPClientError` now carries structured HTTP context when it originates from the
+  streamable HTTP transport. This lets downstream consumers (e.g. agent frameworks
+  that need to decide whether to fall back from streamable HTTP to legacy SSE
+  transport per the MCP spec) branch on the actual response status without parsing
+  the error message string.
+
+  Fields are optional — they remain `undefined` for stdio transport errors and for
+  non-response failures (network errors, aborts).
+
+## 1.0.43
+
+### Patch Changes
+
+- e2b923f: fix(mcp): deduplicate auth refresh on http transport
+
+## 1.0.42
+
+### Patch Changes
+
+- 725f2ed: feat(mcp): expose server instructions to be accessible through client
+- 7281592: fix(mcp): use negotiated protocol version in transport request headers
+
+## 1.0.41
+
+### Patch Changes
+
+- f591416: feat(ai): add toolMetadata for tool specific metdata
+- Updated dependencies [f591416]
+  - @ai-sdk/provider-utils@4.0.27
+
+## 1.0.40
+
+### Patch Changes
+
+- 221a984: Add `resource_link` content type to `CallToolResultSchema` and `PromptMessageSchema` per MCP spec. Fixes hard rejection when MCP servers return `resource_link` content parts with zod ≥ 4.4.x.
+- 0084974: feat(mcp): deprecate name and use clientName for MCPClient
+
+## 1.0.39
+
+### Patch Changes
+
+- 7beadf0: feat(mcp): propagate the server name through dynamic tool parts
+- Updated dependencies [7beadf0]
+  - @ai-sdk/provider-utils@4.0.26
+
+## 1.0.38
+
+### Patch Changes
+
+- a727da4: chore: ensure consistent import handling and avoid import duplicates or cycles
+- 5fee301: fix(mcp): prevent prototype pollution by using secureJsonParse
+- Updated dependencies [a727da4]
+  - @ai-sdk/provider-utils@4.0.25
+  - @ai-sdk/provider@3.0.10
+
+## 1.0.37
+
+### Patch Changes
+
+- a7f3c72: trigger release for all packages after provenance setup
+- Updated dependencies [a7f3c72]
+  - @ai-sdk/provider@3.0.9
+  - @ai-sdk/provider-utils@4.0.24
+
 ## 1.0.36
 
 ### Patch Changes

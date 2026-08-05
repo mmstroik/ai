@@ -637,6 +637,7 @@ describe('prepareResponsesTools', () => {
               externalWebAccess: true,
               filters: {
                 allowedDomains: ['example.com', 'test.org'],
+                blockedDomains: ['blocked.example', 'blocked.test'],
               },
               searchContextSize: 'high',
               userLocation: {
@@ -664,6 +665,10 @@ describe('prepareResponsesTools', () => {
                   "example.com",
                   "test.org",
                 ],
+                "blocked_domains": [
+                  "blocked.example",
+                  "blocked.test",
+                ],
               },
               "search_context_size": "high",
               "type": "web_search",
@@ -680,7 +685,7 @@ describe('prepareResponsesTools', () => {
       `);
     });
 
-    it('should prepare web_search tool with filters but no externalWebAccess', async () => {
+    it('should prepare web_search tool with blocked domains', async () => {
       const result = await prepareResponsesTools({
         tools: [
           {
@@ -689,7 +694,7 @@ describe('prepareResponsesTools', () => {
             name: 'web_search',
             args: {
               filters: {
-                allowedDomains: ['example.com'],
+                blockedDomains: ['example.com'],
               },
             },
           },
@@ -705,7 +710,8 @@ describe('prepareResponsesTools', () => {
             {
               "external_web_access": undefined,
               "filters": {
-                "allowed_domains": [
+                "allowed_domains": undefined,
+                "blocked_domains": [
                   "example.com",
                 ],
               },
@@ -1686,6 +1692,270 @@ describe('prepareResponsesTools', () => {
           ],
         }
       `);
+    });
+
+    it('should group function tools by OpenAI namespace provider option', async () => {
+      const result = await prepareResponsesTools({
+        tools: [
+          {
+            type: 'provider',
+            id: 'openai.tool_search',
+            name: 'toolSearch',
+            args: {},
+          },
+          {
+            type: 'function',
+            name: 'get_customer_profile',
+            description: 'Fetch a customer profile by customer ID.',
+            inputSchema: {
+              type: 'object',
+              properties: { customer_id: { type: 'string' } },
+              required: ['customer_id'],
+              additionalProperties: false,
+            },
+            providerOptions: {
+              openai: {
+                namespace: {
+                  name: 'crm',
+                  description:
+                    'CRM tools for customer lookup and order management.',
+                },
+              },
+            },
+          },
+          {
+            type: 'function',
+            name: 'get_weather',
+            description: 'Get the current weather',
+            inputSchema: {
+              type: 'object',
+              properties: { location: { type: 'string' } },
+              required: ['location'],
+              additionalProperties: false,
+            },
+          },
+          {
+            type: 'function',
+            name: 'list_open_orders',
+            description: 'List open orders for a customer ID.',
+            inputSchema: {
+              type: 'object',
+              properties: { customer_id: { type: 'string' } },
+              required: ['customer_id'],
+              additionalProperties: false,
+            },
+            strict: true,
+            providerOptions: {
+              openai: {
+                deferLoading: true,
+                namespace: {
+                  name: 'crm',
+                  description:
+                    'CRM tools for customer lookup and order management.',
+                },
+              },
+            },
+          },
+        ],
+        toolChoice: undefined,
+      });
+
+      expect(result).toMatchInlineSnapshot(`
+        {
+          "toolChoice": undefined,
+          "toolWarnings": [],
+          "tools": [
+            {
+              "type": "tool_search",
+            },
+            {
+              "description": "CRM tools for customer lookup and order management.",
+              "name": "crm",
+              "tools": [
+                {
+                  "description": "Fetch a customer profile by customer ID.",
+                  "name": "get_customer_profile",
+                  "parameters": {
+                    "additionalProperties": false,
+                    "properties": {
+                      "customer_id": {
+                        "type": "string",
+                      },
+                    },
+                    "required": [
+                      "customer_id",
+                    ],
+                    "type": "object",
+                  },
+                  "type": "function",
+                },
+                {
+                  "defer_loading": true,
+                  "description": "List open orders for a customer ID.",
+                  "name": "list_open_orders",
+                  "parameters": {
+                    "additionalProperties": false,
+                    "properties": {
+                      "customer_id": {
+                        "type": "string",
+                      },
+                    },
+                    "required": [
+                      "customer_id",
+                    ],
+                    "type": "object",
+                  },
+                  "strict": true,
+                  "type": "function",
+                },
+              ],
+              "type": "namespace",
+            },
+            {
+              "description": "Get the current weather",
+              "name": "get_weather",
+              "parameters": {
+                "additionalProperties": false,
+                "properties": {
+                  "location": {
+                    "type": "string",
+                  },
+                },
+                "required": [
+                  "location",
+                ],
+                "type": "object",
+              },
+              "type": "function",
+            },
+          ],
+        }
+      `);
+    });
+
+    it('should reject conflicting descriptions for the same OpenAI namespace', async () => {
+      await expect(
+        prepareResponsesTools({
+          tools: [
+            {
+              type: 'function',
+              name: 'get_customer_profile',
+              description: 'Fetch a customer profile by customer ID.',
+              inputSchema: { type: 'object', properties: {} },
+              providerOptions: {
+                openai: {
+                  namespace: {
+                    name: 'crm',
+                    description: 'CRM tools.',
+                  },
+                },
+              },
+            },
+            {
+              type: 'function',
+              name: 'list_open_orders',
+              description: 'List open orders for a customer ID.',
+              inputSchema: { type: 'object', properties: {} },
+              providerOptions: {
+                openai: {
+                  namespace: {
+                    name: 'crm',
+                    description: 'Different CRM tools.',
+                  },
+                },
+              },
+            },
+          ],
+          toolChoice: undefined,
+        }),
+      ).rejects.toThrow(
+        'conflicting descriptions for OpenAI tool namespace "crm"',
+      );
+    });
+  });
+
+  describe('allowedTools provider option', () => {
+    it('should emit allowed_tools with default auto mode', async () => {
+      const result = await prepareResponsesTools({
+        tools: [
+          {
+            type: 'function',
+            name: 'get_weather',
+            description: 'Get weather',
+            inputSchema: { type: 'object', properties: {} },
+          },
+          {
+            type: 'function',
+            name: 'get_time',
+            description: 'Get time',
+            inputSchema: { type: 'object', properties: {} },
+          },
+        ],
+        toolChoice: undefined,
+        allowedTools: { toolNames: ['get_weather'] },
+      });
+
+      expect(result.toolChoice).toEqual({
+        type: 'allowed_tools',
+        mode: 'auto',
+        tools: [{ type: 'function', name: 'get_weather' }],
+      });
+      expect(result.tools).toHaveLength(2);
+    });
+
+    it('should emit allowed_tools with required mode', async () => {
+      const result = await prepareResponsesTools({
+        tools: [
+          {
+            type: 'function',
+            name: 'get_weather',
+            description: 'Get weather',
+            inputSchema: { type: 'object', properties: {} },
+          },
+          {
+            type: 'function',
+            name: 'get_time',
+            description: 'Get time',
+            inputSchema: { type: 'object', properties: {} },
+          },
+        ],
+        toolChoice: undefined,
+        allowedTools: {
+          toolNames: ['get_weather', 'get_time'],
+          mode: 'required',
+        },
+      });
+
+      expect(result.toolChoice).toEqual({
+        type: 'allowed_tools',
+        mode: 'required',
+        tools: [
+          { type: 'function', name: 'get_weather' },
+          { type: 'function', name: 'get_time' },
+        ],
+      });
+      expect(result.tools).toHaveLength(2);
+    });
+
+    it('should override request-level toolChoice when allowedTools is set', async () => {
+      const result = await prepareResponsesTools({
+        tools: [
+          {
+            type: 'function',
+            name: 'get_weather',
+            description: 'Get weather',
+            inputSchema: { type: 'object', properties: {} },
+          },
+        ],
+        toolChoice: { type: 'required' },
+        allowedTools: { toolNames: ['get_weather'] },
+      });
+
+      expect(result.toolChoice).toEqual({
+        type: 'allowed_tools',
+        mode: 'auto',
+        tools: [{ type: 'function', name: 'get_weather' }],
+      });
     });
   });
 });

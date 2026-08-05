@@ -1,19 +1,22 @@
 import {
   APICallError,
   LanguageModelV3,
-  LanguageModelV3GenerateResult,
-  LanguageModelV3Prompt,
-  LanguageModelV3StreamPart,
-  LanguageModelV3StreamResult,
+  type LanguageModelV3GenerateResult,
+  type LanguageModelV3Prompt,
+  type LanguageModelV3StreamPart,
+  type LanguageModelV3StreamResult,
 } from '@ai-sdk/provider';
 import {
   convertReadableStreamToArray,
   mockId,
 } from '@ai-sdk/provider-utils/test';
+import { asSchema } from '@ai-sdk/provider-utils';
 import { createTestServer } from '@ai-sdk/test-server/with-vitest';
 import fs from 'node:fs';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { AnthropicLanguageModelOptions } from './anthropic-messages-options';
+import { z } from 'zod';
+import type { AnthropicLanguageModelOptions } from './anthropic-messages-options';
+import { getModelCapabilities } from './anthropic-messages-language-model';
 import { createAnthropic } from './anthropic-provider';
 
 vi.mock('./version', () => ({
@@ -215,6 +218,71 @@ describe('AnthropicMessagesLanguageModel', () => {
 
         expect(result.warnings).toEqual([]);
       });
+
+      it('should report thinking tokens as reasoning usage', async () => {
+        prepareJsonFixtureResponse('anthropic-claude-opus-5-reasoning-high.1');
+
+        const result = await provider('claude-opus-5').doGenerate({
+          prompt: TEST_PROMPT,
+          providerOptions: {
+            anthropic: {
+              thinking: { type: 'adaptive', display: 'summarized' },
+              effort: 'high',
+            } satisfies AnthropicLanguageModelOptions,
+          },
+        });
+
+        expect(result.usage.outputTokens).toEqual({
+          total: 1699,
+          text: 1560,
+          reasoning: 139,
+        });
+      });
+    });
+
+    describe('reasoning (thinking disabled)', () => {
+      it('should forward thinking { type: "disabled" } to the API instead of stripping it', async () => {
+        prepareJsonFixtureResponse('anthropic-text');
+
+        const result = await provider('claude-sonnet-5').doGenerate({
+          prompt: TEST_PROMPT,
+          maxOutputTokens: 100,
+          providerOptions: {
+            anthropic: {
+              thinking: { type: 'disabled' },
+            } satisfies AnthropicLanguageModelOptions,
+          },
+        });
+
+        const requestBody = await server.calls[0].requestBodyJson;
+        expect(requestBody.thinking).toEqual({ type: 'disabled' });
+        // disabled thinking must not reserve a thinking budget in max_tokens
+        expect(requestBody.max_tokens).toBe(100);
+        expect(result.warnings).toEqual([]);
+      });
+
+      it('should not strip temperature / topP / topK when thinking is disabled', async () => {
+        prepareJsonFixtureResponse('anthropic-text');
+
+        const result = await provider('claude-sonnet-4-5').doGenerate({
+          prompt: TEST_PROMPT,
+          maxOutputTokens: 100,
+          temperature: 0.5,
+          topK: 0.1,
+          providerOptions: {
+            anthropic: {
+              thinking: { type: 'disabled' },
+            } satisfies AnthropicLanguageModelOptions,
+          },
+        });
+
+        const requestBody = await server.calls[0].requestBodyJson;
+        expect(requestBody.thinking).toEqual({ type: 'disabled' });
+        // unlike enabled thinking, disabled thinking keeps sampling params
+        expect(requestBody.temperature).toBe(0.5);
+        expect(requestBody.top_k).toBe(0.1);
+        expect(result.warnings).toEqual([]);
+      });
     });
 
     describe('json schema response format with json tool response (unsupported model)', () => {
@@ -315,6 +383,7 @@ describe('AnthropicMessagesLanguageModel', () => {
           providerOptions: {
             anthropic: {
               structuredOutputMode: 'jsonTool',
+              disableParallelToolUse: false,
             } satisfies AnthropicLanguageModelOptions,
           },
           responseFormat: {
@@ -373,6 +442,18 @@ describe('AnthropicMessagesLanguageModel', () => {
             ],
           }
         `);
+      });
+
+      it('should warn when parallel tool use is requested', () => {
+        expect(result.warnings).toEqual([
+          {
+            type: 'unsupported',
+            feature: 'providerOptions.anthropic.disableParallelToolUse',
+            details:
+              '`disableParallelToolUse: false` is ignored when using the JSON response tool. ' +
+              'Parallel tool use is disabled to ensure a single coherent JSON tool call.',
+          },
+        ]);
       });
 
       it('should return the json response', async () => {
@@ -605,6 +686,149 @@ describe('AnthropicMessagesLanguageModel', () => {
       });
     });
 
+    it('should sanitize unsupported JSON schema keywords for output format', async () => {
+      prepareJsonFixtureResponse('anthropic-json-output-format.1');
+
+      await provider('claude-sonnet-4-5').doGenerate({
+        prompt: TEST_PROMPT,
+        responseFormat: {
+          type: 'json',
+          schema: {
+            type: 'object',
+            properties: {
+              recurringIntervalMinutes: {
+                type: 'number',
+                exclusiveMinimum: 0,
+              },
+              tags: {
+                type: 'array',
+                minItems: 2,
+                maxItems: 4,
+                items: {
+                  type: 'string',
+                  minLength: 1,
+                },
+              },
+            },
+            required: ['recurringIntervalMinutes', 'tags'],
+            additionalProperties: false,
+          },
+        },
+      });
+
+      const requestBody = await server.calls[0].requestBodyJson;
+
+      expect(requestBody.output_config.format.schema).toMatchInlineSnapshot(`
+        {
+          "additionalProperties": false,
+          "properties": {
+            "recurringIntervalMinutes": {
+              "description": "exclusive minimum: 0.",
+              "type": "number",
+            },
+            "tags": {
+              "description": "min items: 2; max items: 4.",
+              "items": {
+                "description": "min length: 1.",
+                "type": "string",
+              },
+              "type": "array",
+            },
+          },
+          "required": [
+            "recurringIntervalMinutes",
+            "tags",
+          ],
+          "type": "object",
+        }
+      `);
+    });
+
+    it('should pass sanitized zod output schema as output_config.format', async () => {
+      prepareJsonFixtureResponse('anthropic-json-output-format.1');
+
+      const schema = asSchema(
+        z.object({
+          recipe: z.object({
+            name: z.string(),
+            ingredients: z
+              .array(z.object({ name: z.string(), amount: z.string() }))
+              .min(10)
+              .max(12),
+            steps: z.array(z.string()),
+          }),
+        }),
+      );
+
+      await provider('claude-sonnet-4-5').doGenerate({
+        prompt: TEST_PROMPT,
+        responseFormat: {
+          type: 'json',
+          schema: await schema.jsonSchema,
+        },
+      });
+
+      const requestBody = await server.calls[0].requestBodyJson;
+
+      expect(requestBody.output_config).toMatchInlineSnapshot(`
+        {
+          "format": {
+            "schema": {
+              "$schema": "http://json-schema.org/draft-07/schema#",
+              "additionalProperties": false,
+              "properties": {
+                "recipe": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "ingredients": {
+                      "description": "min items: 10; max items: 12.",
+                      "items": {
+                        "additionalProperties": false,
+                        "properties": {
+                          "amount": {
+                            "type": "string",
+                          },
+                          "name": {
+                            "type": "string",
+                          },
+                        },
+                        "required": [
+                          "name",
+                          "amount",
+                        ],
+                        "type": "object",
+                      },
+                      "type": "array",
+                    },
+                    "name": {
+                      "type": "string",
+                    },
+                    "steps": {
+                      "items": {
+                        "type": "string",
+                      },
+                      "type": "array",
+                    },
+                  },
+                  "required": [
+                    "name",
+                    "ingredients",
+                    "steps",
+                  ],
+                  "type": "object",
+                },
+              },
+              "required": [
+                "recipe",
+              ],
+              "type": "object",
+            },
+            "type": "json_schema",
+          },
+        }
+      `);
+    });
+
     describe('json schema response format with output format (unknown model, forced)', () => {
       let result: Awaited<ReturnType<typeof model.doGenerate>>;
 
@@ -636,7 +860,7 @@ describe('AnthropicMessagesLanguageModel', () => {
       it('should pass json schema response format as output_config.format', async () => {
         expect(await server.calls[0].requestBodyJson).toMatchInlineSnapshot(`
           {
-            "max_tokens": 4096,
+            "max_tokens": 128000,
             "messages": [
               {
                 "content": [
@@ -1029,6 +1253,183 @@ describe('AnthropicMessagesLanguageModel', () => {
           },
         }
       `);
+    });
+
+    describe('refusal stop reason', () => {
+      it('should map a classifier refusal to content-filter and expose stop details', async () => {
+        prepareJsonFixtureResponse('anthropic-refusal');
+
+        const result = await provider('claude-fable-5').doGenerate({
+          prompt: TEST_PROMPT,
+        });
+
+        expect(result.finishReason).toMatchInlineSnapshot(`
+          {
+            "raw": "refusal",
+            "unified": "content-filter",
+          }
+        `);
+        expect(result.providerMetadata?.anthropic?.stopDetails)
+          .toMatchInlineSnapshot(`
+          {
+            "category": "cyber",
+            "explanation": "This request triggered restrictions on violative cyber content and was blocked under Anthropic's Usage Policy.",
+            "recommendedModel": "claude-fable-5",
+            "type": "refusal",
+          }
+        `);
+      });
+
+      it('should map a refusal without stop details to content-filter and omit stop details', async () => {
+        prepareJsonFixtureResponse('anthropic-refusal-no-details');
+
+        const result = await provider('claude-fable-5').doGenerate({
+          prompt: TEST_PROMPT,
+        });
+
+        expect(result.finishReason).toMatchInlineSnapshot(`
+          {
+            "raw": "refusal",
+            "unified": "content-filter",
+          }
+        `);
+        expect(result.providerMetadata?.anthropic?.stopDetails).toBeUndefined();
+      });
+    });
+
+    describe('fallbacks', () => {
+      it('should pass fallbacks to the request body and add the beta header', async () => {
+        prepareJsonFixtureResponse('anthropic-text');
+
+        await provider('claude-fable-5').doGenerate({
+          prompt: TEST_PROMPT,
+          maxOutputTokens: 1024,
+          providerOptions: {
+            anthropic: {
+              fallbacks: [
+                {
+                  model: 'claude-opus-4-8',
+                  max_tokens: 8192,
+                  thinking: { type: 'disabled' },
+                  speed: 'fast',
+                },
+              ],
+            } satisfies AnthropicLanguageModelOptions,
+          },
+        });
+
+        expect(await server.calls[0].requestBodyJson).toMatchInlineSnapshot(`
+          {
+            "fallbacks": [
+              {
+                "max_tokens": 8192,
+                "model": "claude-opus-4-8",
+                "speed": "fast",
+                "thinking": {
+                  "type": "disabled",
+                },
+              },
+            ],
+            "max_tokens": 1024,
+            "messages": [
+              {
+                "content": [
+                  {
+                    "text": "Hello",
+                    "type": "text",
+                  },
+                ],
+                "role": "user",
+              },
+            ],
+            "model": "claude-fable-5",
+          }
+        `);
+
+        expect(server.calls[0].requestHeaders['anthropic-beta']).toBe(
+          'server-side-fallback-2026-06-01',
+        );
+      });
+
+      it('should pass fallbacks "default" through and add the 2026-07-01 beta header', async () => {
+        prepareJsonFixtureResponse('anthropic-text');
+
+        await provider('claude-fable-5').doGenerate({
+          prompt: TEST_PROMPT,
+          providerOptions: {
+            anthropic: {
+              fallbacks: 'default',
+            } satisfies AnthropicLanguageModelOptions,
+          },
+        });
+
+        const body = await server.calls[0].requestBodyJson;
+        expect(body.fallbacks).toBe('default');
+        expect(server.calls[0].requestHeaders['anthropic-beta']).toBe(
+          'server-side-fallback-2026-07-01',
+        );
+      });
+
+      it('should not add the beta header when fallbacks is an empty array', async () => {
+        prepareJsonFixtureResponse('anthropic-text');
+
+        await provider('claude-fable-5').doGenerate({
+          prompt: TEST_PROMPT,
+          providerOptions: {
+            anthropic: {
+              fallbacks: [],
+            } satisfies AnthropicLanguageModelOptions,
+          },
+        });
+
+        const body = await server.calls[0].requestBodyJson;
+        expect(body.fallbacks).toBeUndefined();
+        expect(
+          server.calls[0].requestHeaders['anthropic-beta'],
+        ).toBeUndefined();
+      });
+
+      it('should drop the fallback content block and surface the fallback iteration', async () => {
+        prepareJsonFixtureResponse('anthropic-fallback');
+
+        const result = await provider('claude-fable-5').doGenerate({
+          prompt: TEST_PROMPT,
+        });
+
+        // The `fallback` content block is dropped; only the served answer text remains.
+        expect(result.content).toMatchInlineSnapshot(`
+          [
+            {
+              "text": "The printing press was invented by Johannes Gutenberg around 1440.",
+              "type": "text",
+            },
+          ]
+        `);
+
+        // The fallback hop is preserved in the Anthropic-specific iterations.
+        expect(result.providerMetadata?.anthropic?.iterations)
+          .toMatchInlineSnapshot(`
+          [
+            {
+              "inputTokens": 408,
+              "model": "claude-fable-5",
+              "outputTokens": 0,
+              "type": "message",
+            },
+            {
+              "inputTokens": 412,
+              "model": "claude-opus-4-8",
+              "outputTokens": 264,
+              "type": "fallback_message",
+            },
+          ]
+        `);
+
+        // Top-level usage reflects the served (fallback) answer, not the
+        // blocked primary attempt (which had 0 output tokens).
+        expect(result.usage.inputTokens.total).toBe(412);
+        expect(result.usage.outputTokens.total).toBe(264);
+      });
     });
 
     it('should expose the raw response headers', async () => {
@@ -3350,6 +3751,178 @@ describe('AnthropicMessagesLanguageModel', () => {
       });
     });
 
+    describe('advisor tool', () => {
+      describe('with fixture', () => {
+        let result: LanguageModelV3GenerateResult;
+
+        beforeEach(async () => {
+          prepareJsonFixtureResponse('anthropic-advisor-20260301.1');
+
+          result = await provider('claude-sonnet-4-6').doGenerate({
+            prompt: TEST_PROMPT,
+            tools: [
+              {
+                type: 'provider',
+                id: 'anthropic.advisor_20260301',
+                name: 'advisor',
+                args: { model: 'claude-opus-4-7' },
+              },
+            ],
+          });
+        });
+
+        it('should send the advisor tool in the request body', async () => {
+          expect(await server.calls[0].requestBodyJson).toMatchInlineSnapshot(`
+            {
+              "max_tokens": 128000,
+              "messages": [
+                {
+                  "content": [
+                    {
+                      "text": "Hello",
+                      "type": "text",
+                    },
+                  ],
+                  "role": "user",
+                },
+              ],
+              "model": "claude-sonnet-4-6",
+              "tools": [
+                {
+                  "model": "claude-opus-4-7",
+                  "name": "advisor",
+                  "type": "advisor_20260301",
+                },
+              ],
+            }
+          `);
+        });
+
+        it('should parse advisor calls and results as provider-executed tool parts', () => {
+          const advisorToolCall = result.content.find(
+            part => part.type === 'tool-call' && part.toolName === 'advisor',
+          );
+          expect(advisorToolCall).toMatchInlineSnapshot(`
+            {
+              "input": "{}",
+              "providerExecuted": true,
+              "toolCallId": "srvtoolu_01H51YYF9DTtdAHfcxxTs1NV",
+              "toolName": "advisor",
+              "type": "tool-call",
+            }
+          `);
+
+          const advisorToolResult = result.content.find(
+            part => part.type === 'tool-result' && part.toolName === 'advisor',
+          );
+          expect(advisorToolResult).toMatchObject({
+            type: 'tool-result',
+            toolCallId: 'srvtoolu_01H51YYF9DTtdAHfcxxTs1NV',
+            toolName: 'advisor',
+            result: {
+              type: 'advisor_result',
+              text: expect.stringContaining('Deliver design outline first'),
+            },
+          });
+        });
+
+        it('should expose advisor usage iterations in provider metadata', () => {
+          expect(result.providerMetadata?.anthropic?.iterations)
+            .toMatchInlineSnapshot(`
+            [
+              {
+                "inputTokens": 1051,
+                "outputTokens": 35,
+                "type": "message",
+              },
+              {
+                "inputTokens": 2728,
+                "model": "claude-opus-4-7",
+                "outputTokens": 874,
+                "type": "advisor_message",
+              },
+              {
+                "inputTokens": 1363,
+                "outputTokens": 3165,
+                "type": "message",
+              },
+            ]
+          `);
+        });
+      });
+
+      it('should emit a tool-call for the advisor server_tool_use so it round-trips on follow-up turns', async () => {
+        server.urls['https://api.anthropic.com/v1/messages'].response = {
+          type: 'json-value',
+          body: {
+            type: 'message',
+            id: 'msg_advisor',
+            model: 'claude-sonnet-4-6',
+            role: 'assistant',
+            content: [
+              {
+                type: 'server_tool_use',
+                id: 'srvtoolu_advisor_1',
+                name: 'advisor',
+                input: {},
+              },
+              {
+                type: 'advisor_tool_result',
+                tool_use_id: 'srvtoolu_advisor_1',
+                content: {
+                  type: 'advisor_result',
+                  text: 'Outline the design first; pick Submit semantics upfront.',
+                },
+              },
+              {
+                type: 'text',
+                text: 'Here is the design outline...',
+              },
+            ],
+            stop_reason: 'end_turn',
+            usage: { input_tokens: 10, output_tokens: 20 },
+          },
+        };
+
+        const result = await provider('claude-sonnet-4-6').doGenerate({
+          prompt: TEST_PROMPT,
+          tools: [
+            {
+              type: 'provider',
+              id: 'anthropic.advisor_20260301',
+              name: 'advisor',
+              args: { model: 'claude-opus-4-7' },
+            },
+          ],
+        });
+
+        expect(result.content).toMatchInlineSnapshot(`
+          [
+            {
+              "input": "{}",
+              "providerExecuted": true,
+              "toolCallId": "srvtoolu_advisor_1",
+              "toolName": "advisor",
+              "type": "tool-call",
+            },
+            {
+              "result": {
+                "text": "Outline the design first; pick Submit semantics upfront.",
+                "type": "advisor_result",
+              },
+              "toolCallId": "srvtoolu_advisor_1",
+              "toolName": "advisor",
+              "type": "tool-result",
+            },
+            {
+              "text": "Here is the design outline...",
+              "type": "text",
+            },
+          ]
+        `);
+      });
+    });
+
     describe('mcp servers', () => {
       it('should send request body with include and tool', async () => {
         prepareJsonFixtureResponse('anthropic-mcp.1');
@@ -4406,7 +4979,6 @@ describe('AnthropicMessagesLanguageModel', () => {
       `);
       expect(await server.calls[0].requestHeaders).toMatchInlineSnapshot(`
         {
-          "anthropic-beta": "effort-2025-11-24",
           "anthropic-version": "2023-06-01",
           "content-type": "application/json",
           "x-api-key": "test-api-key",
@@ -5981,6 +6553,79 @@ describe('AnthropicMessagesLanguageModel', () => {
           },
         },
       });
+    });
+
+    it('should map a streamed classifier refusal to content-filter and expose stop details', async () => {
+      prepareChunksFixtureResponse('anthropic-refusal');
+
+      const { stream } = await provider('claude-fable-5').doStream({
+        prompt: TEST_PROMPT,
+      });
+
+      const result = await convertReadableStreamToArray(stream);
+      const finishPart = result.find(part => part.type === 'finish');
+
+      expect(finishPart).toMatchObject({
+        type: 'finish',
+        finishReason: {
+          unified: 'content-filter',
+          raw: 'refusal',
+        },
+      });
+      expect(
+        finishPart?.type === 'finish'
+          ? finishPart.providerMetadata?.anthropic?.stopDetails
+          : undefined,
+      ).toMatchInlineSnapshot(`
+        {
+          "category": "cyber",
+          "explanation": "This request triggered restrictions on violative cyber content and was blocked under Anthropic's Usage Policy.",
+          "recommendedModel": "claude-fable-5",
+          "type": "refusal",
+        }
+      `);
+    });
+
+    it('should drop the streamed fallback content block and surface the fallback iteration', async () => {
+      prepareChunksFixtureResponse('anthropic-fallback');
+
+      const { stream } = await provider('claude-fable-5').doStream({
+        prompt: TEST_PROMPT,
+      });
+
+      const result = await convertReadableStreamToArray(stream);
+
+      // No content parts are emitted for the dropped `fallback` block; only
+      // the served answer text streams through.
+      const textDeltas = result
+        .filter(part => part.type === 'text-delta')
+        .map(part => (part.type === 'text-delta' ? part.delta : ''))
+        .join('');
+      expect(textDeltas).toBe(
+        'The printing press was invented by Johannes Gutenberg around 1440.',
+      );
+
+      const finishPart = result.find(part => part.type === 'finish');
+      expect(
+        finishPart?.type === 'finish'
+          ? finishPart.providerMetadata?.anthropic?.iterations
+          : undefined,
+      ).toMatchInlineSnapshot(`
+        [
+          {
+            "inputTokens": 408,
+            "model": "claude-fable-5",
+            "outputTokens": 0,
+            "type": "message",
+          },
+          {
+            "inputTokens": 412,
+            "model": "claude-opus-4-8",
+            "outputTokens": 264,
+            "type": "fallback_message",
+          },
+        ]
+      `);
     });
 
     it('should stream reasoning deltas', async () => {
@@ -7825,6 +8470,47 @@ describe('AnthropicMessagesLanguageModel', () => {
           await convertReadableStreamToArray(result.stream),
         ).toMatchSnapshot();
       });
+
+      it('should preserve the text editor discriminator for streamed skill tool calls', async () => {
+        prepareChunksFixtureResponse(
+          'anthropic-code-execution-20250825.pptx-skill',
+        );
+
+        const result = await model.doStream({
+          prompt: TEST_PROMPT,
+          tools: [
+            {
+              type: 'provider',
+              id: 'anthropic.code_execution_20250825',
+              name: 'code_execution',
+              args: {},
+            },
+          ],
+          providerOptions: {
+            anthropic: {
+              container: {
+                skills: [{ type: 'anthropic', skillId: 'pptx' }],
+              },
+            } satisfies AnthropicLanguageModelOptions,
+          },
+        });
+
+        const parts = await convertReadableStreamToArray(result.stream);
+        const skillReadToolCall = parts.find(
+          part =>
+            part.type === 'tool-call' &&
+            part.toolName === 'code_execution' &&
+            part.input.includes('/skills/pptx/SKILL.md'),
+        );
+
+        expect(skillReadToolCall).toMatchObject({
+          type: 'tool-call',
+          toolName: 'code_execution',
+          input:
+            '{"type": "text_editor_code_execution","command": "view", "path": "/skills/pptx/SKILL.md"}',
+          providerExecuted: true,
+        });
+      });
     });
 
     describe('function tool', () => {
@@ -8431,6 +9117,92 @@ describe('AnthropicMessagesLanguageModel', () => {
       });
     });
 
+    describe('advisor tool', () => {
+      let result: LanguageModelV3StreamResult;
+      let parts: LanguageModelV3StreamPart[];
+
+      beforeEach(async () => {
+        prepareChunksFixtureResponse('anthropic-advisor-20250301.1');
+
+        result = await provider('claude-sonnet-4-6').doStream({
+          prompt: TEST_PROMPT,
+          tools: [
+            {
+              type: 'provider',
+              id: 'anthropic.advisor_20260301',
+              name: 'advisor',
+              args: { model: 'claude-opus-4-7' },
+            },
+          ],
+        });
+        parts = await convertReadableStreamToArray(result.stream);
+      });
+
+      it('should emit the advisor server_tool_use as a provider-executed tool call', () => {
+        const advisorToolCall = parts.find(
+          part => part.type === 'tool-call' && part.toolName === 'advisor',
+        );
+
+        expect(advisorToolCall).toMatchInlineSnapshot(`
+          {
+            "input": "{}",
+            "providerExecuted": true,
+            "toolCallId": "srvtoolu_01R6zRtm9VnRaSJUVkGK9zvM",
+            "toolName": "advisor",
+            "type": "tool-call",
+          }
+        `);
+      });
+
+      it('should emit the fully formed advisor result before executor text resumes', () => {
+        const advisorToolResultIndex = parts.findIndex(
+          part => part.type === 'tool-result' && part.toolName === 'advisor',
+        );
+        const nextTextStartIndex = parts.findIndex(
+          (part, index) =>
+            index > advisorToolResultIndex && part.type === 'text-start',
+        );
+
+        expect(advisorToolResultIndex).toBeGreaterThan(-1);
+        expect(nextTextStartIndex).toBeGreaterThan(advisorToolResultIndex);
+        expect(parts[advisorToolResultIndex]).toMatchObject({
+          type: 'tool-result',
+          toolCallId: 'srvtoolu_01R6zRtm9VnRaSJUVkGK9zvM',
+          toolName: 'advisor',
+          result: {
+            type: 'advisor_result',
+            text: expect.stringContaining('Concurrent Worker Pool in Go'),
+          },
+        });
+      });
+
+      it('should expose advisor usage iterations on the finish part', () => {
+        const finishPart = parts.find(part => part.type === 'finish');
+
+        expect(finishPart?.providerMetadata?.anthropic?.iterations)
+          .toMatchInlineSnapshot(`
+            [
+              {
+                "inputTokens": 1051,
+                "outputTokens": 35,
+                "type": "message",
+              },
+              {
+                "inputTokens": 2728,
+                "model": "claude-opus-4-7",
+                "outputTokens": 3880,
+                "type": "advisor_message",
+              },
+              {
+                "inputTokens": 3676,
+                "outputTokens": 3356,
+                "type": "message",
+              },
+            ]
+          `);
+      });
+    });
+
     describe('code execution 20260120 tool', () => {
       it('should stream code execution tool results without beta header', async () => {
         prepareChunksFixtureResponse('anthropic-code-execution-20250825.1');
@@ -8449,6 +9221,147 @@ describe('AnthropicMessagesLanguageModel', () => {
         expect(
           await convertReadableStreamToArray(result.stream),
         ).toMatchSnapshot();
+      });
+
+      it('should preserve the complete code execution transcript when replaying streamed output', async () => {
+        prepareChunksFixtureResponse(
+          'anthropic-code-execution-20260120-cache-replay',
+        );
+
+        const tools = [
+          {
+            type: 'provider' as const,
+            id: 'anthropic.code_execution_20260120' as const,
+            name: 'code_execution',
+            args: {},
+          },
+        ];
+        const liveResult = await provider('claude-sonnet-5').doStream({
+          prompt: TEST_PROMPT,
+          tools,
+        });
+        const parts = await convertReadableStreamToArray(liveResult.stream);
+        const toolCalls = parts.filter(
+          (part): part is LanguageModelV3StreamPart & { type: 'tool-call' } =>
+            part.type === 'tool-call' && part.toolName === 'code_execution',
+        );
+        const toolResults = parts.filter(
+          (part): part is LanguageModelV3StreamPart & { type: 'tool-result' } =>
+            part.type === 'tool-result' && part.toolName === 'code_execution',
+        );
+        const text = parts
+          .filter(part => part.type === 'text-delta')
+          .map(part => (part.type === 'text-delta' ? part.delta : ''))
+          .join('');
+
+        expect(toolCalls).toHaveLength(2);
+        expect(toolResults).toHaveLength(2);
+        if (toolCalls.length !== 2 || toolResults.length !== 2) {
+          throw new Error(
+            'Live fixture did not contain the complete code execution transcript',
+          );
+        }
+
+        prepareChunksFixtureResponse('anthropic-refusal');
+        const replayResult = await provider('claude-sonnet-5').doStream({
+          prompt: [
+            ...TEST_PROMPT,
+            {
+              role: 'assistant',
+              content: [
+                {
+                  type: 'tool-call',
+                  toolCallId: toolCalls[0].toolCallId,
+                  toolName: toolCalls[0].toolName,
+                  input: JSON.parse(toolCalls[0].input),
+                  providerExecuted: true,
+                },
+                {
+                  type: 'tool-result',
+                  toolCallId: toolResults[0].toolCallId,
+                  toolName: toolResults[0].toolName,
+                  output: {
+                    type: 'json',
+                    value: toolResults[0].result,
+                  },
+                },
+                {
+                  type: 'tool-call',
+                  toolCallId: toolCalls[1].toolCallId,
+                  toolName: toolCalls[1].toolName,
+                  input: JSON.parse(toolCalls[1].input),
+                  providerExecuted: true,
+                },
+                {
+                  type: 'tool-result',
+                  toolCallId: toolResults[1].toolCallId,
+                  toolName: toolResults[1].toolName,
+                  output: {
+                    type: 'json',
+                    value: toolResults[1].result,
+                  },
+                },
+                { type: 'text', text },
+              ],
+            },
+          ],
+          tools,
+        });
+        await convertReadableStreamToArray(replayResult.stream);
+
+        const replayRequest = await server.calls[1].requestBodyJson;
+        const expectedTranscript = [
+          {
+            type: 'server_tool_use',
+            id: 'srvtoolu_01G1TEN1tmE12onHPBoUZXyz',
+            name: 'bash_code_execution',
+            input: {
+              command: 'for n in $(seq 1 12); do echo "$n: $((n*n))"; done',
+            },
+          },
+          {
+            type: 'bash_code_execution_tool_result',
+            tool_use_id: 'srvtoolu_01G1TEN1tmE12onHPBoUZXyz',
+            content: {
+              type: 'bash_code_execution_result',
+              stdout:
+                '1: 1\n2: 4\n3: 9\n4: 16\n5: 25\n6: 36\n7: 49\n8: 64\n9: 81\n10: 100\n11: 121\n12: 144\n',
+              stderr: '',
+              return_code: 0,
+              content: [],
+            },
+          },
+          {
+            type: 'server_tool_use',
+            id: 'srvtoolu_01RVGDngrjBVGaN4p46X6hcq',
+            name: 'bash_code_execution',
+            input: {
+              command:
+                'sum=0; for n in $(seq 1 12); do sum=$((sum+n*n)); done; echo "Sum: $sum"',
+            },
+          },
+          {
+            type: 'bash_code_execution_tool_result',
+            tool_use_id: 'srvtoolu_01RVGDngrjBVGaN4p46X6hcq',
+            content: {
+              type: 'bash_code_execution_result',
+              stdout: 'Sum: 650\n',
+              stderr: '',
+              return_code: 0,
+              content: [],
+            },
+          },
+          {
+            type: 'text',
+            text: 'The sum of the squares of the integers from 1 to 12 is **650**.',
+          },
+        ];
+        const replayedTranscript = replayRequest.messages[1].content;
+
+        expect(replayedTranscript).toEqual(expectedTranscript);
+        expect(JSON.stringify(replayedTranscript)).toBe(
+          JSON.stringify(expectedTranscript),
+        );
       });
     });
 
@@ -9338,6 +10251,210 @@ describe('AnthropicMessagesLanguageModel', () => {
         });
       });
     });
+  });
+});
+
+describe('getModelCapabilities', () => {
+  it('should return correct capabilities for claude-opus-4-8', () => {
+    expect(getModelCapabilities('claude-opus-4-8')).toMatchInlineSnapshot(`
+      {
+        "isKnownModel": true,
+        "maxOutputTokens": 128000,
+        "rejectsSamplingParameters": true,
+        "rejectsThinkingDisabledAboveHighEffort": false,
+        "supportsStructuredOutput": true,
+      }
+    `);
+  });
+
+  it('should return correct capabilities for claude-fable-5', () => {
+    expect(getModelCapabilities('claude-fable-5')).toMatchInlineSnapshot(`
+      {
+        "isKnownModel": true,
+        "maxOutputTokens": 128000,
+        "rejectsSamplingParameters": true,
+        "rejectsThinkingDisabledAboveHighEffort": false,
+        "supportsStructuredOutput": true,
+      }
+    `);
+  });
+
+  it('should return correct capabilities for claude-opus-4-7', () => {
+    expect(getModelCapabilities('claude-opus-4-7')).toMatchInlineSnapshot(`
+      {
+        "isKnownModel": true,
+        "maxOutputTokens": 128000,
+        "rejectsSamplingParameters": true,
+        "rejectsThinkingDisabledAboveHighEffort": false,
+        "supportsStructuredOutput": true,
+      }
+    `);
+  });
+
+  it('should return correct capabilities for claude-sonnet-5', () => {
+    expect(getModelCapabilities('claude-sonnet-5')).toMatchInlineSnapshot(`
+      {
+        "isKnownModel": true,
+        "maxOutputTokens": 128000,
+        "rejectsSamplingParameters": true,
+        "rejectsThinkingDisabledAboveHighEffort": false,
+        "supportsStructuredOutput": true,
+      }
+    `);
+  });
+
+  it('should return correct capabilities for claude-opus-4-6', () => {
+    const caps = getModelCapabilities('claude-opus-4-6');
+    expect(caps.rejectsSamplingParameters).toBe(false);
+    expect(caps.rejectsThinkingDisabledAboveHighEffort).toBe(false);
+  });
+
+  it('should return correct capabilities for claude-sonnet-4-6', () => {
+    const caps = getModelCapabilities('claude-sonnet-4-6');
+    expect(caps.rejectsSamplingParameters).toBe(false);
+    expect(caps.rejectsThinkingDisabledAboveHighEffort).toBe(false);
+  });
+
+  it('should return correct capabilities for claude-opus-5', () => {
+    expect(getModelCapabilities('claude-opus-5')).toMatchInlineSnapshot(`
+      {
+        "isKnownModel": true,
+        "maxOutputTokens": 128000,
+        "rejectsSamplingParameters": true,
+        "rejectsThinkingDisabledAboveHighEffort": true,
+        "supportsStructuredOutput": true,
+      }
+    `);
+  });
+
+  it('should not match claude-opus-5 capabilities for claude-opus-4-5', () => {
+    const caps = getModelCapabilities('claude-opus-4-5');
+    expect(caps.maxOutputTokens).toBe(64000);
+    expect(caps.rejectsThinkingDisabledAboveHighEffort).toBe(false);
+  });
+});
+
+describe('effort with thinking disabled', () => {
+  const server = createTestServer({
+    'https://api.anthropic.com/v1/messages': {},
+  });
+
+  function prepareJsonFixtureResponse(filename: string) {
+    server.urls['https://api.anthropic.com/v1/messages'].response = {
+      type: 'json-value',
+      body: JSON.parse(
+        fs.readFileSync(`src/__fixtures__/${filename}.json`, 'utf8'),
+      ),
+    };
+  }
+
+  const provider = createAnthropic({ apiKey: 'test-api-key' });
+  const model = provider('claude-future-9');
+
+  it.each(['xhigh', 'max'] as const)(
+    'should warn and lower effort to high when thinking is disabled with effort %s',
+    async effort => {
+      prepareJsonFixtureResponse('anthropic-text');
+
+      const { warnings } = await model.doGenerate({
+        prompt: [{ role: 'user', content: [{ type: 'text', text: 'Hello' }] }],
+        maxOutputTokens: 1024,
+        providerOptions: {
+          anthropic: {
+            thinking: { type: 'disabled' },
+            effort,
+          },
+        },
+      });
+
+      const requestBody = await server.calls[0].requestBodyJson;
+      expect(requestBody.output_config.effort).toBe('high');
+      expect(requestBody.thinking).toEqual({ type: 'disabled' });
+      expect(warnings).toContainEqual(
+        expect.objectContaining({
+          type: 'unsupported',
+          feature: 'providerOptions.anthropic.effort',
+        }),
+      );
+    },
+  );
+
+  it('should not lower effort for known models', async () => {
+    prepareJsonFixtureResponse('anthropic-text');
+
+    await provider('claude-opus-4-8').doGenerate({
+      prompt: [{ role: 'user', content: [{ type: 'text', text: 'Hello' }] }],
+      providerOptions: {
+        anthropic: {
+          thinking: { type: 'disabled' },
+          effort: 'xhigh',
+        },
+      },
+    });
+
+    const requestBody = await server.calls[0].requestBodyJson;
+    expect(requestBody.output_config.effort).toBe('xhigh');
+  });
+});
+
+describe('mid-conversation tool changes', () => {
+  const server = createTestServer({
+    'https://api.anthropic.com/v1/messages': {},
+  });
+
+  function prepareJsonFixtureResponse(filename: string) {
+    server.urls['https://api.anthropic.com/v1/messages'].response = {
+      type: 'json-value',
+      body: JSON.parse(
+        fs.readFileSync(`src/__fixtures__/${filename}.json`, 'utf8'),
+      ),
+    };
+  }
+
+  const provider = createAnthropic({ apiKey: 'test-api-key' });
+
+  it('should send tool change blocks and the beta header', async () => {
+    prepareJsonFixtureResponse('anthropic-text');
+
+    await provider('claude-opus-4-8').doGenerate({
+      prompt: [
+        { role: 'user', content: [{ type: 'text', text: 'Say OK.' }] },
+        {
+          role: 'system',
+          content: '',
+          providerOptions: {
+            anthropic: {
+              toolChanges: [{ type: 'tool_removal', toolName: 'get_weather' }],
+            },
+          },
+        },
+      ],
+      tools: [
+        {
+          type: 'function',
+          name: 'get_weather',
+          description: 'Get weather',
+          inputSchema: {
+            type: 'object',
+            properties: { city: { type: 'string' } },
+          },
+        },
+      ],
+    });
+
+    const requestBody = await server.calls[0].requestBodyJson;
+    expect(requestBody.messages).toContainEqual({
+      role: 'system',
+      content: [
+        {
+          type: 'tool_removal',
+          tool: { type: 'tool_reference', name: 'get_weather' },
+        },
+      ],
+    });
+    expect(server.calls[0].requestHeaders['anthropic-beta']).toContain(
+      'mid-conversation-tool-changes-2026-07-01',
+    );
   });
 });
 

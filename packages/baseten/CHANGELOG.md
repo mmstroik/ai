@@ -1,5 +1,221 @@
 # @ai-sdk/baseten
 
+## 1.1.0
+
+### Minor Changes
+
+- 8349677: Make the native performance client opt-in for embeddings.
+
+  `@basetenlabs/performance-client` is no longer a dependency. It is a NAPI addon — 16 platform binary packages, ~5-16 MB installed — that could not load in edge runtimes and whose platform binaries bundlers could not resolve, and it was imported at module top level, so every consumer paid for it even though only embeddings use it.
+
+  Embeddings now go over plain HTTP to the deployment's OpenAI-compatible endpoint, which is what Baseten Embeddings Inference serves with no additional settings. To keep the native client's client-side batching and request hedging, install it yourself and pass the constructor:
+
+  ```ts
+  import { createBaseten } from "@ai-sdk/baseten";
+  import { PerformanceClient } from "@basetenlabs/performance-client";
+
+  const baseten = createBaseten({
+    modelURL,
+    performanceClient: PerformanceClient,
+  });
+  ```
+
+  The default path now supports things the previous implementation silently dropped: `abortSignal`, per-call `headers`, the `dimensions` and `user` provider options, and the provider's `fetch` option — `createBaseten({ fetch })` previously had no effect on embeddings. Response headers and warnings are now real rather than empty.
+
+  `usage.tokens` now comes from `prompt_tokens` rather than `total_tokens`, matching the `EmbeddingModelV4` contract ("we only have input tokens for embeddings") and the other providers. The values are normally identical for embeddings.
+
+  One behaviour change to be aware of: each request now sends at most 128 values. `embedMany` splits and parallelises above that, so only a direct `doEmbed` call with more than 128 values is affected — it throws `TooManyEmbeddingValuesForCallError`. The opt-in native path is unchanged and still receives everything in one call.
+
+  Separately, report token usage for streamed chat completions. The provider never set `includeUsage`, so `stream_options.include_usage` was omitted from requests and OpenAI-compatible servers returned no usage at all for streams — `streamText` reported `inputTokens`/`outputTokens`/`totalTokens` as `undefined` while `generateText` on the same model reported them correctly. This affected both the Model APIs and dedicated-deployment paths.
+
+  Also parse the error envelope dedicated deployments return. Baseten sends two different shapes: the Model APIs send `error` as a bare string (`{"error":"please check the model you provided"}`), while a dedicated deployment passes through its server's OpenAI-shaped `{"error":{"message":…,"code":…,"param":…,"type":…}}` object. The schema only accepted the string, so the object failed to parse and the message degraded to the HTTP reason phrase — a real `The model \`x\` does not exist.`surfaced as`Not Found`, or as the empty string over HTTP/2, which has no reason phrase. The schema now accepts both. This affects embeddings especially, since they require a `modelURL` and so always talk to a dedicated deployment.
+
+## 1.0.66
+
+### Patch Changes
+
+- Updated dependencies [9ecdefe]
+  - @ai-sdk/provider-utils@4.0.41
+  - @ai-sdk/openai-compatible@2.0.63
+
+## 1.0.65
+
+### Patch Changes
+
+- Updated dependencies [19093fd]
+  - @ai-sdk/provider-utils@4.0.40
+  - @ai-sdk/openai-compatible@2.0.62
+
+## 1.0.64
+
+### Patch Changes
+
+- Updated dependencies [94fda5c]
+  - @ai-sdk/openai-compatible@2.0.61
+
+## 1.0.63
+
+### Patch Changes
+
+- Updated dependencies [06fb54c]
+  - @ai-sdk/provider-utils@4.0.39
+  - @ai-sdk/openai-compatible@2.0.60
+
+## 1.0.62
+
+### Patch Changes
+
+- Updated dependencies [e1af05f]
+  - @ai-sdk/provider@3.0.14
+  - @ai-sdk/openai-compatible@2.0.59
+  - @ai-sdk/provider-utils@4.0.38
+
+## 1.0.61
+
+### Patch Changes
+
+- Updated dependencies [4d4e176]
+- Updated dependencies [bef93ae]
+- Updated dependencies [d559de9]
+- Updated dependencies [327642b]
+  - @ai-sdk/openai-compatible@2.0.58
+  - @ai-sdk/provider-utils@4.0.37
+
+## 1.0.60
+
+### Patch Changes
+
+- Updated dependencies [0952964]
+  - @ai-sdk/provider-utils@4.0.36
+  - @ai-sdk/openai-compatible@2.0.57
+
+## 1.0.59
+
+### Patch Changes
+
+- Updated dependencies [ea1e95b]
+  - @ai-sdk/provider-utils@4.0.35
+  - @ai-sdk/openai-compatible@2.0.56
+
+## 1.0.58
+
+### Patch Changes
+
+- Updated dependencies [fa850e6]
+  - @ai-sdk/provider@3.0.13
+  - @ai-sdk/openai-compatible@2.0.55
+  - @ai-sdk/provider-utils@4.0.34
+
+## 1.0.57
+
+### Patch Changes
+
+- Updated dependencies [b30e43a]
+  - @ai-sdk/provider-utils@4.0.33
+  - @ai-sdk/openai-compatible@2.0.54
+
+## 1.0.56
+
+### Patch Changes
+
+- Updated dependencies [f19334d]
+  - @ai-sdk/provider@3.0.12
+  - @ai-sdk/openai-compatible@2.0.53
+  - @ai-sdk/provider-utils@4.0.32
+
+## 1.0.55
+
+### Patch Changes
+
+- 1b40ac7: Publish all packages under the `@ai-v6` dist tag.
+- Updated dependencies [1b40ac7]
+  - @ai-sdk/openai-compatible@2.0.52
+  - @ai-sdk/provider-utils@4.0.31
+  - @ai-sdk/provider@3.0.11
+
+## 1.0.54
+
+### Patch Changes
+
+- Updated dependencies [779f5cd]
+  - @ai-sdk/provider-utils@4.0.30
+  - @ai-sdk/openai-compatible@2.0.51
+
+## 1.0.53
+
+### Patch Changes
+
+- Updated dependencies [bfa5864]
+- Updated dependencies [f42aa79]
+  - @ai-sdk/provider-utils@4.0.29
+  - @ai-sdk/openai-compatible@2.0.50
+
+## 1.0.52
+
+### Patch Changes
+
+- Updated dependencies [942f2f8]
+  - @ai-sdk/provider-utils@4.0.28
+  - @ai-sdk/openai-compatible@2.0.49
+
+## 1.0.51
+
+### Patch Changes
+
+- Updated dependencies [e40e1d4]
+  - @ai-sdk/openai-compatible@2.0.48
+
+## 1.0.50
+
+### Patch Changes
+
+- Updated dependencies [f591416]
+  - @ai-sdk/provider-utils@4.0.27
+  - @ai-sdk/openai-compatible@2.0.47
+
+## 1.0.49
+
+### Patch Changes
+
+- Updated dependencies [38966ab]
+  - @ai-sdk/openai-compatible@2.0.46
+
+## 1.0.48
+
+### Patch Changes
+
+- Updated dependencies [6043d24]
+  - @ai-sdk/openai-compatible@2.0.45
+
+## 1.0.47
+
+### Patch Changes
+
+- Updated dependencies [7beadf0]
+  - @ai-sdk/provider-utils@4.0.26
+  - @ai-sdk/openai-compatible@2.0.44
+
+## 1.0.46
+
+### Patch Changes
+
+- a727da4: chore: ensure consistent import handling and avoid import duplicates or cycles
+- Updated dependencies [a727da4]
+  - @ai-sdk/openai-compatible@2.0.43
+  - @ai-sdk/provider-utils@4.0.25
+  - @ai-sdk/provider@3.0.10
+
+## 1.0.45
+
+### Patch Changes
+
+- a7f3c72: trigger release for all packages after provenance setup
+- Updated dependencies [a7f3c72]
+- Updated dependencies [408a2ad]
+  - @ai-sdk/openai-compatible@2.0.42
+  - @ai-sdk/provider@3.0.9
+  - @ai-sdk/provider-utils@4.0.24
+
 ## 1.0.44
 
 ### Patch Changes

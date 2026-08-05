@@ -1,21 +1,32 @@
 import {
   InvalidArgumentError,
-  LanguageModelV3,
   NoSuchModelError,
-  ProviderV3,
+  type LanguageModelV3,
+  type ProviderV3,
 } from '@ai-sdk/provider';
 import {
-  FetchFunction,
   generateId,
   loadApiKey,
   loadOptionalSetting,
   withoutTrailingSlash,
   withUserAgentSuffix,
+  type FetchFunction,
 } from '@ai-sdk/provider-utils';
 import { VERSION } from './version';
 import { AnthropicMessagesLanguageModel } from './anthropic-messages-language-model';
-import { AnthropicMessagesModelId } from './anthropic-messages-options';
+import type { AnthropicMessagesModelId } from './anthropic-messages-options';
 import { anthropicTools } from './anthropic-tools';
+
+const ANTHROPIC_API_URL = 'https://api.anthropic.com';
+const ANTHROPIC_API_VERSIONED_URL = `${ANTHROPIC_API_URL}/v1`;
+
+function normalizeBaseURL(baseURL: string | undefined): string | undefined {
+  const baseURLWithoutTrailingSlash = withoutTrailingSlash(baseURL);
+
+  return baseURLWithoutTrailingSlash === ANTHROPIC_API_URL
+    ? ANTHROPIC_API_VERSIONED_URL
+    : baseURLWithoutTrailingSlash;
+}
 
 export interface AnthropicProvider extends ProviderV3 {
   /**
@@ -91,12 +102,12 @@ export function createAnthropic(
   options: AnthropicProviderSettings = {},
 ): AnthropicProvider {
   const baseURL =
-    withoutTrailingSlash(
+    normalizeBaseURL(
       loadOptionalSetting({
         settingValue: options.baseURL,
         environmentVariableName: 'ANTHROPIC_BASE_URL',
       }),
-    ) ?? 'https://api.anthropic.com/v1';
+    ) ?? ANTHROPIC_API_VERSIONED_URL;
 
   const providerName = options.name ?? 'anthropic.messages';
 

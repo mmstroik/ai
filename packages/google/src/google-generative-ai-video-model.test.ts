@@ -11,11 +11,14 @@ const defaultOptions = {
   prompt,
   n: 1,
   image: undefined,
+  frameImages: undefined,
+  inputReferences: undefined,
   aspectRatio: undefined,
   resolution: undefined,
   duration: undefined,
   fps: undefined,
   seed: undefined,
+  generateAudio: undefined,
   providerOptions: {
     google: {
       pollIntervalMs: 10, // Use short polling interval for tests
@@ -317,6 +320,23 @@ describe('GoogleGenerativeAIVideoModel', () => {
       });
     });
 
+    it('should NOT append the API key when the download URL is on a foreign origin', async () => {
+      const model = createMockModel({
+        apiKey: 'test-api-key',
+        videos: [{ video: { uri: 'https://cdn.evil.example/video-123.mp4' } }],
+      });
+
+      const result = await model.doGenerate({ ...defaultOptions });
+
+      // The key must not travel to a host the provider response named: the URL
+      // is returned verbatim, without the `?key=` credential appended.
+      expect(result.videos[0]).toStrictEqual({
+        type: 'url',
+        url: 'https://cdn.evil.example/video-123.mp4',
+        mediaType: 'video/mp4',
+      });
+    });
+
     it('should return multiple videos', async () => {
       const model = createMockModel({
         apiKey: 'test-key',
@@ -393,7 +413,7 @@ describe('GoogleGenerativeAIVideoModel', () => {
   });
 
   describe('Image-to-Video', () => {
-    it('should send image as inlineData', async () => {
+    it('should send image as bytesBase64Encoded', async () => {
       let capturedBody: unknown;
       const model = createMockModel({
         onRequest: (url, body) => {
@@ -414,10 +434,8 @@ describe('GoogleGenerativeAIVideoModel', () => {
 
       const body = capturedBody as { instances: Array<{ image: unknown }> };
       expect(body.instances[0].image).toStrictEqual({
-        inlineData: {
-          mimeType: 'image/png',
-          data: 'base64-image-data',
-        },
+        bytesBase64Encoded: 'base64-image-data',
+        mimeType: 'image/png',
       });
     });
 
@@ -437,6 +455,207 @@ describe('GoogleGenerativeAIVideoModel', () => {
         type: 'unsupported',
         feature: 'URL-based image input',
       });
+    });
+  });
+
+  describe('frameImages', () => {
+    it('should use frameImages first_frame as image', async () => {
+      let capturedBody: unknown;
+      const model = createMockModel({
+        onRequest: (url, body) => {
+          if (url.includes(':predictLongRunning')) {
+            capturedBody = body;
+          }
+        },
+      });
+
+      await model.doGenerate({
+        ...defaultOptions,
+        frameImages: [
+          {
+            frameType: 'first_frame',
+            image: {
+              type: 'file',
+              data: 'first-frame-data',
+              mediaType: 'image/png',
+            },
+          },
+        ],
+      });
+
+      const body = capturedBody as {
+        instances: Array<{ image: unknown }>;
+      };
+      expect(body.instances[0].image).toStrictEqual({
+        bytesBase64Encoded: 'first-frame-data',
+        mimeType: 'image/png',
+      });
+    });
+
+    it('should prefer frameImages first_frame over the legacy image option', async () => {
+      let capturedBody: unknown;
+      const model = createMockModel({
+        onRequest: (url, body) => {
+          if (url.includes(':predictLongRunning')) {
+            capturedBody = body;
+          }
+        },
+      });
+
+      await model.doGenerate({
+        ...defaultOptions,
+        image: {
+          type: 'file',
+          data: 'legacy-image-data',
+          mediaType: 'image/png',
+        },
+        frameImages: [
+          {
+            frameType: 'first_frame',
+            image: {
+              type: 'file',
+              data: 'first-frame-data',
+              mediaType: 'image/png',
+            },
+          },
+        ],
+      });
+
+      const body = capturedBody as {
+        instances: Array<{ image: unknown }>;
+      };
+      expect(body.instances[0].image).toStrictEqual({
+        bytesBase64Encoded: 'first-frame-data',
+        mimeType: 'image/png',
+      });
+    });
+
+    it('should send lastFrame from frameImages last_frame', async () => {
+      let capturedBody: unknown;
+      const model = createMockModel({
+        onRequest: (url, body) => {
+          if (url.includes(':predictLongRunning')) {
+            capturedBody = body;
+          }
+        },
+      });
+
+      await model.doGenerate({
+        ...defaultOptions,
+        frameImages: [
+          {
+            frameType: 'first_frame',
+            image: {
+              type: 'file',
+              data: 'first-frame-data',
+              mediaType: 'image/png',
+            },
+          },
+          {
+            frameType: 'last_frame',
+            image: {
+              type: 'file',
+              data: 'last-frame-data',
+              mediaType: 'image/jpeg',
+            },
+          },
+        ],
+      });
+
+      const body = capturedBody as {
+        instances: Array<{ image: unknown; lastFrame: unknown }>;
+      };
+      expect(body.instances[0].lastFrame).toStrictEqual({
+        bytesBase64Encoded: 'last-frame-data',
+        mimeType: 'image/jpeg',
+      });
+    });
+  });
+
+  describe('inputReferences', () => {
+    it('should send referenceImages from inputReferences', async () => {
+      let capturedBody: unknown;
+      const model = createMockModel({
+        onRequest: (url, body) => {
+          if (url.includes(':predictLongRunning')) {
+            capturedBody = body;
+          }
+        },
+      });
+
+      await model.doGenerate({
+        ...defaultOptions,
+        inputReferences: [
+          {
+            type: 'file',
+            data: 'reference-1',
+            mediaType: 'image/png',
+          },
+          {
+            type: 'file',
+            data: 'reference-2',
+            mediaType: 'image/jpeg',
+          },
+        ],
+      });
+
+      const body = capturedBody as {
+        instances: Array<{ referenceImages: unknown }>;
+      };
+      expect(body.instances[0].referenceImages).toStrictEqual([
+        {
+          image: {
+            bytesBase64Encoded: 'reference-1',
+            mimeType: 'image/png',
+          },
+        },
+        {
+          image: {
+            bytesBase64Encoded: 'reference-2',
+            mimeType: 'image/jpeg',
+          },
+        },
+      ]);
+    });
+
+    it('should prefer inputReferences over providerOptions.google.referenceImages', async () => {
+      let capturedBody: unknown;
+      const model = createMockModel({
+        onRequest: (url, body) => {
+          if (url.includes(':predictLongRunning')) {
+            capturedBody = body;
+          }
+        },
+      });
+
+      await model.doGenerate({
+        ...defaultOptions,
+        inputReferences: [
+          {
+            type: 'file',
+            data: 'reference-from-input',
+            mediaType: 'image/png',
+          },
+        ],
+        providerOptions: {
+          google: {
+            pollIntervalMs: 10,
+            referenceImages: [{ bytesBase64Encoded: 'provider-reference' }],
+          },
+        },
+      });
+
+      const body = capturedBody as {
+        instances: Array<{ referenceImages: unknown }>;
+      };
+      expect(body.instances[0].referenceImages).toStrictEqual([
+        {
+          image: {
+            bytesBase64Encoded: 'reference-from-input',
+            mimeType: 'image/png',
+          },
+        },
+      ]);
     });
   });
 
@@ -527,13 +746,16 @@ describe('GoogleGenerativeAIVideoModel', () => {
       };
       expect(body.instances[0].referenceImages).toStrictEqual([
         {
-          inlineData: {
+          image: {
+            bytesBase64Encoded: 'reference-image-data',
             mimeType: 'image/png',
-            data: 'reference-image-data',
           },
         },
         {
-          gcsUri: 'gs://bucket/reference.png',
+          image: {
+            gcsUri: 'gs://bucket/reference.png',
+            mimeType: 'image/png',
+          },
         },
       ]);
     });

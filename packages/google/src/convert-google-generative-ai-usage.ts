@@ -1,4 +1,4 @@
-import { LanguageModelV3Usage } from '@ai-sdk/provider';
+import type { LanguageModelV3Usage } from '@ai-sdk/provider';
 
 export type GoogleGenerativeAITokenDetail = {
   modality: string;
@@ -12,6 +12,7 @@ export type GoogleGenerativeAIUsageMetadata = {
   cachedContentTokenCount?: number | null;
   thoughtsTokenCount?: number | null;
   trafficType?: string | null;
+  serviceTier?: string | null;
   promptTokensDetails?: GoogleGenerativeAITokenDetail[] | null;
   candidatesTokensDetails?: GoogleGenerativeAITokenDetail[] | null;
 };

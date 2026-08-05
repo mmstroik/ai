@@ -1,5 +1,161 @@
 # @ai-sdk/groq
 
+## 3.0.55
+
+### Patch Changes
+
+- ae2812a: fix(groq): map word timestamps to transcription segments when segment timestamps are unavailable
+- cc3269f: Support plain-text responses from Groq transcription models when `responseFormat` is set to `text`.
+
+## 3.0.54
+
+### Patch Changes
+
+- Updated dependencies [9ecdefe]
+  - @ai-sdk/provider-utils@4.0.41
+
+## 3.0.53
+
+### Patch Changes
+
+- Updated dependencies [19093fd]
+  - @ai-sdk/provider-utils@4.0.40
+
+## 3.0.52
+
+### Patch Changes
+
+- Updated dependencies [06fb54c]
+  - @ai-sdk/provider-utils@4.0.39
+
+## 3.0.51
+
+### Patch Changes
+
+- cee7e45: fix (provider/groq): surface prompt cache reads in usage
+
+  `convertGroqUsage` accepted `prompt_tokens_details.cached_tokens` but never read it, so cache hits were reported as `cacheRead: undefined` and the entire prompt was counted as `noCache`. Groq's implicit prompt caching now surfaces as `usage.cachedInputTokens` (mapped to `cacheRead`, subtracted from `noCache`). Groq has no cache-creation charge, so `cacheWrite` remains undefined.
+
+## 3.0.50
+
+### Patch Changes
+
+- Updated dependencies [e1af05f]
+  - @ai-sdk/provider@3.0.14
+  - @ai-sdk/provider-utils@4.0.38
+
+## 3.0.49
+
+### Patch Changes
+
+- bef93ae: fix(security): prevent streaming tool calls from finalizing on parsable partial JSON
+
+  Streaming tool call arguments were finalized using `isParsableJson()` as a heuristic for completion. If partial accumulated JSON happened to be valid JSON before all chunks arrived, the tool call would be executed with incomplete arguments. Tool call finalization now only occurs in `flush()` after the stream is fully consumed.
+
+- 327642b: fix: more precise default message for tool execution denial
+- Updated dependencies [d559de9]
+  - @ai-sdk/provider-utils@4.0.37
+
+## 3.0.48
+
+### Patch Changes
+
+- Updated dependencies [0952964]
+  - @ai-sdk/provider-utils@4.0.36
+
+## 3.0.47
+
+### Patch Changes
+
+- Updated dependencies [ea1e95b]
+  - @ai-sdk/provider-utils@4.0.35
+
+## 3.0.46
+
+### Patch Changes
+
+- Updated dependencies [fa850e6]
+  - @ai-sdk/provider@3.0.13
+  - @ai-sdk/provider-utils@4.0.34
+
+## 3.0.45
+
+### Patch Changes
+
+- Updated dependencies [b30e43a]
+  - @ai-sdk/provider-utils@4.0.33
+
+## 3.0.44
+
+### Patch Changes
+
+- Updated dependencies [f19334d]
+  - @ai-sdk/provider@3.0.12
+  - @ai-sdk/provider-utils@4.0.32
+
+## 3.0.43
+
+### Patch Changes
+
+- 1b40ac7: Publish all packages under the `@ai-v6` dist tag.
+- Updated dependencies [1b40ac7]
+  - @ai-sdk/provider-utils@4.0.31
+  - @ai-sdk/provider@3.0.11
+
+## 3.0.42
+
+### Patch Changes
+
+- Updated dependencies [779f5cd]
+  - @ai-sdk/provider-utils@4.0.30
+
+## 3.0.41
+
+### Patch Changes
+
+- Updated dependencies [bfa5864]
+- Updated dependencies [f42aa79]
+  - @ai-sdk/provider-utils@4.0.29
+
+## 3.0.40
+
+### Patch Changes
+
+- Updated dependencies [942f2f8]
+  - @ai-sdk/provider-utils@4.0.28
+
+## 3.0.39
+
+### Patch Changes
+
+- Updated dependencies [f591416]
+  - @ai-sdk/provider-utils@4.0.27
+
+## 3.0.38
+
+### Patch Changes
+
+- Updated dependencies [7beadf0]
+  - @ai-sdk/provider-utils@4.0.26
+
+## 3.0.37
+
+### Patch Changes
+
+- a727da4: chore: ensure consistent import handling and avoid import duplicates or cycles
+- Updated dependencies [a727da4]
+  - @ai-sdk/provider-utils@4.0.25
+  - @ai-sdk/provider@3.0.10
+
+## 3.0.36
+
+### Patch Changes
+
+- a7f3c72: trigger release for all packages after provenance setup
+- Updated dependencies [a7f3c72]
+  - @ai-sdk/provider@3.0.9
+  - @ai-sdk/provider-utils@4.0.24
+
 ## 3.0.35
 
 ### Patch Changes

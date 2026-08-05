@@ -1,13 +1,14 @@
 import { delay } from '@ai-sdk/provider-utils';
-import { JSONRPCMessage } from './json-rpc-message';
-import { MCPTransport } from './mcp-transport';
+import type { JSONRPCMessage } from './json-rpc-message';
+import type { MCPTransport } from './mcp-transport';
 import {
-  MCPTool,
-  MCPResource,
-  MCPPrompt,
   GetPromptResult,
-  CallToolResult,
   LATEST_PROTOCOL_VERSION,
+  type MCPTool,
+  type MCPResource,
+  type MCPPrompt,
+  type CallToolResult,
+  type CompleteResult,
 } from './types';
 
 const DEFAULT_TOOLS: MCPTool[] = [
@@ -41,11 +42,12 @@ export class MockMCPTransport implements MCPTransport {
   private initializeResult;
   private sendError;
   private toolCallResults;
+  private completionResult;
 
   onmessage?: (message: JSONRPCMessage) => void;
   onclose?: () => void;
   onerror?: (error: Error) => void;
-
+  protocolVersion?: string;
   constructor({
     overrideTools = DEFAULT_TOOLS,
     resources = [
@@ -99,6 +101,7 @@ export class MockMCPTransport implements MCPTransport {
     initializeResult,
     sendError = false,
     toolCallResults = {} as Record<string, CallToolResult>,
+    completionResult,
   }: {
     overrideTools?: MCPTool[];
     resources?: MCPResource[];
@@ -128,6 +131,7 @@ export class MockMCPTransport implements MCPTransport {
     initializeResult?: Record<string, unknown>;
     sendError?: boolean;
     toolCallResults?: Record<string, CallToolResult>;
+    completionResult?: CompleteResult;
   } = {}) {
     this.tools = overrideTools;
     this.resources = resources;
@@ -139,6 +143,7 @@ export class MockMCPTransport implements MCPTransport {
     this.initializeResult = initializeResult;
     this.sendError = sendError;
     this.toolCallResults = toolCallResults;
+    this.completionResult = completionResult;
   }
 
   async start(): Promise<void> {
@@ -168,8 +173,30 @@ export class MockMCPTransport implements MCPTransport {
               ...(this.tools.length > 0 ? { tools: {} } : {}),
               ...(this.resources.length > 0 ? { resources: {} } : {}),
               ...(this.prompts.length > 0 ? { prompts: {} } : {}),
+              ...(this.completionResult ? { completions: {} } : {}),
             },
           },
+        });
+      }
+
+      if (message.method === 'completion/complete') {
+        await delay(10);
+        if (!this.completionResult) {
+          this.onmessage?.({
+            jsonrpc: '2.0',
+            id: message.id,
+            error: {
+              code: -32601,
+              message: 'Method not supported',
+            },
+          });
+          return;
+        }
+
+        this.onmessage?.({
+          jsonrpc: '2.0',
+          id: message.id,
+          result: this.completionResult,
         });
       }
 

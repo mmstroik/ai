@@ -1,14 +1,30 @@
 import { describe, expectTypeOf, it } from 'vitest';
 import { z } from 'zod';
-import { Output, StreamTextOnFinishCallback } from '../generate-text';
+import { Output, type StreamTextOnFinishCallback } from '../generate-text';
 import { MockLanguageModelV3 } from '../test/mock-language-model-v3';
-import { AsyncIterableStream } from '../util/async-iterable-stream';
-import { DeepPartial } from '../util/deep-partial';
-import { AgentCallParameters, AgentStreamParameters } from './agent';
+import type { AsyncIterableStream } from '../util/async-iterable-stream';
+import type { DeepPartial } from '../util/deep-partial';
+import type { AgentCallParameters, AgentStreamParameters } from './agent';
 import { ToolLoopAgent } from './tool-loop-agent';
 import type { ToolLoopAgentOnFinishCallback } from './tool-loop-agent-settings';
 
 describe('ToolLoopAgent', () => {
+  it('should support model call settings in prepareStep', () => {
+    new ToolLoopAgent({
+      model: new MockLanguageModelV3(),
+      prepareStep: async () => ({
+        maxOutputTokens: 100,
+        temperature: 0,
+        topP: 0.9,
+        topK: 40,
+        presencePenalty: 0,
+        frequencyPenalty: -0.2,
+        stopSequences: [],
+        seed: 0,
+      }),
+    });
+  });
+
   describe('onFinish callback type compatibility', () => {
     it('should allow StreamTextOnFinishCallback where ToolLoopAgentOnFinishCallback is expected', () => {
       const streamTextCallback: StreamTextOnFinishCallback<{}> =

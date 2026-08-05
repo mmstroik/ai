@@ -1,6 +1,6 @@
 import {
-  LanguageModelV3Prompt,
   LanguageModelV3ProviderTool,
+  type LanguageModelV3Prompt,
 } from '@ai-sdk/provider';
 import { createTestServer } from '@ai-sdk/test-server/with-vitest';
 import { convertReadableStreamToArray } from '@ai-sdk/provider-utils/test';
@@ -10,7 +10,7 @@ import {
   getUrlContextMetadataSchema,
 } from './google-generative-ai-language-model';
 
-import {
+import type {
   GoogleGenerativeAIGroundingMetadata,
   GoogleGenerativeAIUrlContextMetadata,
 } from './google-generative-ai-prompt';
@@ -340,6 +340,157 @@ describe('urlContextMetadata', () => {
 });
 
 describe('doGenerate', () => {
+  it('should associate multiple generated and streamed code execution results with the same tool call', async () => {
+    const response = {
+      candidates: [
+        {
+          content: {
+            parts: [
+              {
+                executableCode: {
+                  language: 'PYTHON',
+                  code: "print('ok')\nprint(1/0)",
+                },
+              },
+              {
+                codeExecutionResult: {
+                  outcome: 'OUTCOME_OK',
+                  output: 'ok\n',
+                },
+              },
+              {
+                codeExecutionResult: {
+                  outcome: 'OUTCOME_FAILED',
+                  output: 'ZeroDivisionError: division by zero\n',
+                },
+              },
+            ],
+            role: 'model',
+          },
+          finishReason: 'STOP',
+        },
+      ],
+    };
+    const fetch = vi
+      .fn()
+      .mockResolvedValueOnce(
+        new Response(JSON.stringify(response), {
+          status: 200,
+          headers: { 'content-type': 'application/json' },
+        }),
+      )
+      .mockResolvedValueOnce(
+        new Response(`data: ${JSON.stringify(response)}\n\n`, {
+          status: 200,
+          headers: { 'content-type': 'text/event-stream' },
+        }),
+      );
+    const testProvider = createGoogleGenerativeAI({
+      apiKey: 'test-api-key',
+      fetch,
+      generateId: () => 'test-id',
+    });
+
+    const { content } = await testProvider
+      .languageModel('gemini-2.0-pro')
+      .doGenerate({
+        tools: [
+          {
+            type: 'provider',
+            id: 'google.code_execution',
+            name: 'code_execution',
+            args: {},
+          },
+        ],
+        prompt: TEST_PROMPT,
+      });
+
+    expect(fetch).toHaveBeenCalledTimes(1);
+    expect(content).toMatchInlineSnapshot(`
+      [
+        {
+          "input": "{"language":"PYTHON","code":"print('ok')\\nprint(1/0)"}",
+          "providerExecuted": true,
+          "toolCallId": "test-id",
+          "toolName": "code_execution",
+          "type": "tool-call",
+        },
+        {
+          "result": {
+            "outcome": "OUTCOME_OK",
+            "output": "ok
+      ",
+          },
+          "toolCallId": "test-id",
+          "toolName": "code_execution",
+          "type": "tool-result",
+        },
+        {
+          "result": {
+            "outcome": "OUTCOME_FAILED",
+            "output": "ZeroDivisionError: division by zero
+      ",
+          },
+          "toolCallId": "test-id",
+          "toolName": "code_execution",
+          "type": "tool-result",
+        },
+      ]
+    `);
+
+    const { stream } = await testProvider
+      .languageModel('gemini-2.0-pro')
+      .doStream({
+        tools: [
+          {
+            type: 'provider',
+            id: 'google.code_execution',
+            name: 'code_execution',
+            args: {},
+          },
+        ],
+        prompt: TEST_PROMPT,
+      });
+
+    const events = await convertReadableStreamToArray(stream);
+    const toolEvents = events.filter(
+      event => event.type === 'tool-call' || event.type === 'tool-result',
+    );
+
+    expect(fetch).toHaveBeenCalledTimes(2);
+    expect(toolEvents).toMatchInlineSnapshot(`
+      [
+        {
+          "input": "{"language":"PYTHON","code":"print('ok')\\nprint(1/0)"}",
+          "providerExecuted": true,
+          "toolCallId": "test-id",
+          "toolName": "code_execution",
+          "type": "tool-call",
+        },
+        {
+          "result": {
+            "outcome": "OUTCOME_OK",
+            "output": "ok
+      ",
+          },
+          "toolCallId": "test-id",
+          "toolName": "code_execution",
+          "type": "tool-result",
+        },
+        {
+          "result": {
+            "outcome": "OUTCOME_FAILED",
+            "output": "ZeroDivisionError: division by zero
+      ",
+          },
+          "toolCallId": "test-id",
+          "toolName": "code_execution",
+          "type": "tool-result",
+        },
+      ]
+    `);
+  });
+
   const TEST_URL_GEMINI_PRO =
     'https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent';
 
@@ -355,6 +506,12 @@ describe('doGenerate', () => {
   const TEST_URL_GEMINI_1_5_FLASH =
     'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent';
 
+  const TEST_URL_GEMINI_99_PRO =
+    'https://generativelanguage.googleapis.com/v1beta/models/gemini-99-pro-preview:generateContent';
+
+  const TEST_URL_GEMINI_2_5_FLASH_LITE =
+    'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent';
+
   const TEST_URL_GEMINI_3_PRO =
     'https://generativelanguage.googleapis.com/v1beta/models/gemini-3-pro-preview:generateContent';
 
@@ -364,6 +521,8 @@ describe('doGenerate', () => {
     [TEST_URL_GEMINI_2_0_FLASH_EXP]: {},
     [TEST_URL_GEMINI_1_0_PRO]: {},
     [TEST_URL_GEMINI_1_5_FLASH]: {},
+    [TEST_URL_GEMINI_99_PRO]: {},
+    [TEST_URL_GEMINI_2_5_FLASH_LITE]: {},
     [TEST_URL_GEMINI_3_PRO]: {},
   });
 
@@ -415,7 +574,8 @@ describe('doGenerate', () => {
       | typeof TEST_URL_GEMINI_2_0_PRO
       | typeof TEST_URL_GEMINI_2_0_FLASH_EXP
       | typeof TEST_URL_GEMINI_1_0_PRO
-      | typeof TEST_URL_GEMINI_1_5_FLASH;
+      | typeof TEST_URL_GEMINI_1_5_FLASH
+      | typeof TEST_URL_GEMINI_2_5_FLASH_LITE;
   }) => {
     server.urls[url].response = {
       type: 'json-value',
@@ -438,6 +598,242 @@ describe('doGenerate', () => {
       },
     };
   };
+
+  it('should omit function call IDs from Vertex requests', async () => {
+    prepareJsonResponse({ content: 'done' });
+
+    const vertexModel = new GoogleGenerativeAILanguageModel('gemini-pro', {
+      provider: 'google.vertex.chat',
+      baseURL: 'https://generativelanguage.googleapis.com/v1beta',
+      headers: { 'x-goog-api-key': 'test-api-key' },
+      generateId: () => 'test-id',
+    });
+
+    await vertexModel.doGenerate({
+      prompt: [
+        {
+          role: 'user',
+          content: [{ type: 'text', text: 'Look up the answer.' }],
+        },
+        {
+          role: 'assistant',
+          content: [
+            {
+              type: 'tool-call',
+              toolCallId: 'call_repro_1',
+              toolName: 'lookup',
+              input: { query: 'vertex function id repro' },
+            },
+          ],
+        },
+        {
+          role: 'tool',
+          content: [
+            {
+              type: 'tool-result',
+              toolCallId: 'call_repro_1',
+              toolName: 'lookup',
+              output: {
+                type: 'json',
+                value: { answer: 'known' },
+              },
+            },
+          ],
+        },
+      ],
+    });
+
+    const requestBody = await server.calls[0].requestBodyJson;
+    expect(requestBody.contents[1].parts[0].functionCall).toEqual({
+      name: 'lookup',
+      args: { query: 'vertex function id repro' },
+    });
+    expect(requestBody.contents[2].parts[0].functionResponse).toEqual({
+      name: 'lookup',
+      response: {
+        name: 'lookup',
+        content: { answer: 'known' },
+      },
+    });
+  });
+
+  it('should send PDF tool result data as inlineData for Gemini 2.5 legacy tool results', async () => {
+    server.urls[TEST_URL_GEMINI_2_5_FLASH_LITE].response = {
+      type: 'json-value',
+      body: {
+        candidates: [
+          {
+            content: {
+              parts: [{ text: 'done' }],
+              role: 'model',
+            },
+            finishReason: 'STOP',
+            index: 0,
+          },
+        ],
+      },
+    };
+
+    const model = provider.chat('gemini-2.5-flash-lite');
+
+    await model.doGenerate({
+      prompt: [
+        {
+          role: 'tool',
+          content: [
+            {
+              type: 'tool-result',
+              toolName: 'catalogSearch',
+              toolCallId: 'testCallId',
+              output: {
+                type: 'content',
+                value: [
+                  { type: 'text', text: 'metadata' },
+                  {
+                    type: 'file-data',
+                    data: 'JVBERi0xLjQK',
+                    mediaType: 'application/pdf',
+                  },
+                ],
+              },
+            },
+          ],
+        },
+      ],
+    });
+
+    const requestBody = await server.calls[0].requestBodyJson;
+    const parts = requestBody.contents[0].parts;
+    const textParts = parts
+      .filter((part: any) => part.text != null)
+      .map((part: any) => part.text);
+
+    expect(textParts).not.toEqual(
+      expect.arrayContaining([expect.stringContaining('JVBERi0xLjQK')]),
+    );
+    expect(parts).toEqual([
+      {
+        functionResponse: {
+          id: 'testCallId',
+          name: 'catalogSearch',
+          response: {
+            name: 'catalogSearch',
+            content: 'metadata',
+          },
+        },
+      },
+      {
+        inlineData: {
+          mimeType: 'application/pdf',
+          data: 'JVBERi0xLjQK',
+        },
+      },
+      {
+        text: 'Tool executed successfully and returned this file as a response',
+      },
+    ]);
+  });
+
+  it('should use newest request behavior for an unknown future Gemini model', async () => {
+    server.urls[TEST_URL_GEMINI_99_PRO].response = {
+      type: 'json-value',
+      body: {
+        candidates: [
+          {
+            content: {
+              parts: [{ text: 'done' }],
+              role: 'model',
+            },
+            finishReason: 'STOP',
+            index: 0,
+          },
+        ],
+      },
+    };
+
+    const model = provider.chat('gemini-99-pro-preview');
+
+    await model.doGenerate({
+      providerOptions: {
+        google: {
+          thinkingConfig: {
+            thinkingLevel: 'high',
+          },
+        },
+      },
+      prompt: [
+        {
+          role: 'user',
+          content: [{ type: 'text', text: 'Create a weather chart.' }],
+        },
+        {
+          role: 'assistant',
+          content: [
+            {
+              type: 'tool-call',
+              toolName: 'createWeatherChart',
+              toolCallId: 'testCallId',
+              input: { location: 'San Francisco' },
+            },
+          ],
+        },
+        {
+          role: 'tool',
+          content: [
+            {
+              type: 'tool-result',
+              toolName: 'createWeatherChart',
+              toolCallId: 'testCallId',
+              output: {
+                type: 'content',
+                value: [
+                  { type: 'text', text: 'Weather chart' },
+                  {
+                    type: 'file-data',
+                    data: 'iVBORw0KGgo=',
+                    mediaType: 'image/png',
+                  },
+                ],
+              },
+            },
+          ],
+        },
+      ],
+    });
+
+    const requestBody = await server.calls[0].requestBodyJson;
+    expect(requestBody.generationConfig.thinkingConfig).toEqual({
+      thinkingLevel: 'high',
+    });
+    expect(requestBody.contents[1].parts[0]).toMatchObject({
+      functionCall: {
+        id: 'testCallId',
+        name: 'createWeatherChart',
+        args: { location: 'San Francisco' },
+      },
+      thoughtSignature: 'skip_thought_signature_validator',
+    });
+    expect(requestBody.contents[2].parts).toEqual([
+      {
+        functionResponse: {
+          id: 'testCallId',
+          name: 'createWeatherChart',
+          response: {
+            name: 'createWeatherChart',
+            content: 'Weather chart',
+          },
+          parts: [
+            {
+              inlineData: {
+                mimeType: 'image/png',
+                data: 'iVBORw0KGgo=',
+              },
+            },
+          ],
+        },
+      },
+    ]);
+  });
 
   describe('text', () => {
     beforeEach(() => {
@@ -471,7 +867,7 @@ describe('doGenerate', () => {
         modelId: response?.modelId,
       }).toMatchInlineSnapshot(`
         {
-          "id": undefined,
+          "id": "Un6LacrVMcjUxs0PmJfWoQc",
           "modelId": undefined,
           "timestamp": undefined,
         }
@@ -587,7 +983,7 @@ describe('doGenerate', () => {
     expect(body).not.toHaveProperty('serviceTier');
   });
 
-  it('should sanitize serviceTier to Vertex format when using Vertex provider', async () => {
+  it('should send sharedRequestType as X-Vertex-AI-LLM-Shared-Request-Type header on Vertex', async () => {
     prepareJsonResponse({ content: 'test response' });
 
     const vertexModel = new GoogleGenerativeAILanguageModel('gemini-pro', {
@@ -601,53 +997,124 @@ describe('doGenerate', () => {
       prompt: TEST_PROMPT,
       providerOptions: {
         google: {
-          serviceTier: 'flex',
+          sharedRequestType: 'flex',
         },
       },
     });
 
-    expect(await server.calls[0].requestBodyJson).toMatchObject({
-      serviceTier: 'SERVICE_TIER_FLEX',
+    expect(server.calls[0].requestHeaders).toMatchObject({
+      'x-vertex-ai-llm-shared-request-type': 'flex',
     });
+    expect(await server.calls[0].requestBodyJson).not.toHaveProperty(
+      'serviceTier',
+    );
   });
 
-  it('should not sanitize serviceTier when using non-Vertex provider', async () => {
+  it('should send requestType as X-Vertex-AI-LLM-Request-Type header on Vertex', async () => {
     prepareJsonResponse({ content: 'test response' });
 
-    await model.doGenerate({
+    const vertexModel = new GoogleGenerativeAILanguageModel('gemini-pro', {
+      provider: 'google.vertex.chat',
+      baseURL: 'https://generativelanguage.googleapis.com/v1beta',
+      headers: { 'x-goog-api-key': 'test-api-key' },
+      generateId: () => 'test-id',
+    });
+
+    await vertexModel.doGenerate({
       prompt: TEST_PROMPT,
       providerOptions: {
         google: {
-          serviceTier: 'standard',
+          sharedRequestType: 'priority',
+          requestType: 'shared',
         },
       },
     });
 
-    expect(await server.calls[0].requestBodyJson).toMatchObject({
-      serviceTier: 'standard',
+    expect(server.calls[0].requestHeaders).toMatchObject({
+      'x-vertex-ai-llm-shared-request-type': 'priority',
+      'x-vertex-ai-llm-request-type': 'shared',
     });
   });
 
-  it('should expose serviceTier in provider metadata', async () => {
+  it('should warn and drop serviceTier on Vertex provider', async () => {
+    prepareJsonResponse({ content: 'test response' });
+
+    const vertexModel = new GoogleGenerativeAILanguageModel('gemini-pro', {
+      provider: 'google.vertex.chat',
+      baseURL: 'https://generativelanguage.googleapis.com/v1beta',
+      headers: { 'x-goog-api-key': 'test-api-key' },
+      generateId: () => 'test-id',
+    });
+
+    const { warnings } = await vertexModel.doGenerate({
+      prompt: TEST_PROMPT,
+      providerOptions: {
+        google: {
+          serviceTier: 'priority',
+        },
+      },
+    });
+
+    expect(await server.calls[0].requestBodyJson).not.toHaveProperty(
+      'serviceTier',
+    );
+    expect(server.calls[0].requestHeaders).not.toHaveProperty(
+      'x-vertex-ai-llm-shared-request-type',
+    );
+    expect(warnings).toContainEqual(
+      expect.objectContaining({
+        type: 'other',
+        message: expect.stringContaining(
+          "'serviceTier' is a Gemini API option",
+        ),
+      }),
+    );
+  });
+
+  it('should warn when sharedRequestType is set on a non-Vertex provider', async () => {
+    prepareJsonResponse({ content: 'test response' });
+
+    const { warnings } = await model.doGenerate({
+      prompt: TEST_PROMPT,
+      providerOptions: {
+        google: {
+          sharedRequestType: 'priority',
+        },
+      },
+    });
+
+    expect(server.calls[0].requestHeaders).not.toHaveProperty(
+      'x-vertex-ai-llm-shared-request-type',
+    );
+    expect(warnings).toContainEqual(
+      expect.objectContaining({
+        type: 'other',
+        message: expect.stringContaining(
+          "'sharedRequestType' and 'requestType'",
+        ),
+      }),
+    );
+  });
+
+  it('should read serviceTier from usageMetadata.serviceTier', async () => {
     server.urls[TEST_URL_GEMINI_PRO].response = {
       type: 'json-value',
       body: {
         candidates: [
           {
-            content: {
-              parts: [{ text: 'test response' }],
-              role: 'model',
-            },
+            content: { parts: [{ text: 'Blue.' }], role: 'model' },
             finishReason: 'STOP',
+            index: 0,
             safetyRatings: SAFETY_RATINGS,
           },
         ],
+        promptFeedback: { safetyRatings: SAFETY_RATINGS },
         usageMetadata: {
           promptTokenCount: 1,
           candidatesTokenCount: 2,
           totalTokenCount: 3,
+          serviceTier: 'priority',
         },
-        serviceTier: 'flex',
       },
     };
 
@@ -655,7 +1122,7 @@ describe('doGenerate', () => {
       prompt: TEST_PROMPT,
     });
 
-    expect(providerMetadata?.google.serviceTier).toBe('flex');
+    expect(providerMetadata?.google.serviceTier).toBe('priority');
   });
 
   it('should expose null serviceTier in provider metadata when not present', async () => {
@@ -720,6 +1187,52 @@ describe('doGenerate', () => {
       });
 
       expect(result).toMatchSnapshot();
+    });
+  });
+
+  describe('no-args tool call (unary)', () => {
+    it('should extract a no-args tool call with thoughtSignature as input "{}"', async () => {
+      server.urls[TEST_URL_GEMINI_PRO].response = {
+        type: 'json-value',
+        body: {
+          candidates: [
+            {
+              content: {
+                role: 'model',
+                parts: [
+                  {
+                    functionCall: { name: 'read_theme' },
+                    thoughtSignature: 'sig-no-args-unary',
+                  },
+                ],
+              },
+              finishReason: 'STOP',
+              index: 0,
+              safetyRatings: SAFETY_RATINGS,
+            },
+          ],
+          usageMetadata: {
+            promptTokenCount: 1,
+            candidatesTokenCount: 2,
+            totalTokenCount: 3,
+          },
+        },
+      };
+
+      const result = await model.doGenerate({ prompt: TEST_PROMPT });
+
+      const toolCalls = result.content.filter(c => c.type === 'tool-call');
+      expect(toolCalls).toEqual([
+        {
+          type: 'tool-call',
+          toolCallId: 'test-id',
+          toolName: 'read_theme',
+          input: '{}',
+          providerMetadata: {
+            google: { thoughtSignature: 'sig-no-args-unary' },
+          },
+        },
+      ]);
     });
   });
 
@@ -824,6 +1337,74 @@ describe('doGenerate', () => {
         },
       }
     `);
+  });
+
+  it('should expand standalone threshold provider option into safetySettings', async () => {
+    prepareJsonFixtureResponse('google-text');
+
+    await model.doGenerate({
+      prompt: TEST_PROMPT,
+      providerOptions: {
+        google: {
+          threshold: 'BLOCK_NONE',
+        },
+      },
+    });
+
+    const expectedSafetySettings = [
+      {
+        category: 'HARM_CATEGORY_HATE_SPEECH',
+        threshold: 'BLOCK_NONE',
+      },
+      {
+        category: 'HARM_CATEGORY_DANGEROUS_CONTENT',
+        threshold: 'BLOCK_NONE',
+      },
+      {
+        category: 'HARM_CATEGORY_HARASSMENT',
+        threshold: 'BLOCK_NONE',
+      },
+      {
+        category: 'HARM_CATEGORY_SEXUALLY_EXPLICIT',
+        threshold: 'BLOCK_NONE',
+      },
+    ];
+    const requestBody = await server.calls[0].requestBodyJson;
+
+    expect(requestBody.safetySettings).toEqual(
+      expect.arrayContaining(expectedSafetySettings),
+    );
+    expect(requestBody.safetySettings).toHaveLength(
+      expectedSafetySettings.length,
+    );
+  });
+
+  it('should let safetySettings take precedence over standalone threshold provider option', async () => {
+    prepareJsonFixtureResponse('google-text');
+
+    await model.doGenerate({
+      prompt: TEST_PROMPT,
+      providerOptions: {
+        google: {
+          threshold: 'BLOCK_NONE',
+          safetySettings: [
+            {
+              category: 'HARM_CATEGORY_HATE_SPEECH',
+              threshold: 'BLOCK_ONLY_HIGH',
+            },
+          ],
+        },
+      },
+    });
+
+    const requestBody = await server.calls[0].requestBodyJson;
+
+    expect(requestBody.safetySettings).toEqual([
+      {
+        category: 'HARM_CATEGORY_HATE_SPEECH',
+        threshold: 'BLOCK_ONLY_HIGH',
+      },
+    ]);
   });
 
   it('should pass tools and toolChoice', async () => {
@@ -2803,6 +3384,78 @@ describe('doGenerate', () => {
     });
   });
 
+  it('should pass imageConfig.personGeneration, imageConfig.prominentPeople and imageConfig.imageOutputOptions on Vertex', async () => {
+    prepareJsonFixtureResponse('google-text');
+
+    const vertexModel = new GoogleGenerativeAILanguageModel('gemini-pro', {
+      provider: 'google.vertex.chat',
+      baseURL: 'https://generativelanguage.googleapis.com/v1beta',
+      headers: { 'x-goog-api-key': 'test-api-key' },
+      generateId: () => 'test-id',
+    });
+
+    const { warnings } = await vertexModel.doGenerate({
+      prompt: TEST_PROMPT,
+      providerOptions: {
+        google: {
+          imageConfig: {
+            aspectRatio: '16:9',
+            personGeneration: 'ALLOW_ADULT',
+            prominentPeople: 'BLOCK_PROMINENT_PEOPLE',
+            imageOutputOptions: {
+              mimeType: 'image/jpeg',
+              compressionQuality: 75,
+            },
+          },
+        },
+      },
+    });
+
+    expect(await server.calls[0].requestBodyJson).toMatchObject({
+      generationConfig: {
+        imageConfig: {
+          aspectRatio: '16:9',
+          personGeneration: 'ALLOW_ADULT',
+          prominentPeople: 'BLOCK_PROMINENT_PEOPLE',
+          imageOutputOptions: {
+            mimeType: 'image/jpeg',
+            compressionQuality: 75,
+          },
+        },
+      },
+    });
+    expect(warnings).toEqual([]);
+  });
+
+  it('should warn and drop Vertex-only imageConfig fields on the Gemini API', async () => {
+    prepareJsonFixtureResponse('google-text');
+
+    const { warnings } = await model.doGenerate({
+      prompt: TEST_PROMPT,
+      providerOptions: {
+        google: {
+          imageConfig: {
+            aspectRatio: '16:9',
+            prominentPeople: 'BLOCK_PROMINENT_PEOPLE',
+          },
+        },
+      },
+    });
+
+    const requestBody = await server.calls[0].requestBodyJson;
+    expect(requestBody.generationConfig.imageConfig).toEqual({
+      aspectRatio: '16:9',
+    });
+    expect(warnings).toEqual([
+      {
+        type: 'other',
+        message:
+          "'imageConfig.prominentPeople' is a Vertex AI option and is " +
+          'ignored with the current Google provider (google.generative-ai).',
+      },
+    ]);
+  });
+
   it('should pass retrievalConfig in provider options', async () => {
     prepareJsonFixtureResponse('google-text', {
       url: TEST_URL_GEMINI_2_0_FLASH_EXP,
@@ -3563,6 +4216,23 @@ describe('doStream', () => {
       expect(chunks.filter(chunk => chunk.type === 'raw')).toHaveLength(0);
     });
 
+    it('should emit response-metadata with the provider responseId', async () => {
+      // Gemini repeats `responseId` on every chunk; the provider emits a single
+      // response-metadata part carrying it (see google-text.chunks.txt fixture).
+      const { stream } = await model.doStream({
+        prompt: TEST_PROMPT,
+        includeRawChunks: false,
+      });
+
+      const responseMetadata = (
+        await convertReadableStreamToArray(stream)
+      ).filter(chunk => chunk.type === 'response-metadata');
+
+      expect(responseMetadata).toEqual([
+        { type: 'response-metadata', id: 'bH6LaZW8Fp_3nsEPqtaSwQ4' },
+      ]);
+    });
+
     it('should expose the raw response headers', async () => {
       prepareChunksFixtureResponse('google-text', {
         headers: { 'test-header': 'test-value' },
@@ -3689,6 +4359,175 @@ describe('doStream', () => {
       });
 
       expect(await convertReadableStreamToArray(stream)).toMatchSnapshot();
+    });
+  });
+
+  describe('streaming-tool-call-array-arguments', () => {
+    beforeEach(() => {
+      prepareChunksFixtureResponse(
+        'google-stream-tool-call-array-arguments-missing-terminal-function-call',
+      );
+    });
+
+    it('should finalize streamed function call arguments when the final partialArgs chunk omits willContinue', async () => {
+      const vertexModel = new GoogleGenerativeAILanguageModel('gemini-pro', {
+        provider: 'google.vertex.chat',
+        baseURL: 'https://generativelanguage.googleapis.com/v1beta',
+        headers: { 'x-goog-api-key': 'test-api-key' },
+        generateId: () => 'test-id',
+      });
+
+      const { stream } = await vertexModel.doStream({
+        prompt: TEST_PROMPT,
+        includeRawChunks: false,
+        tools: [
+          {
+            type: 'function',
+            name: 'writeItems',
+            inputSchema: {
+              type: 'object',
+              properties: {
+                operations: {
+                  type: 'array',
+                  items: {
+                    type: 'object',
+                    properties: {
+                      action: { type: 'string' },
+                      description: { type: 'string' },
+                      itemid: { type: 'string' },
+                      price: { type: 'number' },
+                    },
+                    required: ['action', 'description', 'itemid', 'price'],
+                    additionalProperties: false,
+                  },
+                },
+              },
+              required: ['operations'],
+              additionalProperties: false,
+              $schema: 'http://json-schema.org/draft-07/schema#',
+            },
+          },
+        ],
+        providerOptions: {
+          vertex: {
+            streamFunctionCallArguments: true,
+          },
+        },
+      });
+
+      const events = await convertReadableStreamToArray(stream);
+      const inputDeltas = events.filter(e => e.type === 'tool-input-delta');
+      const toolCalls = events.filter(e => e.type === 'tool-call');
+      const finish = events.find(e => e.type === 'finish');
+
+      expect(inputDeltas.map(e => e.delta).join('')).toMatchInlineSnapshot(
+        `"{"operations":[{"action":"add","description":"Fresh red apple","itemid":"apple_001","price":0.5},{"action":"add","description":"Ripe yellow banana","itemid":"banana_001","price":0.3}]}"`,
+      );
+      expect(toolCalls.map(c => ({ toolName: c.toolName, input: c.input })))
+        .toMatchInlineSnapshot(`
+        [
+          {
+            "input": "{"operations":[{"action":"add","description":"Fresh red apple","itemid":"apple_001","price":0.5},{"action":"add","description":"Ripe yellow banana","itemid":"banana_001","price":0.3}]}",
+            "toolName": "writeItems",
+          },
+        ]
+      `);
+      expect(finish?.finishReason.unified).toBe('tool-calls');
+    });
+  });
+
+  describe('streaming-no-args-tool-call', () => {
+    beforeEach(() => {
+      prepareChunksFixtureResponse('google-stream-no-args-tool-call');
+    });
+
+    it('should emit no-args function calls and preserve thoughtSignature alongside streamed-args calls', async () => {
+      const vertexModel = new GoogleGenerativeAILanguageModel('gemini-pro', {
+        provider: 'google.vertex.chat',
+        baseURL: 'https://generativelanguage.googleapis.com/v1beta',
+        headers: { 'x-goog-api-key': 'test-api-key' },
+        generateId: () => 'test-id',
+      });
+
+      const { stream } = await vertexModel.doStream({
+        prompt: TEST_PROMPT,
+        includeRawChunks: false,
+        tools: [
+          {
+            type: 'function',
+            name: 'read_theme',
+            inputSchema: {
+              type: 'object',
+              properties: {},
+              additionalProperties: false,
+              $schema: 'http://json-schema.org/draft-07/schema#',
+            },
+          },
+          {
+            type: 'function',
+            name: 'read_screen',
+            inputSchema: {
+              type: 'object',
+              properties: { id: { type: 'string' } },
+              required: ['id'],
+              additionalProperties: false,
+              $schema: 'http://json-schema.org/draft-07/schema#',
+            },
+          },
+        ],
+        providerOptions: {
+          vertex: {
+            streamFunctionCallArguments: true,
+          },
+        },
+      });
+
+      const events = await convertReadableStreamToArray(stream);
+
+      // The fixture is a real Vertex recording where the model picked the
+      // no-args `read_theme` first (carrying the response's only
+      // thoughtSignature), then streamed three parallel `read_screen` calls
+      // for A, B, C. Pre-fix the read_theme call and its signature were
+      // dropped entirely.
+      const toolCalls = events.filter(e => e.type === 'tool-call');
+      expect(
+        toolCalls.map(c => ({ toolName: c.toolName, input: c.input })),
+      ).toEqual([
+        { toolName: 'read_theme', input: '{}' },
+        { toolName: 'read_screen', input: '{"id":"A"}' },
+        { toolName: 'read_screen', input: '{"id":"B"}' },
+        { toolName: 'read_screen', input: '{"id":"C"}' },
+      ]);
+
+      const readThemeCall = toolCalls.find(c => c.toolName === 'read_theme')!;
+      const signature =
+        readThemeCall.providerMetadata?.vertex?.thoughtSignature;
+      expect(typeof signature).toBe('string');
+      expect((signature as string).length).toBeGreaterThan(100);
+
+      // The no-args call must emit start/end framing too, so the signature
+      // is exposed at every stage downstream consumers might inspect.
+      const toolInputStarts = events.filter(e => e.type === 'tool-input-start');
+      const noArgsStart = toolInputStarts.find(
+        e => e.toolName === 'read_theme',
+      );
+      expect(noArgsStart?.providerMetadata?.vertex?.thoughtSignature).toBe(
+        signature,
+      );
+
+      const toolInputEnds = events.filter(e => e.type === 'tool-input-end');
+      const noArgsEnd = toolInputEnds.find(
+        e => e.providerMetadata?.vertex?.thoughtSignature === signature,
+      );
+      expect(noArgsEnd).toBeDefined();
+
+      // The no-args branch must not emit any tool-input-delta events.
+      const deltas = events.filter(e => e.type === 'tool-input-delta');
+      expect(
+        deltas.every(
+          e => e.providerMetadata?.vertex?.thoughtSignature !== signature,
+        ),
+      ).toBe(true);
     });
   });
 
@@ -4122,27 +4961,26 @@ describe('doStream', () => {
     ).toBeNull();
   });
 
-  it('should expose serviceTier in provider metadata on finish', async () => {
+  it('should read serviceTier from chunk usageMetadata', async () => {
+    // Gemini streaming does not set the x-gemini-service-tier response header
+    // but does include serviceTier in each chunk's usageMetadata.
     server.urls[TEST_URL_GEMINI_PRO].response = {
       type: 'stream-chunks',
       chunks: [
         `data: ${JSON.stringify({
           candidates: [
             {
-              content: {
-                parts: [{ text: 'test response' }],
-                role: 'model',
-              },
+              content: { parts: [{ text: 'Blue' }], role: 'model' },
               finishReason: 'STOP',
-              safetyRatings: SAFETY_RATINGS,
+              index: 0,
             },
           ],
           usageMetadata: {
-            promptTokenCount: 1,
-            candidatesTokenCount: 2,
-            totalTokenCount: 3,
+            promptTokenCount: 10,
+            candidatesTokenCount: 1,
+            totalTokenCount: 11,
+            serviceTier: 'priority',
           },
-          serviceTier: 'flex',
         })}\n\n`,
       ],
     };
@@ -4157,7 +4995,7 @@ describe('doStream', () => {
     expect(
       finishEvent?.type === 'finish' &&
         finishEvent.providerMetadata?.google.serviceTier,
-    ).toBe('flex');
+    ).toBe('priority');
   });
 
   it('should expose null serviceTier in provider metadata on finish when not present', async () => {
@@ -5197,6 +6035,108 @@ describe('doStream', () => {
       {
         "raw": "STOP",
         "unified": "tool-calls",
+      }
+    `);
+  });
+
+  it('should omit server-side tool invocation flag for Vertex Gemini 3', async () => {
+    server.urls[TEST_URL_GEMINI_3_PRO].response = {
+      type: 'stream-chunks',
+      chunks: [
+        `data: ${JSON.stringify({
+          candidates: [
+            {
+              content: { parts: [{ text: 'Hello' }], role: 'model' },
+              finishReason: 'STOP',
+              safetyRatings: SAFETY_RATINGS,
+            },
+          ],
+          usageMetadata: {
+            promptTokenCount: 1,
+            candidatesTokenCount: 1,
+            totalTokenCount: 2,
+          },
+        })}\n\n`,
+      ],
+    };
+
+    const vertexModel = new GoogleGenerativeAILanguageModel(
+      'gemini-3-pro-preview',
+      {
+        provider: 'google.vertex.chat',
+        baseURL: 'https://generativelanguage.googleapis.com/v1beta',
+        headers: { 'x-goog-api-key': 'test-api-key' },
+        generateId: () => 'test-id',
+      },
+    );
+
+    const { stream } = await vertexModel.doStream({
+      prompt: TEST_PROMPT,
+      includeRawChunks: false,
+      tools: [
+        {
+          type: 'function',
+          name: 'test-tool',
+          inputSchema: {
+            type: 'object',
+            properties: { value: { type: 'string' } },
+            required: ['value'],
+            additionalProperties: false,
+            $schema: 'http://json-schema.org/draft-07/schema#',
+          },
+        },
+        {
+          type: 'provider',
+          id: 'google.google_search',
+          name: 'google_search',
+          args: {},
+        },
+      ],
+    });
+
+    const requestBody = await server.calls[0].requestBodyJson;
+    expect({
+      toolConfig: requestBody.toolConfig,
+      tools: requestBody.tools,
+    }).toMatchInlineSnapshot(`
+      {
+        "toolConfig": {
+          "functionCallingConfig": {
+            "mode": "VALIDATED",
+          },
+        },
+        "tools": [
+          {
+            "googleSearch": {},
+          },
+          {
+            "functionDeclarations": [
+              {
+                "description": "",
+                "name": "test-tool",
+                "parameters": {
+                  "properties": {
+                    "value": {
+                      "type": "string",
+                    },
+                  },
+                  "required": [
+                    "value",
+                  ],
+                  "type": "object",
+                },
+              },
+            ],
+          },
+        ],
+      }
+    `);
+
+    const events = await convertReadableStreamToArray(stream);
+    expect(events[0]).toMatchInlineSnapshot(`
+      {
+        "type": "stream-start",
+        "warnings": [],
       }
     `);
   });

@@ -3,13 +3,21 @@ import {
   OpenAICompatibleCompletionLanguageModel,
   OpenAICompatibleEmbeddingModel,
 } from '@ai-sdk/openai-compatible';
-import {
+import type {
   EmbeddingModelV3,
   LanguageModelV3,
   RerankingModelV3,
 } from '@ai-sdk/provider';
 import { loadApiKey } from '@ai-sdk/provider-utils';
-import { afterEach, beforeEach, describe, expect, it, Mock, vi } from 'vitest';
+import {
+  afterEach,
+  beforeEach,
+  describe,
+  expect,
+  it,
+  vi,
+  type Mock,
+} from 'vitest';
 import { TogetherAIRerankingModel } from './reranking/togetherai-reranking-model';
 import { TogetherAIImageModel } from './togetherai-image-model';
 import { createTogetherAI } from './togetherai-provider';
@@ -188,6 +196,14 @@ describe('TogetherAIProvider', () => {
 
       expect(model).toBeInstanceOf(OpenAICompatibleChatLanguageModel);
     });
+
+    it('should set includeUsage so streaming responses report token usage', () => {
+      const provider = createTogetherAI();
+      provider.chatModel('together-chat-model');
+
+      const config = OpenAICompatibleChatLanguageModelMock.mock.calls[0][1];
+      expect(config.includeUsage).toBe(true);
+    });
   });
 
   describe('completionModel', () => {
@@ -198,6 +214,16 @@ describe('TogetherAIProvider', () => {
       const model = provider.completionModel(modelId);
 
       expect(model).toBeInstanceOf(OpenAICompatibleCompletionLanguageModel);
+    });
+
+    it('should set includeUsage so streaming responses report token usage', () => {
+      const provider = createTogetherAI();
+      provider.completionModel('together-completion-model');
+
+      const config = (
+        OpenAICompatibleCompletionLanguageModel as unknown as Mock
+      ).mock.calls[0][1];
+      expect(config.includeUsage).toBe(true);
     });
   });
 

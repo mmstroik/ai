@@ -1,4 +1,4 @@
-import {
+import type {
   LanguageModelV3,
   LanguageModelV3CallOptions,
   LanguageModelV3Content,
@@ -8,22 +8,26 @@ import {
   LanguageModelV3StreamResult,
 } from '@ai-sdk/provider';
 import {
-  FetchFunction,
-  ParseResult,
   combineHeaders,
   createEventSourceResponseHandler,
   createJsonResponseHandler,
   parseProviderOptions,
+  parseJSON,
   postJsonToApi,
+  type FetchFunction,
+  type ParseResult,
 } from '@ai-sdk/provider-utils';
 import { z } from 'zod/v4';
 import {
-  CohereChatModelId,
   cohereLanguageModelOptions,
+  type CohereChatModelId,
 } from './cohere-chat-options';
 import { cohereFailedResponseHandler } from './cohere-error';
 import { prepareTools } from './cohere-prepare-tools';
-import { CohereUsageTokens, convertCohereUsage } from './convert-cohere-usage';
+import {
+  convertCohereUsage,
+  type CohereUsageTokens,
+} from './convert-cohere-usage';
 import { convertToCohereChatPrompt } from './convert-to-cohere-chat-prompt';
 import { mapCohereFinishReason } from './map-cohere-finish-reason';
 
@@ -40,8 +44,8 @@ export class CohereChatLanguageModel implements LanguageModelV3 {
 
   readonly modelId: CohereChatModelId;
 
-  readonly supportedUrls = {
-    // No URLs are supported.
+  readonly supportedUrls: Record<string, RegExp[]> = {
+    'image/*': [/^https?:\/\/.*$/],
   };
 
   private readonly config: CohereChatConfig;
@@ -82,7 +86,7 @@ export class CohereChatLanguageModel implements LanguageModelV3 {
       messages: chatPrompt,
       documents: cohereDocuments,
       warnings: promptWarnings,
-    } = convertToCohereChatPrompt(prompt);
+    } = await convertToCohereChatPrompt(prompt);
 
     const {
       tools: cohereTools,
@@ -260,7 +264,7 @@ export class CohereChatLanguageModel implements LanguageModelV3 {
             controller.enqueue({ type: 'stream-start', warnings });
           },
 
-          transform(chunk, controller) {
+          async transform(chunk, controller) {
             if (options.includeRawChunks) {
               controller.enqueue({ type: 'raw', rawValue: chunk.rawValue });
             }
@@ -385,7 +389,9 @@ export class CohereChatLanguageModel implements LanguageModelV3 {
                     toolCallId: pendingToolCall.id,
                     toolName: pendingToolCall.name,
                     input: JSON.stringify(
-                      JSON.parse(pendingToolCall.arguments?.trim() || '{}'),
+                      await parseJSON({
+                        text: pendingToolCall.arguments?.trim() || '{}',
+                      }),
                     ),
                   });
 

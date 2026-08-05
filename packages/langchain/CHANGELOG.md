@@ -1,5 +1,532 @@
 # @ai-sdk/langchain
 
+## 2.0.250
+
+### Patch Changes
+
+- ai@6.0.242
+
+## 2.0.249
+
+### Patch Changes
+
+- ai@6.0.241
+
+## 2.0.248
+
+### Patch Changes
+
+- ai@6.0.240
+
+## 2.0.247
+
+### Patch Changes
+
+- ai@6.0.239
+
+## 2.0.246
+
+### Patch Changes
+
+- Updated dependencies [9ecdefe]
+- Updated dependencies [26d10c0]
+- Updated dependencies [7767170]
+  - ai@6.0.238
+
+## 2.0.245
+
+### Patch Changes
+
+- Updated dependencies [f6020d7]
+  - ai@6.0.237
+
+## 2.0.244
+
+### Patch Changes
+
+- ai@6.0.236
+
+## 2.0.243
+
+### Patch Changes
+
+- ai@6.0.235
+
+## 2.0.242
+
+### Patch Changes
+
+- 533f6c4: Emit canonical LangChain image content blocks when converting user messages.
+- Updated dependencies [1efdef8]
+- Updated dependencies [49414cf]
+  - ai@6.0.234
+
+## 2.0.241
+
+### Patch Changes
+
+- Updated dependencies [fe410e7]
+- Updated dependencies [af7188c]
+  - ai@6.0.233
+
+## 2.0.240
+
+### Patch Changes
+
+- Updated dependencies [7644a61]
+  - ai@6.0.232
+
+## 2.0.239
+
+### Patch Changes
+
+- Updated dependencies [926f5a0]
+- Updated dependencies [4c5a22f]
+- Updated dependencies [842a383]
+  - ai@6.0.231
+
+## 2.0.238
+
+### Patch Changes
+
+- c184a23: fix(langchain): close LangGraph reasoning before starting text
+- Updated dependencies [19093fd]
+  - ai@6.0.230
+
+## 2.0.237
+
+### Patch Changes
+
+- ai@6.0.229
+
+## 2.0.236
+
+### Patch Changes
+
+- ai@6.0.228
+
+## 2.0.235
+
+### Patch Changes
+
+- Updated dependencies [6ace546]
+  - ai@6.0.227
+
+## 2.0.234
+
+### Patch Changes
+
+- Updated dependencies [94219a2]
+- Updated dependencies [b1be847]
+  - ai@6.0.226
+
+## 2.0.233
+
+### Patch Changes
+
+- ai@6.0.225
+
+## 2.0.232
+
+### Patch Changes
+
+- ai@6.0.224
+
+## 2.0.231
+
+### Patch Changes
+
+- ai@6.0.223
+
+## 2.0.230
+
+### Patch Changes
+
+- Updated dependencies [e1af05f]
+  - ai@6.0.222
+
+## 2.0.229
+
+### Patch Changes
+
+- c8e38eb: fix(langchain): reset streamEvents text between model invocations
+- ea6eb0a: fix(langchain): register key mapping for tool calls emitted via messages mode for HITL interrupt matching
+- Updated dependencies [2958540]
+- Updated dependencies [aa2dbe6]
+- Updated dependencies [faaef7c]
+- Updated dependencies [45a9cbf]
+- Updated dependencies [2706461]
+- Updated dependencies [327642b]
+- Updated dependencies [89df298]
+- Updated dependencies [8ed1f83]
+  - ai@6.0.221
+
+## 2.0.228
+
+### Patch Changes
+
+- Updated dependencies [158d027]
+- Updated dependencies [eb3cdd9]
+  - ai@6.0.220
+
+## 2.0.227
+
+### Patch Changes
+
+- ai@6.0.219
+
+## 2.0.226
+
+### Patch Changes
+
+- Updated dependencies [ea1e95b]
+  - ai@6.0.218
+
+## 2.0.225
+
+### Patch Changes
+
+- Updated dependencies [fa850e6]
+  - ai@6.0.217
+
+## 2.0.224
+
+### Patch Changes
+
+- ai@6.0.216
+
+## 2.0.223
+
+### Patch Changes
+
+- Updated dependencies [f66ac32]
+  - ai@6.0.215
+
+## 2.0.222
+
+### Patch Changes
+
+- ai@6.0.214
+
+## 2.0.221
+
+### Patch Changes
+
+- Updated dependencies [f19334d]
+  - ai@6.0.213
+
+## 2.0.220
+
+### Patch Changes
+
+- ai@6.0.212
+
+## 2.0.219
+
+### Patch Changes
+
+- ai@6.0.211
+
+## 2.0.218
+
+### Patch Changes
+
+- 1b40ac7: Publish all packages under the `@ai-v6` dist tag.
+- Updated dependencies [1b40ac7]
+  - ai@6.0.210
+
+## 2.0.217
+
+### Patch Changes
+
+- Updated dependencies [d102dff]
+  - ai@6.0.209
+
+## 2.0.216
+
+### Patch Changes
+
+- Updated dependencies [8261640]
+- Updated dependencies [f994df3]
+  - ai@6.0.208
+
+## 2.0.215
+
+### Patch Changes
+
+- dff49ee: Surface LangChain citation annotations as spec-compliant `source-url` / `source-document` UI message parts. Previously, citations attached to text content blocks (e.g. from web search or RAG) were dropped entirely instead of being emitted as AI SDK source parts. Citation metadata (`citedText`, `startIndex`, `endIndex`, `source`) is preserved under `providerMetadata.langchain`.
+
+## 2.0.214
+
+### Patch Changes
+
+- Updated dependencies [779f5cd]
+  - ai@6.0.207
+
+## 2.0.213
+
+### Patch Changes
+
+- ai@6.0.206
+
+## 2.0.212
+
+### Patch Changes
+
+- ai@6.0.205
+
+## 2.0.211
+
+### Patch Changes
+
+- b51014f: fix(langchain): prevent polluting global object.prototype
+  - ai@6.0.204
+
+## 2.0.210
+
+### Patch Changes
+
+- Updated dependencies [f42aa79]
+- Updated dependencies [5291f7e]
+- Updated dependencies [b4b575a]
+  - ai@6.0.203
+
+## 2.0.209
+
+### Patch Changes
+
+- Updated dependencies [942f2f8]
+  - ai@6.0.202
+
+## 2.0.208
+
+### Patch Changes
+
+- Updated dependencies [0c8c0ed]
+  - ai@6.0.201
+
+## 2.0.207
+
+### Patch Changes
+
+- Updated dependencies [14098e7]
+- Updated dependencies [2cabe9c]
+  - ai@6.0.200
+
+## 2.0.206
+
+### Patch Changes
+
+- Updated dependencies [49d9364]
+  - ai@6.0.199
+
+## 2.0.205
+
+### Patch Changes
+
+- ai@6.0.198
+
+## 2.0.204
+
+### Patch Changes
+
+- ai@6.0.197
+
+## 2.0.203
+
+### Patch Changes
+
+- ai@6.0.196
+
+## 2.0.202
+
+### Patch Changes
+
+- ai@6.0.195
+
+## 2.0.201
+
+### Patch Changes
+
+- ai@6.0.194
+
+## 2.0.200
+
+### Patch Changes
+
+- Updated dependencies [af580ea]
+  - ai@6.0.193
+
+## 2.0.199
+
+### Patch Changes
+
+- ai@6.0.192
+
+## 2.0.198
+
+### Patch Changes
+
+- 63847a6: fix(langchain): recognize Python `AIMessageChunk` plain message objects from RemoteGraph streams
+
+  Python `langchain-core` serializes streaming message chunks with `type: "AIMessageChunk"`, while TypeScript `langchain-core` uses `type: "ai"`. The `toUIMessageStream` adapter previously only matched the TypeScript form, silently dropping text deltas and tool-call events when streaming from Python LangGraph servers via `RemoteGraph`.
+
+## 2.0.197
+
+### Patch Changes
+
+- ai@6.0.191
+
+## 2.0.196
+
+### Patch Changes
+
+- ai@6.0.190
+
+## 2.0.195
+
+### Patch Changes
+
+- Updated dependencies [356c3cf]
+  - ai@6.0.189
+
+## 2.0.194
+
+### Patch Changes
+
+- Updated dependencies [c98715a]
+  - ai@6.0.188
+
+## 2.0.193
+
+### Patch Changes
+
+- ai@6.0.187
+
+## 2.0.192
+
+### Patch Changes
+
+- ai@6.0.186
+
+## 2.0.191
+
+### Patch Changes
+
+- ai@6.0.185
+
+## 2.0.190
+
+### Patch Changes
+
+- Updated dependencies [40fc5e4]
+  - ai@6.0.184
+
+## 2.0.189
+
+### Patch Changes
+
+- ai@6.0.183
+
+## 2.0.188
+
+### Patch Changes
+
+- Updated dependencies [e76a29a]
+  - ai@6.0.182
+
+## 2.0.187
+
+### Patch Changes
+
+- Updated dependencies [538974a]
+  - ai@6.0.181
+
+## 2.0.186
+
+### Patch Changes
+
+- Updated dependencies [253bd5a]
+- Updated dependencies [57ec10f]
+  - ai@6.0.180
+
+## 2.0.185
+
+### Patch Changes
+
+- ai@6.0.179
+
+## 2.0.184
+
+### Patch Changes
+
+- Updated dependencies [ac6f27e]
+  - ai@6.0.178
+
+## 2.0.183
+
+### Patch Changes
+
+- ai@6.0.177
+
+## 2.0.182
+
+### Patch Changes
+
+- Updated dependencies [f591416]
+  - ai@6.0.176
+
+## 2.0.181
+
+### Patch Changes
+
+- ai@6.0.175
+
+## 2.0.180
+
+### Patch Changes
+
+- ai@6.0.174
+
+## 2.0.179
+
+### Patch Changes
+
+- Updated dependencies [7beadf0]
+  - ai@6.0.173
+
+## 2.0.178
+
+### Patch Changes
+
+- ai@6.0.172
+
+## 2.0.177
+
+### Patch Changes
+
+- a727da4: chore: ensure consistent import handling and avoid import duplicates or cycles
+- Updated dependencies [48f842a]
+- Updated dependencies [a727da4]
+- Updated dependencies [5fee301]
+  - ai@6.0.171
+
+## 2.0.176
+
+### Patch Changes
+
+- Updated dependencies [19d587a]
+  - ai@6.0.170
+
+## 2.0.175
+
+### Patch Changes
+
+- a7f3c72: trigger release for all packages after provenance setup
+- Updated dependencies [2662bb5]
+- Updated dependencies [a7f3c72]
+  - ai@6.0.169
+
 ## 2.0.174
 
 ### Patch Changes

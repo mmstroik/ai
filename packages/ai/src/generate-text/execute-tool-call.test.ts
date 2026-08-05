@@ -2,19 +2,18 @@ import { tool } from '@ai-sdk/provider-utils';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import * as z from 'zod/v4';
 import { MockTracer } from '../test/mock-tracer';
+import { now } from '../util/now';
 import { executeToolCall } from './execute-tool-call';
-import {
+import type {
   GenerateTextOnToolCallFinishCallback,
   GenerateTextOnToolCallStartCallback,
 } from './generate-text';
-import { TypedToolCall } from './tool-call';
-import { TypedToolResult } from './tool-result';
+import type { TypedToolCall } from './tool-call';
+import type { TypedToolResult } from './tool-result';
 
 vi.mock('../util/now', () => ({
   now: vi.fn(),
 }));
-
-import { now } from '../util/now';
 
 const mockNow = vi.mocked(now);
 
@@ -109,6 +108,30 @@ describe('executeToolCall', () => {
         providerMetadata: { custom: { key: 'value' } },
       });
     });
+
+    it('should preserve toolMetadata from toolCall', async () => {
+      const result = await executeToolCall({
+        toolCall: createToolCall({
+          toolMetadata: { clientName: 'MyMCPClient' },
+        }),
+        tools: {
+          testTool: tool({
+            inputSchema: z.object({ value: z.string() }),
+            execute: async ({ value }) => `${value}-result`,
+          }),
+        },
+        tracer,
+        telemetry: undefined,
+        messages: [],
+        abortSignal: undefined,
+        experimental_context: undefined,
+      });
+
+      expect(result).toMatchObject({
+        type: 'tool-result',
+        toolMetadata: { clientName: 'MyMCPClient' },
+      });
+    });
   });
 
   describe('when tool execution fails', () => {
@@ -165,6 +188,32 @@ describe('executeToolCall', () => {
       expect(result).toMatchObject({
         type: 'tool-error',
         providerMetadata: { custom: { key: 'value' } },
+      });
+    });
+
+    it('should preserve toolMetadata from toolCall on error', async () => {
+      const result = await executeToolCall({
+        toolCall: createToolCall({
+          toolMetadata: { clientName: 'MyMCPClient' },
+        }),
+        tools: {
+          testTool: tool({
+            inputSchema: z.object({ value: z.string() }),
+            execute: async (): Promise<string> => {
+              throw new Error('execution failed');
+            },
+          }),
+        },
+        tracer,
+        telemetry: undefined,
+        messages: [],
+        abortSignal: undefined,
+        experimental_context: undefined,
+      });
+
+      expect(result).toMatchObject({
+        type: 'tool-error',
+        toolMetadata: { clientName: 'MyMCPClient' },
       });
     });
   });

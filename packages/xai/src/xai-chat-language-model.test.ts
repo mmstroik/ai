@@ -1,4 +1,4 @@
-import { LanguageModelV3Prompt } from '@ai-sdk/provider';
+import type { LanguageModelV3Prompt } from '@ai-sdk/provider';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { createTestServer } from '@ai-sdk/test-server/with-vitest';
 import { convertReadableStreamToArray } from '@ai-sdk/provider-utils/test';
@@ -263,7 +263,6 @@ describe('XaiChatLanguageModel', () => {
                 "name": "test-tool",
                 "parameters": {
                   "$schema": "http://json-schema.org/draft-07/schema#",
-                  "additionalProperties": false,
                   "properties": {
                     "value": {
                       "type": "string",
@@ -1204,6 +1203,78 @@ describe('XaiChatLanguageModel', () => {
     });
   });
 
+  describe('image detail', () => {
+    it('should pass detail from the imageDetail provider option on image parts', async () => {
+      prepareJsonFixtureResponse('xai-text');
+
+      await model.doGenerate({
+        prompt: [
+          {
+            role: 'user',
+            content: [
+              { type: 'text', text: 'What is in this image?' },
+              {
+                type: 'file',
+                mediaType: 'image/png',
+                data: Buffer.from([0, 1, 2, 3]),
+                providerOptions: { xai: { imageDetail: 'low' } },
+              },
+            ],
+          },
+        ],
+      });
+
+      expect((await server.calls[0].requestBodyJson).messages).toEqual([
+        {
+          role: 'user',
+          content: [
+            { type: 'text', text: 'What is in this image?' },
+            {
+              type: 'image_url',
+              image_url: {
+                url: 'data:image/png;base64,AAECAw==',
+                detail: 'low',
+              },
+            },
+          ],
+        },
+      ]);
+    });
+
+    it('should not set detail when the imageDetail provider option is not set', async () => {
+      prepareJsonFixtureResponse('xai-text');
+
+      await model.doGenerate({
+        prompt: [
+          {
+            role: 'user',
+            content: [
+              { type: 'text', text: 'What is in this image?' },
+              {
+                type: 'file',
+                mediaType: 'image/png',
+                data: Buffer.from([0, 1, 2, 3]),
+              },
+            ],
+          },
+        ],
+      });
+
+      expect((await server.calls[0].requestBodyJson).messages).toEqual([
+        {
+          role: 'user',
+          content: [
+            { type: 'text', text: 'What is in this image?' },
+            {
+              type: 'image_url',
+              image_url: { url: 'data:image/png;base64,AAECAw==' },
+            },
+          ],
+        },
+      ]);
+    });
+  });
+
   describe('reasoning models', () => {
     const reasoningModel = new XaiChatLanguageModel('grok-3-mini', testConfig);
 
@@ -1227,6 +1298,30 @@ describe('XaiChatLanguageModel', () => {
           ],
           "model": "grok-3-mini",
           "reasoning_effort": "high",
+        }
+      `);
+    });
+
+    it('should pass reasoning_effort none parameter', async () => {
+      prepareJsonFixtureResponse('xai-text');
+
+      await reasoningModel.doGenerate({
+        prompt: TEST_PROMPT,
+        providerOptions: {
+          xai: { reasoningEffort: 'none' },
+        },
+      });
+
+      expect(await server.calls[0].requestBodyJson).toMatchInlineSnapshot(`
+        {
+          "messages": [
+            {
+              "content": "Hello",
+              "role": "user",
+            },
+          ],
+          "model": "grok-3-mini",
+          "reasoning_effort": "none",
         }
       `);
     });

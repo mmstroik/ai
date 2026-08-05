@@ -567,4 +567,176 @@ describe('parseToolCall', () => {
       expect(result.title).toBe('Invalid Tool');
     });
   });
+
+  describe('tool metadata propagation', () => {
+    it('should propagate tool metadata onto a parsed dynamic tool call', async () => {
+      const result = await parseToolCall({
+        toolCall: {
+          type: 'tool-call',
+          toolCallId: 'call-1',
+          toolName: 'weather',
+          input: '{"location":"Paris"}',
+        },
+        tools: {
+          weather: dynamicTool({
+            description: 'Get weather',
+            metadata: { clientName: 'MyMCPClient' },
+            inputSchema: jsonSchema({
+              type: 'object',
+              properties: { location: { type: 'string' } },
+              additionalProperties: false,
+            }),
+            execute: async () => 'sunny',
+          }),
+        },
+        repairToolCall: undefined,
+        system: undefined,
+        messages: [],
+      });
+
+      expect(result).toMatchInlineSnapshot(`
+        {
+          "dynamic": true,
+          "input": {
+            "location": "Paris",
+          },
+          "providerExecuted": undefined,
+          "providerMetadata": undefined,
+          "title": undefined,
+          "toolCallId": "call-1",
+          "toolMetadata": {
+            "clientName": "MyMCPClient",
+          },
+          "toolName": "weather",
+          "type": "tool-call",
+        }
+      `);
+    });
+
+    it('should propagate tool metadata onto a parsed static tool call', async () => {
+      const result = await parseToolCall({
+        toolCall: {
+          type: 'tool-call',
+          toolCallId: 'call-2',
+          toolName: 'calculator',
+          input: '{"a":5,"b":3}',
+        },
+        tools: {
+          calculator: tool({
+            description: 'Calculate',
+            metadata: { clientName: 'MyMCPClient' },
+            inputSchema: z.object({ a: z.number(), b: z.number() }),
+            execute: async ({ a, b }) => a + b,
+          }),
+        },
+        repairToolCall: undefined,
+        system: undefined,
+        messages: [],
+      });
+
+      expect(result).toMatchInlineSnapshot(`
+        {
+          "input": {
+            "a": 5,
+            "b": 3,
+          },
+          "providerExecuted": undefined,
+          "providerMetadata": undefined,
+          "title": undefined,
+          "toolCallId": "call-2",
+          "toolMetadata": {
+            "clientName": "MyMCPClient",
+          },
+          "toolName": "calculator",
+          "type": "tool-call",
+        }
+      `);
+    });
+
+    it('should keep tool metadata separate from model-supplied providerMetadata', async () => {
+      const result = await parseToolCall({
+        toolCall: {
+          type: 'tool-call',
+          toolCallId: 'call-3',
+          toolName: 'weather',
+          input: '{"location":"Paris"}',
+          providerMetadata: {
+            anthropic: { cacheControl: { type: 'ephemeral' } },
+          },
+        },
+        tools: {
+          weather: dynamicTool({
+            description: 'Get weather',
+            metadata: { clientName: 'MyMCPClient' },
+            inputSchema: jsonSchema({
+              type: 'object',
+              properties: { location: { type: 'string' } },
+              additionalProperties: false,
+            }),
+            execute: async () => 'sunny',
+          }),
+        },
+        repairToolCall: undefined,
+        system: undefined,
+        messages: [],
+      });
+
+      expect({
+        providerMetadata: result.providerMetadata,
+        toolMetadata: result.toolMetadata,
+      }).toMatchInlineSnapshot(`
+        {
+          "providerMetadata": {
+            "anthropic": {
+              "cacheControl": {
+                "type": "ephemeral",
+              },
+            },
+          },
+          "toolMetadata": {
+            "clientName": "MyMCPClient",
+          },
+        }
+      `);
+    });
+
+    it('should propagate tool metadata onto an invalid tool call', async () => {
+      const result = await parseToolCall({
+        toolCall: {
+          type: 'tool-call',
+          toolCallId: 'call-4',
+          toolName: 'weather',
+          input: 'invalid json',
+        },
+        tools: {
+          weather: dynamicTool({
+            description: 'Get weather',
+            metadata: { clientName: 'MyMCPClient' },
+            inputSchema: jsonSchema({
+              type: 'object',
+              properties: { location: { type: 'string' } },
+              required: ['location'],
+              additionalProperties: false,
+            }),
+            execute: async () => 'sunny',
+          }),
+        },
+        repairToolCall: undefined,
+        system: undefined,
+        messages: [],
+      });
+
+      expect({
+        invalid: result.invalid,
+        toolMetadata: result.toolMetadata,
+      }).toMatchInlineSnapshot(`
+        {
+          "invalid": true,
+          "toolMetadata": {
+            "clientName": "MyMCPClient",
+          },
+        }
+      `);
+    });
+  });
 });

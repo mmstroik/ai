@@ -1,5 +1,149 @@
 # @ai-sdk/prodia
 
+## 1.0.46
+
+### Patch Changes
+
+- Updated dependencies [9ecdefe]
+  - @ai-sdk/provider-utils@4.0.41
+
+## 1.0.45
+
+### Patch Changes
+
+- Updated dependencies [19093fd]
+  - @ai-sdk/provider-utils@4.0.40
+
+## 1.0.44
+
+### Patch Changes
+
+- Updated dependencies [06fb54c]
+  - @ai-sdk/provider-utils@4.0.39
+
+## 1.0.43
+
+### Patch Changes
+
+- Updated dependencies [e1af05f]
+  - @ai-sdk/provider@3.0.14
+  - @ai-sdk/provider-utils@4.0.38
+
+## 1.0.42
+
+### Patch Changes
+
+- Updated dependencies [d559de9]
+  - @ai-sdk/provider-utils@4.0.37
+
+## 1.0.41
+
+### Patch Changes
+
+- Updated dependencies [0952964]
+  - @ai-sdk/provider-utils@4.0.36
+
+## 1.0.40
+
+### Patch Changes
+
+- Updated dependencies [ea1e95b]
+  - @ai-sdk/provider-utils@4.0.35
+
+## 1.0.39
+
+### Patch Changes
+
+- Updated dependencies [fa850e6]
+  - @ai-sdk/provider@3.0.13
+  - @ai-sdk/provider-utils@4.0.34
+
+## 1.0.38
+
+### Patch Changes
+
+- Updated dependencies [b30e43a]
+  - @ai-sdk/provider-utils@4.0.33
+
+## 1.0.37
+
+### Patch Changes
+
+- Updated dependencies [f19334d]
+  - @ai-sdk/provider@3.0.12
+  - @ai-sdk/provider-utils@4.0.32
+
+## 1.0.36
+
+### Patch Changes
+
+- 1b40ac7: Publish all packages under the `@ai-v6` dist tag.
+- Updated dependencies [1b40ac7]
+  - @ai-sdk/provider-utils@4.0.31
+  - @ai-sdk/provider@3.0.11
+
+## 1.0.35
+
+### Patch Changes
+
+- Updated dependencies [779f5cd]
+  - @ai-sdk/provider-utils@4.0.30
+
+## 1.0.34
+
+### Patch Changes
+
+- Updated dependencies [bfa5864]
+- Updated dependencies [f42aa79]
+  - @ai-sdk/provider-utils@4.0.29
+
+## 1.0.33
+
+### Patch Changes
+
+- Updated dependencies [942f2f8]
+  - @ai-sdk/provider-utils@4.0.28
+
+## 1.0.32
+
+### Patch Changes
+
+- 3ee4555: fix(prodia): validate user-supplied image URLs before fetching (SSRF)
+
+  The Prodia video model's `resolveVideoFileData` fetched a user-supplied `image` URL directly with `fetch()`, bypassing the SDK's SSRF guard. An attacker who could supply the image URL could make the server request internal endpoints (e.g. cloud metadata) and have the response uploaded to Prodia's API. The URL is now downloaded via `downloadBlob`, which routes through `validateDownloadUrl` and rejects private/internal addresses, matching the pattern used by other providers.
+
+## 1.0.31
+
+### Patch Changes
+
+- Updated dependencies [f591416]
+  - @ai-sdk/provider-utils@4.0.27
+
+## 1.0.30
+
+### Patch Changes
+
+- Updated dependencies [7beadf0]
+  - @ai-sdk/provider-utils@4.0.26
+
+## 1.0.29
+
+### Patch Changes
+
+- a727da4: chore: ensure consistent import handling and avoid import duplicates or cycles
+- Updated dependencies [a727da4]
+  - @ai-sdk/provider-utils@4.0.25
+  - @ai-sdk/provider@3.0.10
+
+## 1.0.28
+
+### Patch Changes
+
+- a7f3c72: trigger release for all packages after provenance setup
+- Updated dependencies [a7f3c72]
+  - @ai-sdk/provider@3.0.9
+  - @ai-sdk/provider-utils@4.0.24
+
 ## 1.0.27
 
 ### Patch Changes

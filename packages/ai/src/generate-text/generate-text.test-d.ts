@@ -1,4 +1,4 @@
-import { JSONValue } from '@ai-sdk/provider';
+import type { JSONValue } from '@ai-sdk/provider';
 import { describe, expectTypeOf, it } from 'vitest';
 import { z } from 'zod';
 import { generateText, Output } from '../generate-text';
@@ -63,6 +63,23 @@ describe('generateText types', () => {
       });
 
       expectTypeOf<typeof result.output>().toEqualTypeOf<JSONValue>();
+    });
+  });
+
+  it('should support model call settings in prepareStep', async () => {
+    await generateText({
+      model: new MockLanguageModelV3(),
+      prompt: 'Hello, world!',
+      prepareStep: async () => ({
+        maxOutputTokens: 100,
+        temperature: 0,
+        topP: 0.9,
+        topK: 40,
+        presencePenalty: 0,
+        frequencyPenalty: -0.2,
+        stopSequences: [],
+        seed: 0,
+      }),
     });
   });
 });

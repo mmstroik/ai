@@ -1,5 +1,10 @@
 import { xai } from '@ai-sdk/xai';
-import { streamText, ModelMessage, ToolCallPart, ToolResultPart } from 'ai';
+import {
+  streamText,
+  type ModelMessage,
+  type ToolCallPart,
+  type ToolResultPart,
+} from 'ai';
 import { weatherTool } from '../../tools/weather-tool';
 import { run } from '../../lib/run';
 
@@ -9,7 +14,7 @@ run(async () => {
   let toolResponseAvailable = false;
 
   const result = streamText({
-    model: xai('grok-3-beta'),
+    model: xai('grok-4.5'),
     maxOutputTokens: 512,
     tools: {
       weather: weatherTool,

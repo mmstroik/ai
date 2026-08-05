@@ -1,5 +1,23 @@
 # @ai-sdk/test-server
 
+## 1.0.6
+
+### Patch Changes
+
+- 1b40ac7: Publish all packages under the `@ai-v6` dist tag.
+
+## 1.0.5
+
+### Patch Changes
+
+- a727da4: chore: ensure consistent import handling and avoid import duplicates or cycles
+
+## 1.0.4
+
+### Patch Changes
+
+- a7f3c72: trigger release for all packages after provenance setup
+
 ## 1.0.3
 
 ### Patch Changes

@@ -1,13 +1,14 @@
-import {
+import type { JSONObject } from '@ai-sdk/provider';
+import type {
   InferToolInput,
   InferToolOutput,
   Tool,
   ToolCall,
 } from '@ai-sdk/provider-utils';
-import { ToolSet } from '../generate-text';
-import { ProviderMetadata } from '../types/provider-metadata';
-import { DeepPartial } from '../util/deep-partial';
-import { ValueOf } from '../util/value-of';
+import type { ToolSet } from '../generate-text';
+import type { ProviderMetadata } from '../types/provider-metadata';
+import type { DeepPartial } from '../util/deep-partial';
+import type { ValueOf } from '../util/value-of';
 
 /**
  * The data types that can be used in the UI message for the UI message data parts.
@@ -222,6 +223,7 @@ export type UIToolInvocation<TOOL extends UITool | Tool> = {
    */
   toolCallId: string;
   title?: string;
+  toolMetadata?: JSONObject;
 
   /**
    * Whether the tool call was executed by the provider.
@@ -230,7 +232,7 @@ export type UIToolInvocation<TOOL extends UITool | Tool> = {
 } & (
   | {
       state: 'input-streaming';
-      input: DeepPartial<asUITool<TOOL>['input']> | undefined;
+      input?: DeepPartial<asUITool<TOOL>['input']> | undefined;
       output?: never;
       errorText?: never;
       callProviderMetadata?: ProviderMetadata;
@@ -254,6 +256,7 @@ export type UIToolInvocation<TOOL extends UITool | Tool> = {
         id: string;
         approved?: never;
         reason?: never;
+        signature?: string;
       };
     }
   | {
@@ -266,6 +269,7 @@ export type UIToolInvocation<TOOL extends UITool | Tool> = {
         id: string;
         approved: boolean;
         reason?: string;
+        signature?: string;
       };
     }
   | {
@@ -280,6 +284,7 @@ export type UIToolInvocation<TOOL extends UITool | Tool> = {
         id: string;
         approved: true;
         reason?: string;
+        signature?: string;
       };
     }
   | {
@@ -294,6 +299,7 @@ export type UIToolInvocation<TOOL extends UITool | Tool> = {
         id: string;
         approved: true;
         reason?: string;
+        signature?: string;
       };
     }
   | {
@@ -306,6 +312,7 @@ export type UIToolInvocation<TOOL extends UITool | Tool> = {
         id: string;
         approved: false;
         reason?: string;
+        signature?: string;
       };
     }
 );
@@ -329,6 +336,7 @@ export type DynamicToolUIPart = {
    */
   toolCallId: string;
   title?: string;
+  toolMetadata?: JSONObject;
 
   /**
    * Whether the tool call was executed by the provider.
@@ -337,7 +345,7 @@ export type DynamicToolUIPart = {
 } & (
   | {
       state: 'input-streaming';
-      input: unknown | undefined;
+      input?: unknown;
       output?: never;
       errorText?: never;
       callProviderMetadata?: ProviderMetadata;
@@ -361,6 +369,7 @@ export type DynamicToolUIPart = {
         id: string;
         approved?: never;
         reason?: never;
+        signature?: string;
       };
     }
   | {
@@ -373,6 +382,7 @@ export type DynamicToolUIPart = {
         id: string;
         approved: boolean;
         reason?: string;
+        signature?: string;
       };
     }
   | {
@@ -387,6 +397,7 @@ export type DynamicToolUIPart = {
         id: string;
         approved: true;
         reason?: string;
+        signature?: string;
       };
     }
   | {
@@ -400,6 +411,7 @@ export type DynamicToolUIPart = {
         id: string;
         approved: true;
         reason?: string;
+        signature?: string;
       };
     }
   | {
@@ -412,6 +424,7 @@ export type DynamicToolUIPart = {
         id: string;
         approved: false;
         reason?: string;
+        signature?: string;
       };
     }
 );

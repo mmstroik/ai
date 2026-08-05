@@ -1,10 +1,10 @@
-import { JSONValue } from '@ai-sdk/provider';
+import type { JSONValue } from '@ai-sdk/provider';
 import { describe, expectTypeOf, it } from 'vitest';
 import { z } from 'zod';
 import { Output, streamText } from '../generate-text';
 import { MockLanguageModelV3 } from '../test/mock-language-model-v3';
-import { AsyncIterableStream } from '../util';
-import { DeepPartial } from '../util/deep-partial';
+import type { AsyncIterableStream } from '../util';
+import type { DeepPartial } from '../util/deep-partial';
 
 describe('streamText types', () => {
   describe('output', () => {
@@ -195,6 +195,23 @@ describe('streamText types', () => {
       expectTypeOf<typeof result.elementStream>().toEqualTypeOf<
         AsyncIterableStream<never>
       >();
+    });
+  });
+
+  it('should support model call settings in prepareStep', () => {
+    streamText({
+      model: new MockLanguageModelV3(),
+      prompt: 'Hello, world!',
+      prepareStep: async () => ({
+        maxOutputTokens: 100,
+        temperature: 0,
+        topP: 0.9,
+        topK: 40,
+        presencePenalty: 0,
+        frequencyPenalty: -0.2,
+        stopSequences: [],
+        seed: 0,
+      }),
     });
   });
 });

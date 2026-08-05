@@ -1,14 +1,18 @@
+import type * as ProviderUtilsModule from '@ai-sdk/provider-utils';
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { createVertex } from './google-vertex-provider';
-import { GoogleGenerativeAILanguageModel } from '@ai-sdk/google/internal';
+import {
+  GoogleGenerativeAILanguageModel,
+  GoogleInteractionsLanguageModel,
+} from '@ai-sdk/google/internal';
 import { GoogleVertexEmbeddingModel } from './google-vertex-embedding-model';
 import { GoogleVertexImageModel } from './google-vertex-image-model';
 import { GoogleVertexVideoModel } from './google-vertex-video-model';
+import { GoogleVertexTranscriptionModel } from './google-vertex-transcription-model';
 
 // Mock the imported modules
 vi.mock('@ai-sdk/provider-utils', async importOriginal => {
-  const actual =
-    await importOriginal<typeof import('@ai-sdk/provider-utils')>();
+  const actual = await importOriginal<typeof ProviderUtilsModule>();
   return {
     ...actual,
     loadSetting: vi.fn().mockImplementation(({ settingValue }) => settingValue),
@@ -36,6 +40,7 @@ vi.mock('@ai-sdk/provider-utils', async importOriginal => {
 
 vi.mock('@ai-sdk/google/internal', () => ({
   GoogleGenerativeAILanguageModel: vi.fn(),
+  GoogleInteractionsLanguageModel: vi.fn(),
   googleTools: {
     googleSearch: vi.fn(),
     urlContext: vi.fn(),
@@ -54,6 +59,10 @@ vi.mock('./google-vertex-image-model', () => ({
 
 vi.mock('./google-vertex-video-model', () => ({
   GoogleVertexVideoModel: vi.fn(),
+}));
+
+vi.mock('./google-vertex-transcription-model', () => ({
+  GoogleVertexTranscriptionModel: vi.fn(),
 }));
 
 describe('google-vertex-provider', () => {
@@ -82,6 +91,39 @@ describe('google-vertex-provider', () => {
         headers: expect.any(Function),
         generateId: expect.any(Function),
       }),
+    );
+  });
+
+  it('should create an interactions model targeting the location-scoped interactions resource', () => {
+    const provider = createVertex({
+      project: 'test-project',
+      location: 'test-location',
+    });
+    provider.interactions('gemini-omni-flash-preview');
+
+    expect(GoogleInteractionsLanguageModel).toHaveBeenCalledWith(
+      'gemini-omni-flash-preview',
+      expect.objectContaining({
+        provider: 'google.vertex.interactions',
+        // No `/publishers/google` suffix — the interactions model appends
+        // `/interactions` to reach `.../locations/{region}/interactions`.
+        baseURL:
+          'https://test-location-aiplatform.googleapis.com/v1beta1/projects/test-project/locations/test-location',
+        headers: expect.any(Function),
+        generateId: expect.any(Function),
+      }),
+    );
+  });
+
+  it('should throw for interactions models when an Express Mode API key is set', () => {
+    process.env.GOOGLE_VERTEX_API_KEY = 'test-api-key';
+    const provider = createVertex({
+      project: 'test-project',
+      location: 'test-location',
+    });
+
+    expect(() => provider.interactions('gemini-omni-flash-preview')).toThrow(
+      /do not support Express Mode API keys/,
     );
   });
 
@@ -279,6 +321,44 @@ describe('google-vertex-provider', () => {
     );
   });
 
+  it('should use multi-region REP URL for us location', () => {
+    const provider = createVertex({
+      project: 'test-project',
+      location: 'us',
+    });
+    provider('test-model-id');
+
+    expect(GoogleGenerativeAILanguageModel).toHaveBeenCalledWith(
+      'test-model-id',
+      expect.objectContaining({
+        provider: 'google.vertex.chat',
+        baseURL:
+          'https://aiplatform.us.rep.googleapis.com/v1beta1/projects/test-project/locations/us/publishers/google',
+        headers: expect.any(Function),
+        generateId: expect.any(Function),
+      }),
+    );
+  });
+
+  it('should use multi-region REP URL for eu location', () => {
+    const provider = createVertex({
+      project: 'test-project',
+      location: 'eu',
+    });
+    provider('test-model-id');
+
+    expect(GoogleGenerativeAILanguageModel).toHaveBeenCalledWith(
+      'test-model-id',
+      expect.objectContaining({
+        provider: 'google.vertex.chat',
+        baseURL:
+          'https://aiplatform.eu.rep.googleapis.com/v1beta1/projects/test-project/locations/eu/publishers/google',
+        headers: expect.any(Function),
+        generateId: expect.any(Function),
+      }),
+    );
+  });
+
   it('should use express mode base URL when apiKey is provided', () => {
     const provider = createVertex({
       apiKey: 'test-api-key',
@@ -377,6 +457,47 @@ describe('google-vertex-provider', () => {
       expect.objectContaining({
         baseURL: customBaseURL,
       }),
+    );
+  });
+
+  it('should create a transcription model with correct settings', () => {
+    const provider = createVertex({
+      project: 'test-project',
+      location: 'us-central1',
+    });
+    provider.transcription('chirp_2');
+
+    expect(GoogleVertexTranscriptionModel).toHaveBeenCalledWith(
+      'chirp_2',
+      expect.objectContaining({
+        provider: 'google.vertex.transcription',
+        project: 'test-project',
+        location: 'us-central1',
+        headers: expect.any(Function),
+      }),
+    );
+  });
+
+  it('should create a transcription model via transcriptionModel()', () => {
+    const provider = createVertex({
+      project: 'test-project',
+      location: 'us-central1',
+    });
+    provider.transcriptionModel('chirp_3');
+
+    expect(GoogleVertexTranscriptionModel).toHaveBeenCalledWith(
+      'chirp_3',
+      expect.objectContaining({ provider: 'google.vertex.transcription' }),
+    );
+  });
+
+  it('should reject Express Mode for transcription models', () => {
+    const provider = createVertex({
+      apiKey: 'test-api-key',
+    });
+
+    expect(() => provider.transcription('chirp_3')).toThrow(
+      'Google Vertex transcription models do not support Express Mode API keys. Use standard Google Cloud credentials instead.',
     );
   });
 });

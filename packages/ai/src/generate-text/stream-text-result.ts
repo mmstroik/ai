@@ -1,41 +1,46 @@
-import { IdGenerator } from '@ai-sdk/provider-utils';
-import { ServerResponse } from 'node:http';
-import {
+import type { JSONObject } from '@ai-sdk/provider';
+import type { IdGenerator } from '@ai-sdk/provider-utils';
+import type { ServerResponse } from 'node:http';
+import type {
   CallWarning,
   FinishReason,
   LanguageModelRequestMetadata,
   ProviderMetadata,
 } from '../types';
-import { Source } from '../types/language-model';
-import { LanguageModelResponseMetadata } from '../types/language-model-response-metadata';
-import { LanguageModelUsage } from '../types/usage';
-import { InferUIMessageChunk } from '../ui-message-stream/ui-message-chunks';
-import { UIMessageStreamOnFinishCallback } from '../ui-message-stream/ui-message-stream-on-finish-callback';
-import { UIMessageStreamResponseInit } from '../ui-message-stream/ui-message-stream-response-init';
-import { InferUIMessageMetadata, UIMessage } from '../ui/ui-messages';
-import { AsyncIterableStream } from '../util/async-iterable-stream';
-import { ErrorHandler } from '../util/error-handler';
-import { ContentPart } from './content-part';
-import { GeneratedFile } from './generated-file';
-import { Output } from './output';
-import {
+import type { Source } from '../types/language-model';
+import type { LanguageModelResponseMetadata } from '../types/language-model-response-metadata';
+import type { LanguageModelUsage } from '../types/usage';
+import type { InferUIMessageChunk } from '../ui-message-stream/ui-message-chunks';
+import type { UIMessageStreamOnFinishCallback } from '../ui-message-stream/ui-message-stream-on-finish-callback';
+import type { UIMessageStreamResponseInit } from '../ui-message-stream/ui-message-stream-response-init';
+import type { InferUIMessageMetadata, UIMessage } from '../ui/ui-messages';
+import type { AsyncIterableStream } from '../util/async-iterable-stream';
+import type { ErrorHandler } from '../util/error-handler';
+import type { ContentPart } from './content-part';
+import type { GeneratedFile } from './generated-file';
+import type { Output } from './output';
+import type {
   InferCompleteOutput,
   InferElementOutput,
   InferPartialOutput,
 } from './output-utils';
-import { ReasoningOutput } from './reasoning-output';
-import { ResponseMessage } from './response-message';
-import { StepResult } from './step-result';
-import { ToolApprovalRequestOutput } from './tool-approval-request-output';
-import { DynamicToolCall, StaticToolCall, TypedToolCall } from './tool-call';
-import { TypedToolError } from './tool-error';
-import { StaticToolOutputDenied } from './tool-output-denied';
-import {
+import type { ReasoningOutput } from './reasoning-output';
+import type { ResponseMessage } from './response-message';
+import type { StepResult } from './step-result';
+import type { ToolApprovalRequestOutput } from './tool-approval-request-output';
+import type {
+  DynamicToolCall,
+  StaticToolCall,
+  TypedToolCall,
+} from './tool-call';
+import type { TypedToolError } from './tool-error';
+import type { StaticToolOutputDenied } from './tool-output-denied';
+import type {
   DynamicToolResult,
   StaticToolResult,
   TypedToolResult,
 } from './tool-result';
-import { ToolSet } from './tool-set';
+import type { ToolSet } from './tool-set';
 
 export type UIMessageStreamOptions<UI_MESSAGE extends UIMessage> = {
   /**
@@ -274,8 +279,9 @@ export interface StreamTextResult<
 
   /**
    * A text stream that returns only the generated text deltas. You can use it
-   * as either an AsyncIterable or a ReadableStream. When an error occurs, the
-   * stream will throw the error.
+   * as either an AsyncIterable or a ReadableStream. Error parts are not
+   * surfaced in this stream. Use the `onError` callback or `fullStream` to
+   * observe them.
    */
   readonly textStream: AsyncIterableStream<string>;
 
@@ -337,7 +343,7 @@ export interface StreamTextResult<
   pipeUIMessageStreamToResponse<UI_MESSAGE extends UIMessage>(
     response: ServerResponse,
     options?: UIMessageStreamResponseInit & UIMessageStreamOptions<UI_MESSAGE>,
-  ): void;
+  ): Promise<void>;
 
   /**
    * Writes text delta output to a Node.js response-like object.
@@ -347,7 +353,10 @@ export interface StreamTextResult<
    * @param response A Node.js response-like object (ServerResponse).
    * @param init Optional headers, status code, and status text.
    */
-  pipeTextStreamToResponse(response: ServerResponse, init?: ResponseInit): void;
+  pipeTextStreamToResponse(
+    response: ServerResponse,
+    init?: ResponseInit,
+  ): Promise<void>;
 
   /**
    * Converts the result to a streamed response object with a stream data part stream.
@@ -405,6 +414,7 @@ export type TextStreamPart<TOOLS extends ToolSet> =
       id: string;
       toolName: string;
       providerMetadata?: ProviderMetadata;
+      toolMetadata?: JSONObject;
       providerExecuted?: boolean;
       dynamic?: boolean;
       title?: string;

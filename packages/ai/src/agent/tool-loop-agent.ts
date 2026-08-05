@@ -1,14 +1,19 @@
+import { validateTypes, type ModelMessage } from '@ai-sdk/provider-utils';
 import { generateText } from '../generate-text/generate-text';
-import { GenerateTextResult } from '../generate-text/generate-text-result';
-import { Output } from '../generate-text/output';
-import { StepResult } from '../generate-text/step-result';
+import type { GenerateTextResult } from '../generate-text/generate-text-result';
+import type { Output } from '../generate-text/output';
+import type { StepResult } from '../generate-text/step-result';
 import { stepCountIs } from '../generate-text/stop-condition';
 import { streamText } from '../generate-text/stream-text';
-import { StreamTextResult } from '../generate-text/stream-text-result';
-import { ToolSet } from '../generate-text/tool-set';
-import { Prompt } from '../prompt';
-import { Agent, AgentCallParameters, AgentStreamParameters } from './agent';
-import {
+import type { StreamTextResult } from '../generate-text/stream-text-result';
+import type { ToolSet } from '../generate-text/tool-set';
+import type { Prompt } from '../prompt';
+import type {
+  Agent,
+  AgentCallParameters,
+  AgentStreamParameters,
+} from './agent';
+import type {
   ToolLoopAgentOnStepFinishCallback,
   ToolLoopAgentSettings,
 } from './tool-loop-agent-settings';
@@ -52,16 +57,28 @@ export class ToolLoopAgent<
   }
 
   private async prepareCall(options: {
-    prompt?: string | Array<import('@ai-sdk/provider-utils').ModelMessage>;
-    messages?: Array<import('@ai-sdk/provider-utils').ModelMessage>;
+    prompt?: string | Array<ModelMessage>;
+    messages?: Array<ModelMessage>;
     options?: CALL_OPTIONS;
   }): Promise<
     Omit<
       ToolLoopAgentSettings<CALL_OPTIONS, TOOLS, OUTPUT>,
-      'prepareCall' | 'instructions' | 'onStepFinish'
+      'prepareCall' | 'instructions' | 'allowSystemInMessages' | 'onStepFinish'
     > &
       Prompt
   > {
+    if (
+      this.settings.callOptionsSchema != null &&
+      options.options !== undefined
+    ) {
+      const validatedOptions = await validateTypes({
+        value: options.options,
+        schema: this.settings.callOptionsSchema,
+        context: { field: 'options' },
+      });
+      options = { ...options, options: validatedOptions };
+    }
+
     const { onStepFinish: _settingsOnStepFinish, ...settingsWithoutCallback } =
       this.settings;
     const baseCallArgs = {
@@ -79,13 +96,24 @@ export class ToolLoopAgent<
         >[0],
       )) ?? baseCallArgs;
 
-    const { instructions, messages, prompt, ...callArgs } = preparedCallArgs;
+    const {
+      instructions,
+      allowSystemInMessages,
+      messages,
+      prompt,
+      ...callArgs
+    } = preparedCallArgs;
 
     return {
       ...callArgs,
 
       // restore prompt types
-      ...({ system: instructions, messages, prompt } as Prompt),
+      ...({
+        system: instructions,
+        allowSystemInMessages,
+        messages,
+        prompt,
+      } as Prompt),
     };
   }
 

@@ -1,5 +1,264 @@
 # @ai-sdk/xai
 
+## 3.0.114
+
+### Patch Changes
+
+- 5d0c5f4: fix(xai): video generation no longer hangs while polling status
+
+## 3.0.113
+
+### Patch Changes
+
+- Updated dependencies [9ecdefe]
+  - @ai-sdk/provider-utils@4.0.41
+  - @ai-sdk/openai-compatible@2.0.63
+
+## 3.0.112
+
+### Patch Changes
+
+- e4f8b5b: Warn when xAI Responses models ignore unsupported sampling settings.
+
+## 3.0.111
+
+### Patch Changes
+
+- 05ce9c0: fix(provider/xai): preserve images in Responses API tool results
+
+## 3.0.110
+
+### Patch Changes
+
+- 09ecf7b: fix(xai): handle empty HTTP 202 responses while polling videos
+- Updated dependencies [19093fd]
+  - @ai-sdk/provider-utils@4.0.40
+  - @ai-sdk/openai-compatible@2.0.62
+
+## 3.0.109
+
+### Patch Changes
+
+- b0db900: feat(provider/xai): support end-user identifiers for video generation and editing
+
+## 3.0.108
+
+### Patch Changes
+
+- Updated dependencies [94fda5c]
+  - @ai-sdk/openai-compatible@2.0.61
+
+## 3.0.107
+
+### Patch Changes
+
+- Updated dependencies [06fb54c]
+  - @ai-sdk/provider-utils@4.0.39
+  - @ai-sdk/openai-compatible@2.0.60
+
+## 3.0.106
+
+### Patch Changes
+
+- e1af05f: feat (video): support video (not just image) reference inputs in `inputReferences` for reference-to-video generation
+- 1ce0d1c: feat (provider/xai): add grok-4.5 model id
+- Updated dependencies [e1af05f]
+  - @ai-sdk/provider@3.0.14
+  - @ai-sdk/openai-compatible@2.0.59
+  - @ai-sdk/provider-utils@4.0.38
+
+## 3.0.105
+
+### Patch Changes
+
+- c00849a: feat: support `imageDetail` provider option on image file parts to control image processing resolution
+
+## 3.0.104
+
+### Patch Changes
+
+- 327642b: fix: more precise default message for tool execution denial
+- 19eece6: fix reasoning text extraction from content in responses doGenerate
+- Updated dependencies [4d4e176]
+- Updated dependencies [bef93ae]
+- Updated dependencies [d559de9]
+- Updated dependencies [327642b]
+  - @ai-sdk/openai-compatible@2.0.58
+  - @ai-sdk/provider-utils@4.0.37
+
+## 3.0.103
+
+### Patch Changes
+
+- cb4e5e1: Emit provider-executed tool results for completed xAI Responses API streaming tool calls.
+- Updated dependencies [0952964]
+  - @ai-sdk/provider-utils@4.0.36
+  - @ai-sdk/openai-compatible@2.0.57
+
+## 3.0.102
+
+### Patch Changes
+
+- Updated dependencies [ea1e95b]
+  - @ai-sdk/provider-utils@4.0.35
+  - @ai-sdk/openai-compatible@2.0.56
+
+## 3.0.101
+
+### Patch Changes
+
+- fa850e6: feat (video): add first-class `frameImages` and `inputReferences` call options for video generation
+- Updated dependencies [fa850e6]
+  - @ai-sdk/provider@3.0.13
+  - @ai-sdk/openai-compatible@2.0.55
+  - @ai-sdk/provider-utils@4.0.34
+
+## 3.0.100
+
+### Patch Changes
+
+- Updated dependencies [b30e43a]
+  - @ai-sdk/provider-utils@4.0.33
+  - @ai-sdk/openai-compatible@2.0.54
+
+## 3.0.99
+
+### Patch Changes
+
+- Updated dependencies [f19334d]
+  - @ai-sdk/provider@3.0.12
+  - @ai-sdk/openai-compatible@2.0.53
+  - @ai-sdk/provider-utils@4.0.32
+
+## 3.0.98
+
+### Patch Changes
+
+- 1b40ac7: Publish all packages under the `@ai-v6` dist tag.
+- Updated dependencies [1b40ac7]
+  - @ai-sdk/openai-compatible@2.0.52
+  - @ai-sdk/provider-utils@4.0.31
+  - @ai-sdk/provider@3.0.11
+
+## 3.0.97
+
+### Patch Changes
+
+- 9300b02: xai: support 'none' and 'medium' reasoning effort and curate model ids to xai's current lineup (add grok-4.3, grok-build-0.1, grok-imagine-image-quality)
+
+## 3.0.96
+
+### Patch Changes
+
+- Updated dependencies [779f5cd]
+  - @ai-sdk/provider-utils@4.0.30
+  - @ai-sdk/openai-compatible@2.0.51
+
+## 3.0.95
+
+### Patch Changes
+
+- Updated dependencies [bfa5864]
+- Updated dependencies [f42aa79]
+  - @ai-sdk/provider-utils@4.0.29
+  - @ai-sdk/openai-compatible@2.0.50
+
+## 3.0.94
+
+### Patch Changes
+
+- Updated dependencies [942f2f8]
+  - @ai-sdk/provider-utils@4.0.28
+  - @ai-sdk/openai-compatible@2.0.49
+
+## 3.0.93
+
+### Patch Changes
+
+- 165d531: deprecate searchParameters (xai live search) in favor of web_search/x_search agent tools
+- 4d53460: feat(provider/xai): add `enableImageSearch` to the xAI Web Search tool
+
+  The xAI Responses API supports `enable_image_search` on Web Search tools. `xai.tools.webSearch()` now accepts `enableImageSearch` and sends it through to the API as `enable_image_search`.
+
+## 3.0.92
+
+### Patch Changes
+
+- Updated dependencies [e40e1d4]
+  - @ai-sdk/openai-compatible@2.0.48
+
+## 3.0.91
+
+### Patch Changes
+
+- 71c43dc: fix reasoning-start dedupe on multi-summary-part responses to prevent xai 400 on continuation requests
+- 0e8ea74: surface full xai error detail in APICallError.message instead of falling back to http status text
+
+## 3.0.90
+
+### Patch Changes
+
+- 1822d0c: fix(xai): stop emitting additionalProperties flag
+
+## 3.0.89
+
+### Patch Changes
+
+- Updated dependencies [f591416]
+  - @ai-sdk/provider-utils@4.0.27
+  - @ai-sdk/openai-compatible@2.0.47
+
+## 3.0.88
+
+### Patch Changes
+
+- Updated dependencies [38966ab]
+  - @ai-sdk/openai-compatible@2.0.46
+
+## 3.0.87
+
+### Patch Changes
+
+- Updated dependencies [6043d24]
+  - @ai-sdk/openai-compatible@2.0.45
+
+## 3.0.86
+
+### Patch Changes
+
+- Updated dependencies [7beadf0]
+  - @ai-sdk/provider-utils@4.0.26
+  - @ai-sdk/openai-compatible@2.0.44
+
+## 3.0.85
+
+### Patch Changes
+
+- a727da4: chore: ensure consistent import handling and avoid import duplicates or cycles
+- fa6e62b: feat(provider/xai): support non-image file parts (PDF, text, CSV) in the Responses API via `input_file` + `file_url`
+
+  The xAI Responses API accepts `{ type: 'input_file', file_url }` for non-image documents (see https://docs.x.ai/docs/guides/chat-with-files), but the AI SDK xAI Responses provider previously threw `UnsupportedFunctionalityError` for any file part whose `mediaType` did not start with `image/`.
+
+  When a file part is passed with `data: URL` and a non-image media type, the provider now emits `{ type: 'input_file', file_url }`. `application/pdf` and `text/*` are also added to `supportedUrls` so the SDK does not download them to bytes before reaching the converter.
+
+  Inline-byte (base64) inputs for non-image media types continue to throw, since xAI's Responses API requires either a public URL or a pre-uploaded `file_id` for non-image documents.
+
+- Updated dependencies [a727da4]
+  - @ai-sdk/openai-compatible@2.0.43
+  - @ai-sdk/provider-utils@4.0.25
+  - @ai-sdk/provider@3.0.10
+
+## 3.0.84
+
+### Patch Changes
+
+- a7f3c72: trigger release for all packages after provenance setup
+- Updated dependencies [a7f3c72]
+- Updated dependencies [408a2ad]
+  - @ai-sdk/openai-compatible@2.0.42
+  - @ai-sdk/provider@3.0.9
+  - @ai-sdk/provider-utils@4.0.24
+
 ## 3.0.83
 
 ### Patch Changes

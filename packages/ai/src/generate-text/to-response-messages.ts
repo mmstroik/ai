@@ -1,12 +1,12 @@
-import {
+import type {
   AssistantContent,
   AssistantModelMessage,
   ToolContent,
   ToolModelMessage,
 } from '../prompt';
 import { createToolModelOutput } from '../prompt/create-tool-model-output';
-import { ContentPart } from './content-part';
-import { ToolSet } from './tool-set';
+import type { ContentPart } from './content-part';
+import type { ToolSet } from './tool-set';
 
 /**
  * Converts the result of a `generateText` or `streamText` call to a list of response messages.
@@ -19,6 +19,7 @@ export async function toResponseMessages<TOOLS extends ToolSet>({
   tools: TOOLS | undefined;
 }): Promise<Array<AssistantModelMessage | ToolModelMessage>> {
   const responseMessages: Array<AssistantModelMessage | ToolModelMessage> = [];
+  const toolCallOrder = new Map<string, number>();
 
   const content: AssistantContent = [];
   for (const part of inputContent) {
@@ -64,6 +65,9 @@ export async function toResponseMessages<TOOLS extends ToolSet>({
         });
         break;
       case 'tool-call':
+        if (!toolCallOrder.has(part.toolCallId)) {
+          toolCallOrder.set(part.toolCallId, toolCallOrder.size);
+        }
         content.push({
           type: 'tool-call',
           toolCallId: part.toolCallId,
@@ -113,6 +117,7 @@ export async function toResponseMessages<TOOLS extends ToolSet>({
           type: 'tool-approval-request',
           approvalId: part.approvalId,
           toolCallId: part.toolCall.toolCallId,
+          ...(part.signature != null ? { signature: part.signature } : {}),
         });
         break;
     }
@@ -156,9 +161,49 @@ export async function toResponseMessages<TOOLS extends ToolSet>({
   if (toolResultContent.length > 0) {
     responseMessages.push({
       role: 'tool',
-      content: toolResultContent,
+      content: sortToolResultContentByToolCallOrder({
+        toolResultContent,
+        toolCallOrder,
+      }),
     });
   }
 
   return responseMessages;
+}
+
+function sortToolResultContentByToolCallOrder({
+  toolResultContent,
+  toolCallOrder,
+}: {
+  toolResultContent: ToolContent;
+  toolCallOrder: Map<string, number>;
+}): ToolContent {
+  const sortedToolResults = toolResultContent
+    .filter(part => part.type === 'tool-result')
+    .map((part, index) => ({ part, index }))
+    .sort((a, b) => {
+      const aOrder = toolCallOrder.get(a.part.toolCallId);
+      const bOrder = toolCallOrder.get(b.part.toolCallId);
+
+      if (aOrder == null && bOrder == null) {
+        return a.index - b.index;
+      }
+
+      if (aOrder == null) {
+        return 1;
+      }
+
+      if (bOrder == null) {
+        return -1;
+      }
+
+      return aOrder - bOrder || a.index - b.index;
+    })
+    .map(({ part }) => part);
+
+  let toolResultIndex = 0;
+
+  return toolResultContent.map(part =>
+    part.type === 'tool-result' ? sortedToolResults[toolResultIndex++] : part,
+  );
 }

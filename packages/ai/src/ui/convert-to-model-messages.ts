@@ -1,31 +1,31 @@
 import {
-  AssistantContent,
-  FilePart,
   isNonNullable,
-  ModelMessage,
-  TextPart,
-  ToolApprovalResponse,
-  ToolResultPart,
+  type AssistantContent,
+  type FilePart,
+  type ModelMessage,
+  type TextPart,
+  type ToolApprovalResponse,
+  type ToolResultPart,
 } from '@ai-sdk/provider-utils';
-import { ToolSet } from '../generate-text/tool-set';
+import type { ToolSet } from '../generate-text/tool-set';
 import { createToolModelOutput } from '../prompt/create-tool-model-output';
 import { MessageConversionError } from '../prompt/message-conversion-error';
 import {
-  DataUIPart,
-  DynamicToolUIPart,
-  FileUIPart,
   getToolName,
-  InferUIMessageData,
-  InferUIMessageTools,
   isDataUIPart,
   isFileUIPart,
   isReasoningUIPart,
   isTextUIPart,
   isToolUIPart,
-  ReasoningUIPart,
-  TextUIPart,
-  ToolUIPart,
-  UIMessage,
+  type DataUIPart,
+  type DynamicToolUIPart,
+  type FileUIPart,
+  type InferUIMessageData,
+  type InferUIMessageTools,
+  type ReasoningUIPart,
+  type TextUIPart,
+  type ToolUIPart,
+  type UIMessage,
 } from './ui-messages';
 
 /**
@@ -196,6 +196,9 @@ export async function convertToModelMessages<UI_MESSAGE extends UIMessage>(
                       type: 'tool-approval-request' as const,
                       approvalId: part.approval.id,
                       toolCallId: part.toolCallId,
+                      ...(part.approval.signature != null
+                        ? { signature: part.approval.signature }
+                        : {}),
                     });
                   }
 
@@ -243,10 +246,12 @@ export async function convertToModelMessages<UI_MESSAGE extends UIMessage>(
               }
             }
 
-            modelMessages.push({
-              role: 'assistant',
-              content,
-            });
+            if (content.length > 0) {
+              modelMessages.push({
+                role: 'assistant',
+                content,
+              });
+            }
 
             // check if there are tool invocations with results in the block
             // Include non-provider-executed tools, OR provider-executed tools with approval responses
@@ -293,8 +298,8 @@ export async function convertToModelMessages<UI_MESSAGE extends UIMessage>(
                         output: {
                           type: 'error-text' as const,
                           value:
-                            toolPart.approval.reason ??
-                            'Tool execution denied.',
+                            toolPart.approval?.reason ??
+                            'Tool call execution denied.',
                         },
                         ...(toolPart.callProviderMetadata != null
                           ? { providerOptions: toolPart.callProviderMetadata }

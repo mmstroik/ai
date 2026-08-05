@@ -1,5 +1,269 @@
 # @ai-sdk/openai
 
+## 3.0.90
+
+### Patch Changes
+
+- Updated dependencies [9ecdefe]
+  - @ai-sdk/provider-utils@4.0.41
+
+## 3.0.89
+
+### Patch Changes
+
+- 23632b1: Add blocked domain filters to the OpenAI and Azure Responses API web search tools.
+
+## 3.0.88
+
+### Patch Changes
+
+- 8100830: Apply reasoning, service tier, and image defaults to recognizable future OpenAI model family versions.
+
+## 3.0.87
+
+### Patch Changes
+
+- 2f11af1: Preserve stored tool search output item IDs from provider metadata.
+
+## 3.0.86
+
+### Patch Changes
+
+- Updated dependencies [19093fd]
+  - @ai-sdk/provider-utils@4.0.40
+
+## 3.0.85
+
+### Patch Changes
+
+- Updated dependencies [06fb54c]
+  - @ai-sdk/provider-utils@4.0.39
+
+## 3.0.84
+
+### Patch Changes
+
+- 356918c: feat(provider/openai): add GPT-5.6 reasoning and prompt cache controls
+
+## 3.0.83
+
+### Patch Changes
+
+- 34b5acc: feat(provider/openai,provider/gateway): add gpt-5.6 model ids
+- Updated dependencies [e1af05f]
+  - @ai-sdk/provider@3.0.14
+  - @ai-sdk/provider-utils@4.0.38
+
+## 3.0.82
+
+### Patch Changes
+
+- bef93ae: fix(security): prevent streaming tool calls from finalizing on parsable partial JSON
+
+  Streaming tool call arguments were finalized using `isParsableJson()` as a heuristic for completion. If partial accumulated JSON happened to be valid JSON before all chunks arrived, the tool call would be executed with incomplete arguments. Tool call finalization now only occurs in `flush()` after the stream is fully consumed.
+
+- 327642b: fix: more precise default message for tool execution denial
+- ae00aeb: fix(openai): throw retryable errors for OpenAI stream failures before output starts
+- Updated dependencies [d559de9]
+  - @ai-sdk/provider-utils@4.0.37
+
+## 3.0.81
+
+### Patch Changes
+
+- Updated dependencies [0952964]
+  - @ai-sdk/provider-utils@4.0.36
+
+## 3.0.80
+
+### Patch Changes
+
+- Updated dependencies [ea1e95b]
+  - @ai-sdk/provider-utils@4.0.35
+
+## 3.0.79
+
+### Patch Changes
+
+- Updated dependencies [fa850e6]
+  - @ai-sdk/provider@3.0.13
+  - @ai-sdk/provider-utils@4.0.34
+
+## 3.0.78
+
+### Patch Changes
+
+- 64a701d: Return a helpful error when the Responses stream parser receives Chat Completions chunks.
+
+## 3.0.77
+
+### Patch Changes
+
+- Updated dependencies [b30e43a]
+  - @ai-sdk/provider-utils@4.0.33
+
+## 3.0.76
+
+### Patch Changes
+
+- 2ee1700: feat(openai): add support for web_search_call.results include option
+- Updated dependencies [f19334d]
+  - @ai-sdk/provider@3.0.12
+  - @ai-sdk/provider-utils@4.0.32
+
+## 3.0.75
+
+### Patch Changes
+
+- 1b40ac7: Publish all packages under the `@ai-v6` dist tag.
+- Updated dependencies [1b40ac7]
+  - @ai-sdk/provider-utils@4.0.31
+  - @ai-sdk/provider@3.0.11
+
+## 3.0.74
+
+### Patch Changes
+
+- 466544d: feat(openai): add orchestration token usage details to Responses API usage
+
+## 3.0.73
+
+### Patch Changes
+
+- 1274c07: fix(provider/openai): send client-executed tool calls as full function_call items in the Responses API so they pair with their function_call_output by call_id
+
+## 3.0.72
+
+### Patch Changes
+
+- Updated dependencies [779f5cd]
+  - @ai-sdk/provider-utils@4.0.30
+
+## 3.0.71
+
+### Patch Changes
+
+- Updated dependencies [bfa5864]
+- Updated dependencies [f42aa79]
+  - @ai-sdk/provider-utils@4.0.29
+
+## 3.0.70
+
+### Patch Changes
+
+- Updated dependencies [942f2f8]
+  - @ai-sdk/provider-utils@4.0.28
+
+## 3.0.69
+
+### Patch Changes
+
+- 9a55f6d: feat(openai): add namespaces for tool definitions
+
+## 3.0.68
+
+### Patch Changes
+
+- c65c952: fix(openai): round-trip `namespace` on function_call input items
+
+  When `tool_search` dispatches a deferred tool, the resulting `function_call` carries a `namespace` field identifying which deferred-tool group the model picked. `#14789` preserved this on the read side (`providerMetadata.openai.namespace`), but the write side still serialized `function_call` input items without `namespace`. Multi-step / multi-turn conversations then failed with `Missing namespace for function_call '<name>'. ... Round-trip the model's function_call item with its namespace field included.`
+
+  `convert-to-openai-responses-input.ts` now reads `namespace` from `providerOptions.openai.namespace` (or `providerMetadata.openai.namespace`) on `tool-call` parts and includes it on the serialized `function_call` item, mirroring how `itemId` is round-tripped.
+
+## 3.0.67
+
+### Patch Changes
+
+- c679fec: feat(provider/azure):web search tool in the Azure OpenAI Responses API.
+
+## 3.0.66
+
+### Patch Changes
+
+- c82ab42: feat(openai): forward `web_search_call.action.queries` from Responses API
+
+## 3.0.65
+
+### Patch Changes
+
+- eb52378: fix(openai): skip passing reasoning items when using previous response id
+
+## 3.0.64
+
+### Patch Changes
+
+- b7ed8bd: feat(openai): add opt-in pass-through for unsupported file media types
+
+## 3.0.63
+
+### Patch Changes
+
+- Updated dependencies [f591416]
+  - @ai-sdk/provider-utils@4.0.27
+
+## 3.0.62
+
+### Patch Changes
+
+- 65edcca: feat: add allowedTools provider option for OpenAI Responses
+
+## 3.0.61
+
+### Patch Changes
+
+- b93f9b4: feat(provider/openai): forward imageDetail providerOptions on tool-result image content
+
+## 3.0.60
+
+### Patch Changes
+
+- 6dcd8e6: feat(openai): add GPT-5.5 chat model IDs
+
+## 3.0.59
+
+### Patch Changes
+
+- 38966ab: fix(openai, openai-compatible): only send null content for assistant messages with tool calls
+
+## 3.0.58
+
+### Patch Changes
+
+- 2370948: feat(openai): preserve `namespace` on function_call output items
+
+## 3.0.57
+
+### Patch Changes
+
+- d33e7cc: chore(provider/openai): add type for image model options for type-safe processing
+
+## 3.0.56
+
+### Patch Changes
+
+- Updated dependencies [7beadf0]
+  - @ai-sdk/provider-utils@4.0.26
+
+## 3.0.55
+
+### Patch Changes
+
+- a727da4: chore: ensure consistent import handling and avoid import duplicates or cycles
+- Updated dependencies [a727da4]
+  - @ai-sdk/provider-utils@4.0.25
+  - @ai-sdk/provider@3.0.10
+
+## 3.0.54
+
+### Patch Changes
+
+- a7f3c72: trigger release for all packages after provenance setup
+- 408a2ad: patch - send content: null instead of empty string for tool-only assistant messages
+- c71ad14: feat(provider/openai): add gpt-image-2 model support
+- Updated dependencies [a7f3c72]
+  - @ai-sdk/provider@3.0.9
+  - @ai-sdk/provider-utils@4.0.24
+
 ## 3.0.53
 
 ### Patch Changes

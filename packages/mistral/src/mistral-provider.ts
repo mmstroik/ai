@@ -1,19 +1,22 @@
 import {
-  EmbeddingModelV3,
-  LanguageModelV3,
   NoSuchModelError,
-  ProviderV3,
+  type EmbeddingModelV3,
+  type LanguageModelV3,
+  type ProviderV3,
+  type SpeechModelV3,
 } from '@ai-sdk/provider';
 import {
-  FetchFunction,
   loadApiKey,
   withoutTrailingSlash,
   withUserAgentSuffix,
+  type FetchFunction,
 } from '@ai-sdk/provider-utils';
 import { MistralChatLanguageModel } from './mistral-chat-language-model';
-import { MistralChatModelId } from './mistral-chat-options';
+import type { MistralChatModelId } from './mistral-chat-options';
 import { MistralEmbeddingModel } from './mistral-embedding-model';
-import { MistralEmbeddingModelId } from './mistral-embedding-options';
+import type { MistralEmbeddingModelId } from './mistral-embedding-options';
+import { MistralSpeechModel } from './mistral-speech-model';
+import type { MistralSpeechModelId } from './mistral-speech-model-options';
 import { VERSION } from './version';
 
 export interface MistralProvider extends ProviderV3 {
@@ -38,6 +41,16 @@ export interface MistralProvider extends ProviderV3 {
    * Creates a model for text embeddings.
    */
   embeddingModel: (modelId: MistralEmbeddingModelId) => EmbeddingModelV3;
+
+  /**
+   * Creates a model for speech generation (text-to-speech).
+   */
+  speech(modelId: MistralSpeechModelId): SpeechModelV3;
+
+  /**
+   * Creates a model for speech generation (text-to-speech).
+   */
+  speechModel(modelId: MistralSpeechModelId): SpeechModelV3;
 
   /**
    * @deprecated Use `embedding` instead.
@@ -116,6 +129,14 @@ export function createMistral(
       fetch: options.fetch,
     });
 
+  const createSpeechModel = (modelId: MistralSpeechModelId) =>
+    new MistralSpeechModel(modelId, {
+      provider: 'mistral.speech',
+      baseURL,
+      headers: getHeaders,
+      fetch: options.fetch,
+    });
+
   const provider = function (modelId: MistralChatModelId) {
     if (new.target) {
       throw new Error(
@@ -133,6 +154,8 @@ export function createMistral(
   provider.embeddingModel = createEmbeddingModel;
   provider.textEmbedding = createEmbeddingModel;
   provider.textEmbeddingModel = createEmbeddingModel;
+  provider.speech = createSpeechModel;
+  provider.speechModel = createSpeechModel;
 
   provider.imageModel = (modelId: string) => {
     throw new NoSuchModelError({ modelId, modelType: 'imageModel' });

@@ -1,31 +1,33 @@
 import {
   InvalidResponseDataError,
-  LanguageModelV3,
-  LanguageModelV3CallOptions,
-  LanguageModelV3Content,
-  LanguageModelV3FinishReason,
-  LanguageModelV3GenerateResult,
-  LanguageModelV3StreamPart,
-  LanguageModelV3StreamResult,
-  SharedV3ProviderMetadata,
-  SharedV3Warning,
+  type LanguageModelV3,
+  type LanguageModelV3CallOptions,
+  type LanguageModelV3Content,
+  type LanguageModelV3FinishReason,
+  type LanguageModelV3GenerateResult,
+  type LanguageModelV3StreamPart,
+  type LanguageModelV3StreamResult,
+  type SharedV3ProviderMetadata,
+  type SharedV3Warning,
 } from '@ai-sdk/provider';
 import {
-  FetchFunction,
-  ParseResult,
   combineHeaders,
   createEventSourceResponseHandler,
   createJsonResponseHandler,
   generateId,
-  isParsableJson,
   parseProviderOptions,
   postJsonToApi,
+  type FetchFunction,
+  type ParseResult,
 } from '@ai-sdk/provider-utils';
 import { z } from 'zod/v4';
 import { convertGroqUsage } from './convert-groq-usage';
 import { convertToGroqChatMessages } from './convert-to-groq-chat-messages';
 import { getResponseMetadata } from './get-response-metadata';
-import { GroqChatModelId, groqLanguageModelOptions } from './groq-chat-options';
+import {
+  groqLanguageModelOptions,
+  type GroqChatModelId,
+} from './groq-chat-options';
 import { groqErrorDataSchema, groqFailedResponseHandler } from './groq-error';
 import { prepareTools } from './groq-prepare-tools';
 import { mapGroqFinishReason } from './map-groq-finish-reason';
@@ -465,23 +467,6 @@ export class GroqChatLanguageModel implements LanguageModelV3 {
                         delta: toolCall.function.arguments,
                       });
                     }
-
-                    // check if tool call is complete
-                    // (some providers send the full tool call in one chunk):
-                    if (isParsableJson(toolCall.function.arguments)) {
-                      controller.enqueue({
-                        type: 'tool-input-end',
-                        id: toolCall.id,
-                      });
-
-                      controller.enqueue({
-                        type: 'tool-call',
-                        toolCallId: toolCall.id ?? generateId(),
-                        toolName: toolCall.function.name,
-                        input: toolCall.function.arguments,
-                      });
-                      toolCall.hasFinished = true;
-                    }
                   }
 
                   continue;
@@ -505,26 +490,6 @@ export class GroqChatLanguageModel implements LanguageModelV3 {
                   id: toolCall.id,
                   delta: toolCallDelta.function.arguments ?? '',
                 });
-
-                // check if tool call is complete
-                if (
-                  toolCall.function?.name != null &&
-                  toolCall.function?.arguments != null &&
-                  isParsableJson(toolCall.function.arguments)
-                ) {
-                  controller.enqueue({
-                    type: 'tool-input-end',
-                    id: toolCall.id,
-                  });
-
-                  controller.enqueue({
-                    type: 'tool-call',
-                    toolCallId: toolCall.id ?? generateId(),
-                    toolName: toolCall.function.name,
-                    input: toolCall.function.arguments,
-                  });
-                  toolCall.hasFinished = true;
-                }
               }
             }
           },
@@ -536,6 +501,25 @@ export class GroqChatLanguageModel implements LanguageModelV3 {
 
             if (isActiveText) {
               controller.enqueue({ type: 'text-end', id: 'txt-0' });
+            }
+
+            // Finalize any unfinished tool calls on stream end to
+            // prevent premature execution from parsable partial JSON.
+            for (const toolCall of toolCalls) {
+              if (!toolCall.hasFinished) {
+                controller.enqueue({
+                  type: 'tool-input-end',
+                  id: toolCall.id,
+                });
+
+                controller.enqueue({
+                  type: 'tool-call',
+                  toolCallId: toolCall.id ?? generateId(),
+                  toolName: toolCall.function.name,
+                  input: toolCall.function.arguments,
+                });
+                toolCall.hasFinished = true;
+              }
             }
 
             controller.enqueue({

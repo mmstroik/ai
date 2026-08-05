@@ -1,4 +1,4 @@
-import {
+import type {
   FlexibleSchema,
   MaybePromiseLike,
   ProviderOptions,
@@ -8,17 +8,17 @@ import type {
   OnFinishEvent,
   OnStepFinishEvent,
 } from '../generate-text/callback-events';
-import { Output } from '../generate-text/output';
-import { PrepareStepFunction } from '../generate-text/prepare-step';
-import { StopCondition } from '../generate-text/stop-condition';
-import { ToolCallRepairFunction } from '../generate-text/tool-call-repair-function';
-import { ToolSet } from '../generate-text/tool-set';
-import { CallSettings } from '../prompt/call-settings';
-import { Prompt } from '../prompt/prompt';
-import { TelemetrySettings } from '../telemetry/telemetry-settings';
-import { LanguageModel, ToolChoice } from '../types/language-model';
-import { DownloadFunction } from '../util/download/download-function';
-import { AgentCallParameters } from './agent';
+import type { Output } from '../generate-text/output';
+import type { PrepareStepFunction } from '../generate-text/prepare-step';
+import type { StopCondition } from '../generate-text/stop-condition';
+import type { ToolCallRepairFunction } from '../generate-text/tool-call-repair-function';
+import type { ToolSet } from '../generate-text/tool-set';
+import type { CallSettings } from '../prompt/call-settings';
+import type { Prompt } from '../prompt/prompt';
+import type { TelemetrySettings } from '../telemetry/telemetry-settings';
+import type { LanguageModel, ToolChoice } from '../types/language-model';
+import type { DownloadFunction } from '../util/download/download-function';
+import type { AgentCallParameters } from './agent';
 
 export type ToolLoopAgentOnStepFinishCallback<TOOLS extends ToolSet = {}> = (
   stepResult: OnStepFinishEvent<TOOLS>,
@@ -47,6 +47,16 @@ export type ToolLoopAgentSettings<
    * It can be a string, or, if you need to pass additional provider options (e.g. for caching), a `SystemModelMessage`.
    */
   instructions?: string | SystemModelMessage | Array<SystemModelMessage>;
+
+  /**
+   * Whether system messages are allowed in the `prompt` or `messages` fields.
+   *
+   * When disabled, system messages must be provided through the `instructions`
+   * option.
+   *
+   * @default false
+   */
+  allowSystemInMessages?: boolean;
 
   /**
    * The language model to use.
@@ -141,6 +151,16 @@ export type ToolLoopAgentSettings<
    * Prepare the parameters for the generateText or streamText call.
    *
    * You can use this to have templates based on call options.
+   *
+   * The design requires you to pass call parameters as follows to
+   * allow for the removal of parameters from the original settings
+   * by setting them to `undefined`:
+   *
+   * ```
+   *   prepareCall: ({ options, ...rest }) => ({
+   *     ...rest,
+   *   }),
+   * ```
    */
   prepareCall?: (
     options: Omit<
@@ -161,6 +181,7 @@ export type ToolLoopAgentSettings<
         | 'seed'
         | 'headers'
         | 'instructions'
+        | 'allowSystemInMessages'
         | 'stopWhen'
         | 'experimental_telemetry'
         | 'activeTools'
@@ -183,6 +204,7 @@ export type ToolLoopAgentSettings<
       | 'seed'
       | 'headers'
       | 'instructions'
+      | 'allowSystemInMessages'
       | 'stopWhen'
       | 'experimental_telemetry'
       | 'activeTools'

@@ -1,5 +1,41 @@
 # @ai-sdk/provider
 
+## 3.0.14
+
+### Patch Changes
+
+- e1af05f: feat (video): support video (not just image) reference inputs in `inputReferences` for reference-to-video generation
+
+## 3.0.13
+
+### Patch Changes
+
+- fa850e6: feat (video): add first-class `frameImages` and `inputReferences` call options for video generation
+
+## 3.0.12
+
+### Patch Changes
+
+- f19334d: feat (video): add first-class `generateAudio` call option
+
+## 3.0.11
+
+### Patch Changes
+
+- 1b40ac7: Publish all packages under the `@ai-v6` dist tag.
+
+## 3.0.10
+
+### Patch Changes
+
+- a727da4: chore: ensure consistent import handling and avoid import duplicates or cycles
+
+## 3.0.9
+
+### Patch Changes
+
+- a7f3c72: trigger release for all packages after provenance setup
+
 ## 3.0.8
 
 ### Patch Changes
@@ -69,13 +105,13 @@
   Before
 
   ```ts
-  model.textEmbeddingModel('my-model-id');
+  model.textEmbeddingModel("my-model-id");
   ```
 
   After
 
   ```ts
-  model.embeddingModel('my-model-id');
+  model.embeddingModel("my-model-id");
   ```
 
 - dce03c4: feat: tool input examples
@@ -195,13 +231,13 @@
   Before
 
   ```ts
-  model.textEmbeddingModel('my-model-id');
+  model.textEmbeddingModel("my-model-id");
   ```
 
   After
 
   ```ts
-  model.embeddingModel('my-model-id');
+  model.embeddingModel("my-model-id");
   ```
 
 ## 3.0.0-beta.18
@@ -388,13 +424,13 @@
   Before
 
   ```ts
-  import { convertUint8ArrayToBase64 } from '@ai-sdk/provider-utils';
+  import { convertUint8ArrayToBase64 } from "@ai-sdk/provider-utils";
 
   // Had to manually convert binary data to base64
   const fileData = new Uint8Array([0, 1, 2, 3]);
   const filePart = {
-    type: 'file',
-    mediaType: 'application/pdf',
+    type: "file",
+    mediaType: "application/pdf",
     data: convertUint8ArrayToBase64(fileData), // Required conversion
   };
   ```
@@ -405,8 +441,8 @@
   // Can use binary data directly
   const fileData = new Uint8Array([0, 1, 2, 3]);
   const filePart = {
-    type: 'file',
-    mediaType: 'application/pdf',
+    type: "file",
+    mediaType: "application/pdf",
     data: fileData, // Direct Uint8Array support
   };
   ```
@@ -422,10 +458,10 @@
   The `experimental_generateImage` method from the `ai` package now returnes revised prompts for OpenAI's image models.
 
   ```js
-  const prompt = 'Santa Claus driving a Cadillac';
+  const prompt = "Santa Claus driving a Cadillac";
 
   const { providerMetadata } = await experimental_generateImage({
-    model: openai.image('dall-e-3'),
+    model: openai.image("dall-e-3"),
     prompt,
   });
 
@@ -584,10 +620,10 @@
   The `experimental_generateImage` method from the `ai` package now returnes revised prompts for OpenAI's image models.
 
   ```js
-  const prompt = 'Santa Claus driving a Cadillac';
+  const prompt = "Santa Claus driving a Cadillac";
 
   const { providerMetadata } = await experimental_generateImage({
-    model: openai.image('dall-e-3'),
+    model: openai.image("dall-e-3"),
     prompt,
   });
 

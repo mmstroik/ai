@@ -1,12 +1,12 @@
-import type {
-  Experimental_VideoModelV3,
-  Experimental_VideoModelV3CallOptions,
-  Experimental_VideoModelV3File,
-  Experimental_VideoModelV3VideoData,
-  SharedV3ProviderMetadata,
-  SharedV3Warning,
+import {
+  APICallError,
+  type Experimental_VideoModelV3,
+  type Experimental_VideoModelV3CallOptions,
+  type Experimental_VideoModelV3File,
+  type Experimental_VideoModelV3VideoData,
+  type SharedV3ProviderMetadata,
+  type SharedV3Warning,
 } from '@ai-sdk/provider';
-import { APICallError } from '@ai-sdk/provider';
 import {
   combineHeaders,
   convertUint8ArrayToBase64,
@@ -17,6 +17,7 @@ import {
   type Resolvable,
 } from '@ai-sdk/provider-utils';
 import { z } from 'zod/v4';
+import { mapGatewayWarnings } from './map-gateway-warnings';
 import type { GatewayConfig } from './gateway-config';
 import { asGatewayError } from './errors';
 import { parseAuthMethod } from './errors/parse-auth-method';
@@ -46,7 +47,10 @@ export class GatewayVideoModel implements Experimental_VideoModelV3 {
     duration,
     fps,
     seed,
+    generateAudio,
     image,
+    frameImages,
+    inputReferences,
     providerOptions,
     headers,
     abortSignal,
@@ -79,8 +83,20 @@ export class GatewayVideoModel implements Experimental_VideoModelV3 {
           ...(duration && { duration }),
           ...(fps && { fps }),
           ...(seed && { seed }),
+          ...(generateAudio !== undefined && { generateAudio }),
           ...(providerOptions && { providerOptions }),
           ...(image && { image: maybeEncodeVideoFile(image) }),
+          ...(frameImages && {
+            frameImages: frameImages.map(frame => ({
+              ...frame,
+              image: maybeEncodeVideoFile(frame.image),
+            })),
+          }),
+          ...(inputReferences && {
+            inputReferences: inputReferences.map(reference =>
+              maybeEncodeVideoFile(reference),
+            ),
+          }),
         },
         successfulResponseHandler: async ({
           response,
@@ -168,7 +184,7 @@ export class GatewayVideoModel implements Experimental_VideoModelV3 {
 
       return {
         videos: responseBody.videos,
-        warnings: responseBody.warnings ?? [],
+        warnings: mapGatewayWarnings(responseBody.warnings),
         providerMetadata:
           responseBody.providerMetadata as SharedV3ProviderMetadata,
         response: {
@@ -233,6 +249,11 @@ const gatewayVideoWarningSchema = z.discriminatedUnion('type', [
     type: z.literal('compatibility'),
     feature: z.string(),
     details: z.string().optional(),
+  }),
+  z.object({
+    type: z.literal('deprecated'),
+    setting: z.string(),
+    message: z.string(),
   }),
   z.object({
     type: z.literal('other'),

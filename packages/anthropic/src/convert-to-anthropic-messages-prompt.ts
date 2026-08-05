@@ -1,34 +1,42 @@
 import {
-  SharedV3Warning,
-  LanguageModelV3DataContent,
-  LanguageModelV3Message,
-  LanguageModelV3Prompt,
-  SharedV3ProviderMetadata,
   UnsupportedFunctionalityError,
+  type SharedV3Warning,
+  type LanguageModelV3DataContent,
+  type LanguageModelV3Message,
+  type LanguageModelV3Prompt,
+  type SharedV3ProviderMetadata,
 } from '@ai-sdk/provider';
 import {
   convertBase64ToUint8Array,
   convertToBase64,
   parseProviderOptions,
-  validateTypes,
+  safeParseJSON,
   isNonNullable,
-  ToolNameMapping,
+  secureJsonParse,
+  validateTypes,
+  type ToolNameMapping,
 } from '@ai-sdk/provider-utils';
 import {
-  AnthropicAssistantMessage,
-  AnthropicMessagesPrompt,
   anthropicReasoningMetadataSchema,
-  AnthropicToolResultContent,
-  AnthropicUserMessage,
-  AnthropicWebFetchToolResultContent,
+  type AnthropicAssistantMessage,
+  type AnthropicMessagesPrompt,
+  type AnthropicSystemMessage,
+  type AnthropicTextContent,
+  type AnthropicToolChangeContent,
+  type AnthropicToolResultContent,
+  type AnthropicUserMessage,
+  type AnthropicWebFetchToolResultContent,
+  type Citation,
 } from './anthropic-messages-api';
-import { anthropicFilePartProviderOptions } from './anthropic-messages-options';
-import { CacheControlValidator } from './get-cache-control';
-import { codeExecution_20250522OutputSchema } from './tool/code-execution_20250522';
 import {
+  anthropicFilePartProviderOptions,
+  anthropicSystemMessageProviderOptions,
   anthropicSearchResultToolOutput,
   type AnthropicSearchResultToolOutput,
 } from './anthropic-messages-options';
+import { CacheControlValidator } from './get-cache-control';
+import { advisor_20260301OutputSchema } from './tool/advisor_20260301';
+import { codeExecution_20250522OutputSchema } from './tool/code-execution_20250522';
 import { codeExecution_20250825OutputSchema } from './tool/code-execution_20250825';
 import { codeExecution_20260120OutputSchema } from './tool/code-execution_20260120';
 import { toolSearchRegex_20251119OutputSchema as toolSearchOutputSchema } from './tool/tool-search-regex_20251119';
@@ -70,6 +78,36 @@ function isUrlString(data: LanguageModelV3DataContent): boolean {
 
 function getUrlString(data: LanguageModelV3DataContent): string {
   return data instanceof URL ? data.toString() : (data as string);
+}
+
+/**
+ * Extract error information from a provider tool error result value.
+ * Handles both stringified JSON and plain object forms.
+ */
+async function extractErrorValue(
+  value: unknown,
+): Promise<{ errorCode?: string }> {
+  if (typeof value === 'string') {
+    const result = await safeParseJSON({ text: value });
+
+    if (
+      result.success &&
+      typeof result.value === 'object' &&
+      result.value !== null
+    ) {
+      return result.value as { errorCode?: string };
+    }
+
+    return {
+      errorCode: 'unavailable',
+    };
+  }
+
+  if (typeof value === 'object' && value !== null) {
+    return value as { errorCode?: string };
+  }
+
+  return {};
 }
 
 export async function convertToAnthropicMessagesPrompt({
@@ -129,21 +167,67 @@ export async function convertToAnthropicMessagesPrompt({
 
     switch (type) {
       case 'system': {
-        if (system != null) {
-          throw new UnsupportedFunctionalityError({
-            functionality:
-              'Multiple system messages that are separated by user/assistant messages',
+        const content: AnthropicSystemMessage['content'] = [];
+        let toolChangeCount = 0;
+
+        for (const { content: text, providerOptions } of block.messages) {
+          const systemMessageOptions = await parseProviderOptions({
+            provider: 'anthropic',
+            providerOptions,
+            schema: anthropicSystemMessageProviderOptions,
           });
+          const toolChanges = systemMessageOptions?.toolChanges ?? [];
+
+          // A system message that only carries tool changes may have empty
+          // text; do not emit an empty text block for it.
+          if (text !== '' || toolChanges.length === 0) {
+            content.push({
+              type: 'text' as const,
+              text,
+              cache_control: validator.getCacheControl(providerOptions, {
+                type: 'system message',
+                canCache: true,
+              }),
+            });
+          }
+
+          for (const toolChange of toolChanges) {
+            toolChangeCount++;
+            content.push({
+              type: toolChange.type,
+              tool: {
+                type: 'tool_reference',
+                name: toolNameMapping.toProviderToolName(toolChange.toolName),
+              },
+            } satisfies AnthropicToolChangeContent);
+          }
         }
 
-        system = block.messages.map(({ content, providerOptions }) => ({
-          type: 'text',
-          text: content,
-          cache_control: validator.getCacheControl(providerOptions, {
-            type: 'system message',
-            canCache: true,
-          }),
-        }));
+        // The first block becomes the top-level system prompt. Later system
+        // blocks are sent as inline system messages — always when they carry
+        // tool changes (which are only valid mid-conversation), and otherwise
+        // only when a top-level system prompt already exists (preserving the
+        // existing hoisting behavior for plain text).
+        if (i === 0 || (system == null && toolChangeCount === 0)) {
+          if (toolChangeCount > 0) {
+            warnings.push({
+              type: 'other',
+              message:
+                'tool changes on the initial system message are not supported by Anthropic. ' +
+                'Configure the initial tool set via the tools option instead. ' +
+                'The tool changes have been ignored.',
+            });
+          }
+          system = content.filter(
+            (part): part is AnthropicTextContent => part.type === 'text',
+          );
+        } else {
+          messages.push({ role: 'system', content });
+          betas.add('mid-conversation-system-2026-04-07');
+          if (toolChangeCount > 0) {
+            betas.add('mid-conversation-tool-changes-2026-07-01');
+          }
+        }
 
         break;
       }
@@ -284,14 +368,28 @@ export async function convertToAnthropicMessagesPrompt({
                   continue;
                 }
 
+                const output = part.output;
+                const outputProviderOptions =
+                  'providerOptions' in output
+                    ? output.providerOptions
+                    : output.type === 'content'
+                      ? output.value.find(
+                          contentPart => contentPart.providerOptions != null,
+                        )?.providerOptions
+                      : undefined;
+
                 // cache control: first add cache control from part.
-                // for the last part of a message,
-                // check also if the message has cache control.
+                // then from tool result output, and for the last part of a
+                // message, check also if the message has cache control.
                 const isLastPart = i === content.length - 1;
 
                 const cacheControl =
                   validator.getCacheControl(part.providerOptions, {
                     type: 'tool result part',
+                    canCache: true,
+                  }) ??
+                  validator.getCacheControl(outputProviderOptions, {
+                    type: 'tool result output',
                     canCache: true,
                   }) ??
                   (isLastPart
@@ -300,8 +398,6 @@ export async function convertToAnthropicMessagesPrompt({
                         canCache: true,
                       })
                     : undefined);
-
-                const output = part.output;
 
                 let contentValue: AnthropicToolResultContent['content'];
                 switch (output.type) {
@@ -396,7 +492,8 @@ export async function convertToAnthropicMessagesPrompt({
                     contentValue = output.value;
                     break;
                   case 'execution-denied':
-                    contentValue = output.reason ?? 'Tool execution denied.';
+                    contentValue =
+                      output.reason ?? 'Tool call execution denied.';
                     break;
                   case 'json':
                     const searchResults =
@@ -487,7 +584,7 @@ export async function convertToAnthropicMessagesPrompt({
               case 'text': {
                 // Check if this is a compaction block (via providerMetadata)
                 const textMetadata = part.providerOptions?.anthropic as
-                  | { type?: string }
+                  | { type?: string; citations?: Citation[] }
                   | undefined;
 
                 if (textMetadata?.type === 'compaction') {
@@ -506,7 +603,9 @@ export async function convertToAnthropicMessagesPrompt({
                       isLastBlock && isLastMessage && isLastContentPart
                         ? part.text.trim()
                         : part.text,
-
+                    ...(textMetadata?.citations != null && {
+                      citations: textMetadata.citations,
+                    }),
                     cache_control: cacheControl,
                   });
                 }
@@ -610,11 +709,12 @@ export async function convertToAnthropicMessagesPrompt({
                     (part.input.type === 'bash_code_execution' ||
                       part.input.type === 'text_editor_code_execution')
                   ) {
+                    const { type: subtoolName, ...input } = part.input;
                     anthropicContent.push({
                       type: 'server_tool_use',
                       id: part.toolCallId,
-                      name: part.input.type, // map back to subtool name
-                      input: part.input,
+                      name: subtoolName, // map back to subtool name
+                      input,
                       cache_control: cacheControl,
                     });
                   } else if (
@@ -659,6 +759,15 @@ export async function convertToAnthropicMessagesPrompt({
                         id: part.toolCallId,
                         name: providerToolName,
                         input: part.input,
+                        cache_control: cacheControl,
+                      });
+                    } else if (providerToolName === 'advisor') {
+                      // The advisor server_tool_use.input is always {}.
+                      anthropicContent.push({
+                        type: 'server_tool_use',
+                        id: part.toolCallId,
+                        name: 'advisor',
+                        input: {},
                         cache_control: cacheControl,
                       });
                     } else {
@@ -740,7 +849,7 @@ export async function convertToAnthropicMessagesPrompt({
                     let errorInfo: { type?: string; errorCode?: string } = {};
                     try {
                       if (typeof output.value === 'string') {
-                        errorInfo = JSON.parse(output.value);
+                        errorInfo = secureJsonParse(output.value);
                       } else if (
                         typeof output.value === 'object' &&
                         output.value !== null
@@ -874,7 +983,19 @@ export async function convertToAnthropicMessagesPrompt({
                         type: 'bash_code_execution_tool_result',
                         tool_use_id: part.toolCallId,
                         cache_control: cacheControl,
-                        content: codeExecutionOutput,
+                        // Prompt caching requires stable key ordering:
+                        // https://platform.claude.com/docs/en/build-with-claude/prompt-caching#troubleshooting-common-issues
+                        content:
+                          codeExecutionOutput.type ===
+                          'bash_code_execution_result'
+                            ? {
+                                type: codeExecutionOutput.type,
+                                stdout: codeExecutionOutput.stdout,
+                                stderr: codeExecutionOutput.stderr,
+                                return_code: codeExecutionOutput.return_code,
+                                content: codeExecutionOutput.content,
+                              }
+                            : codeExecutionOutput,
                       });
                     } else {
                       anthropicContent.push({
@@ -892,35 +1013,14 @@ export async function convertToAnthropicMessagesPrompt({
                   const output = part.output;
 
                   if (output.type === 'error-json') {
-                    let errorValue: { errorCode?: string } = {};
-                    try {
-                      if (typeof output.value === 'string') {
-                        errorValue = JSON.parse(output.value);
-                      } else if (
-                        typeof output.value === 'object' &&
-                        output.value !== null
-                      ) {
-                        errorValue = output.value as typeof errorValue;
-                      }
-                    } catch {
-                      // If parsing fails, treat the value as-is
-                      const extractedErrorCode = (
-                        output.value as Record<string, unknown>
-                      )?.errorCode;
-                      errorValue = {
-                        errorCode:
-                          typeof extractedErrorCode === 'string'
-                            ? extractedErrorCode
-                            : 'unavailable',
-                      };
-                    }
-
                     anthropicContent.push({
                       type: 'web_fetch_tool_result',
                       tool_use_id: part.toolCallId,
                       content: {
                         type: 'web_fetch_tool_result_error',
-                        error_code: errorValue.errorCode ?? 'unavailable',
+                        error_code:
+                          (await extractErrorValue(output.value)).errorCode ??
+                          'unavailable',
                       },
                       cache_control: cacheControl,
                     });
@@ -974,6 +1074,22 @@ export async function convertToAnthropicMessagesPrompt({
 
                 if (providerToolName === 'web_search') {
                   const output = part.output;
+
+                  if (output.type === 'error-json') {
+                    anthropicContent.push({
+                      type: 'web_search_tool_result',
+                      tool_use_id: part.toolCallId,
+                      content: {
+                        type: 'web_search_tool_result_error',
+                        error_code:
+                          (await extractErrorValue(output.value)).errorCode ??
+                          'unavailable',
+                      },
+                      cache_control: cacheControl,
+                    });
+
+                    break;
+                  }
 
                   if (output.type !== 'json') {
                     warnings.push({
@@ -1047,6 +1163,58 @@ export async function convertToAnthropicMessagesPrompt({
                   break;
                 }
 
+                if (providerToolName === 'advisor') {
+                  const output = part.output;
+
+                  if (output.type !== 'json' && output.type !== 'error-json') {
+                    warnings.push({
+                      type: 'other',
+                      message: `provider executed tool result output type ${output.type} for tool ${part.toolName} is not supported`,
+                    });
+
+                    break;
+                  }
+
+                  const advisorOutput = await validateTypes({
+                    value: output.value,
+                    schema: advisor_20260301OutputSchema,
+                  });
+
+                  if (advisorOutput.type === 'advisor_result') {
+                    anthropicContent.push({
+                      type: 'advisor_tool_result',
+                      tool_use_id: part.toolCallId,
+                      content: {
+                        type: 'advisor_result',
+                        text: advisorOutput.text,
+                      },
+                      cache_control: cacheControl,
+                    });
+                  } else if (advisorOutput.type === 'advisor_redacted_result') {
+                    anthropicContent.push({
+                      type: 'advisor_tool_result',
+                      tool_use_id: part.toolCallId,
+                      content: {
+                        type: 'advisor_redacted_result',
+                        encrypted_content: advisorOutput.encryptedContent,
+                      },
+                      cache_control: cacheControl,
+                    });
+                  } else {
+                    anthropicContent.push({
+                      type: 'advisor_tool_result',
+                      tool_use_id: part.toolCallId,
+                      content: {
+                        type: 'advisor_tool_result_error',
+                        error_code: advisorOutput.errorCode,
+                      },
+                      cache_control: cacheControl,
+                    });
+                  }
+
+                  break;
+                }
+
                 warnings.push({
                   type: 'other',
                   message: `provider executed tool result for tool ${part.toolName} is not supported`,
@@ -1058,7 +1226,10 @@ export async function convertToAnthropicMessagesPrompt({
           }
         }
 
-        messages.push({ role: 'assistant', content: anthropicContent });
+        messages.push({
+          role: 'assistant',
+          content: moveToolUseBlocksToEnd(anthropicContent),
+        });
 
         break;
       }
@@ -1143,4 +1314,32 @@ function groupIntoBlocks(
   }
 
   return blocks;
+}
+
+function moveToolUseBlocksToEnd(
+  content: AnthropicAssistantMessage['content'],
+): AnthropicAssistantMessage['content'] {
+  const result: AnthropicAssistantMessage['content'] = [];
+  let segment: AnthropicAssistantMessage['content'] = [];
+
+  function flushSegment() {
+    result.push(
+      ...segment.filter(part => part.type !== 'tool_use'),
+      ...segment.filter(part => part.type === 'tool_use'),
+    );
+    segment = [];
+  }
+
+  for (const part of content) {
+    if (part.type === 'thinking' || part.type === 'redacted_thinking') {
+      flushSegment();
+      result.push(part);
+    } else {
+      segment.push(part);
+    }
+  }
+
+  flushSegment();
+
+  return result;
 }

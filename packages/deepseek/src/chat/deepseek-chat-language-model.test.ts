@@ -1,10 +1,11 @@
-import { LanguageModelV3Prompt } from '@ai-sdk/provider';
+import type { JSONSchema7, LanguageModelV3Prompt } from '@ai-sdk/provider';
 import { convertReadableStreamToArray } from '@ai-sdk/provider-utils/test';
 import { createTestServer } from '@ai-sdk/test-server/with-vitest';
 import fs from 'node:fs';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { createDeepSeek } from '../deepseek-provider';
-import { DeepSeekLanguageModelOptions } from './deepseek-chat-options';
+import { DeepSeekChatLanguageModel } from './deepseek-chat-language-model';
+import type { DeepSeekLanguageModelOptions } from './deepseek-chat-options';
 
 const TEST_PROMPT: LanguageModelV3Prompt = [
   { role: 'user', content: [{ type: 'text', text: 'Hello' }] },
@@ -120,6 +121,86 @@ describe('DeepSeekChatLanguageModel', () => {
         });
 
         expect(result).toMatchSnapshot();
+      });
+    });
+
+    describe('reasoning_effort', () => {
+      beforeEach(() => {
+        prepareJsonFixtureResponse('deepseek-text');
+      });
+
+      it.each(['low', 'medium', 'xhigh'] as const)(
+        'should pass providerOptions reasoningEffort %s through to the API',
+        async effort => {
+          await provider.chat('deepseek-reasoner').doGenerate({
+            prompt: TEST_PROMPT,
+            providerOptions: {
+              deepseek: {
+                reasoningEffort: effort,
+              } satisfies DeepSeekLanguageModelOptions,
+            },
+          });
+
+          expect((await server.calls[0].requestBodyJson).reasoning_effort).toBe(
+            effort,
+          );
+        },
+      );
+
+      it('should pass providerOptions thinking.type=adaptive through to the API', async () => {
+        await provider.chat('deepseek-reasoner').doGenerate({
+          prompt: TEST_PROMPT,
+          providerOptions: {
+            deepseek: {
+              thinking: { type: 'adaptive' },
+            } satisfies DeepSeekLanguageModelOptions,
+          },
+        });
+
+        expect((await server.calls[0].requestBodyJson).thinking).toStrictEqual({
+          type: 'adaptive',
+        });
+      });
+
+      it('should pass providerOptions reasoningEffort', async () => {
+        await provider.chat('deepseek-reasoner').doGenerate({
+          prompt: TEST_PROMPT,
+          providerOptions: {
+            deepseek: {
+              reasoningEffort: 'max',
+            } satisfies DeepSeekLanguageModelOptions,
+          },
+        });
+
+        const requestBody = await server.calls[0].requestBodyJson;
+        expect(requestBody.reasoning_effort).toBe('max');
+        expect(requestBody.thinking).toBeUndefined();
+      });
+
+      it('should not send reasoning_effort when thinking is disabled', async () => {
+        await provider.chat('deepseek-reasoner').doGenerate({
+          prompt: TEST_PROMPT,
+          providerOptions: {
+            deepseek: {
+              thinking: { type: 'disabled' },
+              reasoningEffort: 'high',
+            } satisfies DeepSeekLanguageModelOptions,
+          },
+        });
+
+        expect(
+          (await server.calls[0].requestBodyJson).reasoning_effort,
+        ).toBeUndefined();
+      });
+
+      it('should not set reasoning_effort when not specified', async () => {
+        await provider.chat('deepseek-reasoner').doGenerate({
+          prompt: TEST_PROMPT,
+        });
+
+        expect(
+          (await server.calls[0].requestBodyJson).reasoning_effort,
+        ).toBeUndefined();
       });
     });
 
@@ -377,6 +458,104 @@ describe('DeepSeekChatLanguageModel', () => {
           });
 
           expect(result).toMatchSnapshot();
+        });
+      });
+
+      describe('json response format with structured outputs', () => {
+        const structuredOutputsModel = new DeepSeekChatLanguageModel(
+          'deepseek-v4-flash',
+          {
+            provider: 'azure.deepseek',
+            url: () => 'https://api.deepseek.com/chat/completions',
+            headers: () => ({}),
+            supportsStructuredOutputs: true,
+          },
+        );
+
+        const TEST_SCHEMA: JSONSchema7 = {
+          type: 'object',
+          properties: { sentiment: { type: 'string' } },
+          required: ['sentiment'],
+          additionalProperties: false,
+        };
+
+        beforeEach(() => {
+          prepareJsonFixtureResponse('deepseek-json');
+        });
+
+        it('should send json_schema response format and skip schema injection', async () => {
+          const { warnings } = await structuredOutputsModel.doGenerate({
+            prompt: TEST_PROMPT,
+            responseFormat: {
+              type: 'json',
+              name: 'sentiment',
+              schema: TEST_SCHEMA,
+            },
+          });
+
+          expect(await server.calls[0].requestBodyJson).toMatchInlineSnapshot(`
+            {
+              "messages": [
+                {
+                  "content": "Hello",
+                  "role": "user",
+                },
+              ],
+              "model": "deepseek-v4-flash",
+              "response_format": {
+                "json_schema": {
+                  "name": "sentiment",
+                  "schema": {
+                    "additionalProperties": false,
+                    "properties": {
+                      "sentiment": {
+                        "type": "string",
+                      },
+                    },
+                    "required": [
+                      "sentiment",
+                    ],
+                    "type": "object",
+                  },
+                  "strict": true,
+                },
+                "type": "json_schema",
+              },
+            }
+          `);
+          expect(warnings).toStrictEqual([]);
+        });
+
+        it('should honor strictJsonSchema provider option', async () => {
+          await structuredOutputsModel.doGenerate({
+            prompt: TEST_PROMPT,
+            responseFormat: { type: 'json', schema: TEST_SCHEMA },
+            providerOptions: {
+              azure: {
+                strictJsonSchema: false,
+              } satisfies DeepSeekLanguageModelOptions,
+            },
+          });
+
+          const body = await server.calls[0].requestBodyJson;
+          expect(body.response_format).toMatchObject({
+            type: 'json_schema',
+            json_schema: { strict: false, name: 'response' },
+          });
+        });
+
+        it('should fall back to json_object without a schema', async () => {
+          await structuredOutputsModel.doGenerate({
+            prompt: TEST_PROMPT,
+            responseFormat: { type: 'json' },
+          });
+
+          const body = await server.calls[0].requestBodyJson;
+          expect(body.response_format).toStrictEqual({ type: 'json_object' });
+          expect(body.messages[0]).toStrictEqual({
+            role: 'system',
+            content: 'Return JSON.',
+          });
         });
       });
 

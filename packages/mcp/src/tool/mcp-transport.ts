@@ -1,14 +1,43 @@
-import { FetchFunction } from '@ai-sdk/provider-utils';
+import type { FetchFunction } from '@ai-sdk/provider-utils';
 import { MCPClientError } from '../error/mcp-client-error';
-import { JSONRPCMessage } from './json-rpc-message';
+import type { JSONRPCMessage } from './json-rpc-message';
 import { SseMCPTransport } from './mcp-sse-transport';
 import { HttpMCPTransport } from './mcp-http-transport';
-import { OAuthClientProvider } from './oauth';
+import type { OAuthClientProvider } from './oauth';
 
 /**
  * Transport interface for MCP (Model Context Protocol) communication.
  * Maps to the `Transport` interface in the MCP spec.
  */
+export type MCPTransportSendOptions = {
+  /**
+   * Cancels the transport operation for this message.
+   */
+  signal?: AbortSignal;
+
+  /**
+   * Associates an outgoing message with an incoming request.
+   */
+  relatedRequestId?: string | number;
+
+  /**
+   * Resumes a previously interrupted request.
+   */
+  resumptionToken?: string;
+
+  /**
+   * Receives updated resumption tokens from transports that support them.
+   */
+  onresumptiontoken?: (token: string) => void;
+};
+
+export type MCPTransportCloseOptions = {
+  /**
+   * Cancels transport cleanup.
+   */
+  signal?: AbortSignal;
+};
+
 export interface MCPTransport {
   /**
    * Initialize and start the transport
@@ -18,13 +47,18 @@ export interface MCPTransport {
   /**
    * Send a JSON-RPC message through the transport
    * @param message The JSON-RPC message to send
+   * @param options Optional request-scoped cancellation options
    */
-  send(message: JSONRPCMessage): Promise<void>;
+  send(
+    message: JSONRPCMessage,
+    options?: MCPTransportSendOptions,
+  ): Promise<void>;
 
   /**
    * Clean up and close the transport
+   * @param options Optional cancellation options for transport cleanup
    */
-  close(): Promise<void>;
+  close(options?: MCPTransportCloseOptions): Promise<void>;
 
   /**
    * Event handler for transport closure
@@ -40,6 +74,16 @@ export interface MCPTransport {
    * Event handler for received messages
    */
   onmessage?: (message: JSONRPCMessage) => void;
+
+  /**
+   * The protocol version negotiated during initialization.
+   */
+  protocolVersion?: string;
+
+  /**
+   * Set the protocol version negotiated during initialization.
+   */
+  setProtocolVersion?(version: string): void;
 }
 
 export type MCPTransportConfig = {

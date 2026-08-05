@@ -1,6 +1,6 @@
-import { LanguageModelV3Prompt, SharedV3Warning } from '@ai-sdk/provider';
+import type { LanguageModelV3Prompt, SharedV3Warning } from '@ai-sdk/provider';
 import { convertToBase64 } from '@ai-sdk/provider-utils';
-import {
+import type {
   FunctionCallItemParam,
   FunctionCallOutputItemParam,
   InputFileContentParam,
@@ -43,25 +43,30 @@ export async function convertToOpenResponsesInput({
               break;
             }
             case 'file': {
-              if (!part.mediaType.startsWith('image/')) {
-                warnings.push({
-                  type: 'other',
-                  message: `unsupported file content type: ${part.mediaType}`,
-                });
-                break;
-              }
-
               const mediaType =
                 part.mediaType === 'image/*' ? 'image/jpeg' : part.mediaType;
 
-              userContent.push({
-                type: 'input_image',
-                ...(part.data instanceof URL
-                  ? { image_url: part.data.toString() }
-                  : {
-                      image_url: `data:${mediaType};base64,${convertToBase64(part.data)}`,
-                    }),
-              });
+              if (part.mediaType.startsWith('image/')) {
+                userContent.push({
+                  type: 'input_image',
+                  ...(part.data instanceof URL
+                    ? { image_url: part.data.toString() }
+                    : {
+                        image_url: `data:${mediaType};base64,${convertToBase64(part.data)}`,
+                      }),
+                });
+              } else if (part.data instanceof URL) {
+                userContent.push({
+                  type: 'input_file',
+                  file_url: part.data.toString(),
+                });
+              } else {
+                userContent.push({
+                  type: 'input_file',
+                  filename: part.filename ?? 'data',
+                  file_data: `data:${mediaType};base64,${convertToBase64(part.data)}`,
+                });
+              }
               break;
             }
           }
@@ -128,7 +133,7 @@ export async function convertToOpenResponsesInput({
                 contentValue = output.value;
                 break;
               case 'execution-denied':
-                contentValue = output.reason ?? 'Tool execution denied.';
+                contentValue = output.reason ?? 'Tool call execution denied.';
                 break;
               case 'json':
               case 'error-json':

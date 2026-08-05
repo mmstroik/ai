@@ -26,7 +26,12 @@ export type XaiResponsesSystemMessage = {
 
 export type XaiResponsesUserMessageContentPart =
   | { type: 'input_text'; text: string }
-  | { type: 'input_image'; image_url: string };
+  | {
+      type: 'input_image';
+      image_url: string;
+      detail?: 'low' | 'high' | 'auto';
+    }
+  | { type: 'input_file'; file_url: string };
 
 export type XaiResponsesUserMessage = {
   role: 'user';
@@ -42,7 +47,18 @@ export type XaiResponsesAssistantMessage = {
 export type XaiResponsesFunctionCallOutput = {
   type: 'function_call_output';
   call_id: string;
-  output: string;
+  output:
+    | string
+    | Array<
+        | {
+            type: 'input_text';
+            text: string;
+          }
+        | {
+            type: 'input_image';
+            image_url: string;
+          }
+      >;
 };
 
 export type XaiResponsesReasoning = {
@@ -77,6 +93,7 @@ export type XaiResponsesTool =
       type: 'web_search';
       allowed_domains?: string[];
       excluded_domains?: string[];
+      enable_image_search?: boolean;
       enable_image_understanding?: boolean;
     }
   | {
@@ -223,6 +240,9 @@ const outputItemSchema = z.discriminatedUnion('type', [
     type: z.literal('reasoning'),
     id: z.string(),
     summary: z.array(reasoningSummaryPartSchema),
+    content: z
+      .array(z.object({ type: z.string(), text: z.string() }))
+      .nullish(),
     status: z.string(),
     encrypted_content: z.string().nullish(),
   }),

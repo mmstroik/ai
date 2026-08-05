@@ -1,16 +1,17 @@
 import {
-  LanguageModelV3Prompt,
-  LanguageModelV3ToolApprovalResponsePart,
-  SharedV3Warning,
   UnsupportedFunctionalityError,
+  type LanguageModelV3Prompt,
+  type LanguageModelV3ToolApprovalResponsePart,
+  type SharedV3ProviderOptions,
+  type SharedV3Warning,
 } from '@ai-sdk/provider';
 import {
   convertToBase64,
   isNonNullable,
   parseJSON,
   parseProviderOptions,
-  ToolNameMapping,
   validateTypes,
+  type ToolNameMapping,
 } from '@ai-sdk/provider-utils';
 import { z } from 'zod/v4';
 import {
@@ -26,7 +27,7 @@ import {
   toolSearchInputSchema,
   toolSearchOutputSchema,
 } from '../tool/tool-search';
-import {
+import type {
   OpenAIResponsesCustomToolCallOutput,
   OpenAIResponsesFunctionCallOutput,
   OpenAIResponsesInput,
@@ -35,6 +36,17 @@ import {
 
 function serializeToolCallArguments(input: unknown): string {
   return JSON.stringify(input === undefined ? {} : input);
+}
+
+type OpenAIPromptCacheBreakpoint = { mode: 'explicit' };
+
+function getPromptCacheBreakpoint(
+  providerOptions: SharedV3ProviderOptions | undefined,
+  providerOptionsName: string,
+): OpenAIPromptCacheBreakpoint | undefined {
+  return providerOptions?.[providerOptionsName]?.promptCacheBreakpoint as
+    | OpenAIPromptCacheBreakpoint
+    | undefined;
 }
 
 /**
@@ -52,8 +64,10 @@ export async function convertToOpenAIResponsesInput({
   systemMessageMode,
   providerOptionsName,
   fileIdPrefixes,
+  passThroughUnsupportedFiles = false,
   store,
   hasConversation = false,
+  hasPreviousResponseId = false,
   hasLocalShellTool = false,
   hasShellTool = false,
   hasApplyPatchTool = false,
@@ -64,8 +78,10 @@ export async function convertToOpenAIResponsesInput({
   systemMessageMode: 'system' | 'developer' | 'remove';
   providerOptionsName: string;
   fileIdPrefixes?: readonly string[];
+  passThroughUnsupportedFiles?: boolean;
   store: boolean;
   hasConversation?: boolean; // when true, skip assistant messages that already have item IDs
+  hasPreviousResponseId?: boolean; // when true, skip reasoning and function-call items that already exist in the previous response chain
   hasLocalShellTool?: boolean;
   hasShellTool?: boolean;
   hasApplyPatchTool?: boolean;
@@ -78,16 +94,48 @@ export async function convertToOpenAIResponsesInput({
   const warnings: Array<SharedV3Warning> = [];
   const processedApprovalIds = new Set<string>();
 
-  for (const { role, content } of prompt) {
+  for (const { role, content, providerOptions } of prompt) {
     switch (role) {
       case 'system': {
         switch (systemMessageMode) {
           case 'system': {
-            input.push({ role: 'system', content });
+            const promptCacheBreakpoint = getPromptCacheBreakpoint(
+              providerOptions,
+              providerOptionsName,
+            );
+            input.push({
+              role: 'system',
+              content:
+                promptCacheBreakpoint == null
+                  ? content
+                  : [
+                      {
+                        type: 'input_text',
+                        text: content,
+                        prompt_cache_breakpoint: promptCacheBreakpoint,
+                      },
+                    ],
+            });
             break;
           }
           case 'developer': {
-            input.push({ role: 'developer', content });
+            const promptCacheBreakpoint = getPromptCacheBreakpoint(
+              providerOptions,
+              providerOptionsName,
+            );
+            input.push({
+              role: 'developer',
+              content:
+                promptCacheBreakpoint == null
+                  ? content
+                  : [
+                      {
+                        type: 'input_text',
+                        text: content,
+                        prompt_cache_breakpoint: promptCacheBreakpoint,
+                      },
+                    ],
+            });
             break;
           }
           case 'remove': {
@@ -113,15 +161,27 @@ export async function convertToOpenAIResponsesInput({
           content: content.map((part, index) => {
             switch (part.type) {
               case 'text': {
-                return { type: 'input_text', text: part.text };
+                const promptCacheBreakpoint = getPromptCacheBreakpoint(
+                  part.providerOptions,
+                  providerOptionsName,
+                );
+                return {
+                  type: 'input_text',
+                  text: part.text,
+                  ...(promptCacheBreakpoint != null && {
+                    prompt_cache_breakpoint: promptCacheBreakpoint,
+                  }),
+                };
               }
               case 'file': {
-                if (part.mediaType.startsWith('image/')) {
-                  const mediaType =
-                    part.mediaType === 'image/*'
-                      ? 'image/jpeg'
-                      : part.mediaType;
+                const promptCacheBreakpoint = getPromptCacheBreakpoint(
+                  part.providerOptions,
+                  providerOptionsName,
+                );
+                const mediaType =
+                  part.mediaType === 'image/*' ? 'image/jpeg' : part.mediaType;
 
+                if (mediaType.startsWith('image/')) {
                   return {
                     type: 'input_image',
                     ...(part.data instanceof URL
@@ -134,29 +194,48 @@ export async function convertToOpenAIResponsesInput({
                           }),
                     detail:
                       part.providerOptions?.[providerOptionsName]?.imageDetail,
+                    ...(promptCacheBreakpoint != null && {
+                      prompt_cache_breakpoint: promptCacheBreakpoint,
+                    }),
                   };
-                } else if (part.mediaType === 'application/pdf') {
-                  if (part.data instanceof URL) {
-                    return {
-                      type: 'input_file',
-                      file_url: part.data.toString(),
-                    };
-                  }
+                }
+
+                if (part.data instanceof URL) {
                   return {
                     type: 'input_file',
-                    ...(typeof part.data === 'string' &&
-                    isFileId(part.data, fileIdPrefixes)
-                      ? { file_id: part.data }
-                      : {
-                          filename: part.filename ?? `part-${index}.pdf`,
-                          file_data: `data:application/pdf;base64,${convertToBase64(part.data)}`,
-                        }),
+                    file_url: part.data.toString(),
+                    ...(promptCacheBreakpoint != null && {
+                      prompt_cache_breakpoint: promptCacheBreakpoint,
+                    }),
                   };
-                } else {
+                }
+
+                if (
+                  mediaType !== 'application/pdf' &&
+                  !passThroughUnsupportedFiles
+                ) {
                   throw new UnsupportedFunctionalityError({
-                    functionality: `file part media type ${part.mediaType}`,
+                    functionality: `file part media type ${mediaType}`,
                   });
                 }
+
+                return {
+                  type: 'input_file',
+                  ...(typeof part.data === 'string' &&
+                  isFileId(part.data, fileIdPrefixes)
+                    ? { file_id: part.data }
+                    : {
+                        filename:
+                          part.filename ??
+                          (mediaType === 'application/pdf'
+                            ? `part-${index}.pdf`
+                            : `part-${index}`),
+                        file_data: `data:${mediaType};base64,${convertToBase64(part.data)}`,
+                      }),
+                  ...(promptCacheBreakpoint != null && {
+                    prompt_cache_breakpoint: promptCacheBreakpoint,
+                  }),
+                };
               }
             }
           }),
@@ -211,6 +290,18 @@ export async function convertToOpenAIResponsesInput({
                 | string
                 | undefined;
 
+              const namespace = (part.providerOptions?.[providerOptionsName]
+                ?.namespace ??
+                (
+                  part as {
+                    providerMetadata?: {
+                      [providerOptionsName]?: { namespace?: string };
+                    };
+                  }
+                ).providerMetadata?.[providerOptionsName]?.namespace) as
+                | string
+                | undefined;
+
               if (hasConversation && id != null) {
                 break;
               }
@@ -257,7 +348,29 @@ export async function convertToOpenAIResponsesInput({
                 break;
               }
 
-              if (store && id != null) {
+              // When chaining with a previous response id, items already part
+              // of that response chain must not be resent.
+              if (hasPreviousResponseId && store && id != null) {
+                break;
+              }
+
+              // Provider-defined tool calls (local_shell, shell, apply_patch,
+              // and custom tools) are stored by the API and can be sent as an
+              // `item_reference` to reduce payload size. Plain client-executed
+              // function calls must NOT be: the matching `function_call_output`
+              // can only reference the call by `call_id` (`call_...`), which
+              // the API cannot reconcile with an item id (`fc_...`) or an
+              // `item_reference`. Sending either breaks call/output pairing and
+              // makes follow-up requests fail with "No tool call found for
+              // function call output with call_id", most visibly with parallel
+              // tool calls across multiple steps.
+              const isProviderDefinedToolCall =
+                (hasLocalShellTool && resolvedToolName === 'local_shell') ||
+                (hasShellTool && resolvedToolName === 'shell') ||
+                (hasApplyPatchTool && resolvedToolName === 'apply_patch') ||
+                (customProviderToolNames?.has(resolvedToolName) ?? false);
+
+              if (store && id != null && isProviderDefinedToolCall) {
                 input.push({ type: 'item_reference', id });
                 break;
               }
@@ -339,7 +452,7 @@ export async function convertToOpenAIResponsesInput({
                 call_id: part.toolCallId,
                 name: resolvedToolName,
                 arguments: serializeToolCallArguments(part.input),
-                id,
+                ...(namespace != null && { namespace }),
               });
               break;
             }
@@ -369,12 +482,16 @@ export async function convertToOpenAIResponsesInput({
               );
 
               if (resolvedResultToolName === 'tool_search') {
-                const itemId =
+                const itemId = (part.providerOptions?.[providerOptionsName]
+                  ?.itemId ??
                   (
-                    part.providerOptions?.[providerOptionsName] as
-                      | { itemId?: string }
-                      | undefined
-                  )?.itemId ?? part.toolCallId;
+                    part as {
+                      providerMetadata?: {
+                        [providerOptionsName]?: { itemId?: string };
+                      };
+                    }
+                  ).providerMetadata?.[providerOptionsName]?.itemId ??
+                  part.toolCallId) as string;
 
                 if (store) {
                   input.push({ type: 'item_reference', id: itemId });
@@ -456,7 +573,10 @@ export async function convertToOpenAIResponsesInput({
 
               const reasoningId = providerOptions?.itemId;
 
-              if (hasConversation && reasoningId != null) {
+              if (
+                (hasConversation || hasPreviousResponseId) &&
+                reasoningId != null
+              ) {
                 break;
               }
 
@@ -685,7 +805,7 @@ export async function convertToOpenAIResponsesInput({
                 outputValue = output.value;
                 break;
               case 'execution-denied':
-                outputValue = output.reason ?? 'Tool execution denied.';
+                outputValue = output.reason ?? 'Tool call execution denied.';
                 break;
               case 'json':
               case 'error-json':
@@ -694,29 +814,57 @@ export async function convertToOpenAIResponsesInput({
               case 'content':
                 outputValue = output.value
                   .map(item => {
+                    const promptCacheBreakpoint = getPromptCacheBreakpoint(
+                      item.providerOptions,
+                      providerOptionsName,
+                    );
                     switch (item.type) {
                       case 'text':
-                        return { type: 'input_text' as const, text: item.text };
+                        return {
+                          type: 'input_text' as const,
+                          text: item.text,
+                          ...(promptCacheBreakpoint != null && {
+                            prompt_cache_breakpoint: promptCacheBreakpoint,
+                          }),
+                        };
                       case 'image-data':
                         return {
                           type: 'input_image' as const,
                           image_url: `data:${item.mediaType};base64,${item.data}`,
+                          detail:
+                            item.providerOptions?.[providerOptionsName]
+                              ?.imageDetail,
+                          ...(promptCacheBreakpoint != null && {
+                            prompt_cache_breakpoint: promptCacheBreakpoint,
+                          }),
                         };
                       case 'image-url':
                         return {
                           type: 'input_image' as const,
                           image_url: item.url,
+                          detail:
+                            item.providerOptions?.[providerOptionsName]
+                              ?.imageDetail,
+                          ...(promptCacheBreakpoint != null && {
+                            prompt_cache_breakpoint: promptCacheBreakpoint,
+                          }),
                         };
                       case 'file-data':
                         return {
                           type: 'input_file' as const,
                           filename: item.filename ?? 'data',
                           file_data: `data:${item.mediaType};base64,${item.data}`,
+                          ...(promptCacheBreakpoint != null && {
+                            prompt_cache_breakpoint: promptCacheBreakpoint,
+                          }),
                         };
                       case 'file-url':
                         return {
                           type: 'input_file' as const,
                           file_url: item.url,
+                          ...(promptCacheBreakpoint != null && {
+                            prompt_cache_breakpoint: promptCacheBreakpoint,
+                          }),
                         };
                       default:
                         warnings.push({
@@ -746,7 +894,7 @@ export async function convertToOpenAIResponsesInput({
               contentValue = output.value;
               break;
             case 'execution-denied':
-              contentValue = output.reason ?? 'Tool execution denied.';
+              contentValue = output.reason ?? 'Tool call execution denied.';
               break;
             case 'json':
             case 'error-json':
@@ -755,15 +903,31 @@ export async function convertToOpenAIResponsesInput({
             case 'content':
               contentValue = output.value
                 .map(item => {
+                  const promptCacheBreakpoint = getPromptCacheBreakpoint(
+                    item.providerOptions,
+                    providerOptionsName,
+                  );
                   switch (item.type) {
                     case 'text': {
-                      return { type: 'input_text' as const, text: item.text };
+                      return {
+                        type: 'input_text' as const,
+                        text: item.text,
+                        ...(promptCacheBreakpoint != null && {
+                          prompt_cache_breakpoint: promptCacheBreakpoint,
+                        }),
+                      };
                     }
 
                     case 'image-data': {
                       return {
                         type: 'input_image' as const,
                         image_url: `data:${item.mediaType};base64,${item.data}`,
+                        detail:
+                          item.providerOptions?.[providerOptionsName]
+                            ?.imageDetail,
+                        ...(promptCacheBreakpoint != null && {
+                          prompt_cache_breakpoint: promptCacheBreakpoint,
+                        }),
                       };
                     }
 
@@ -771,6 +935,12 @@ export async function convertToOpenAIResponsesInput({
                       return {
                         type: 'input_image' as const,
                         image_url: item.url,
+                        detail:
+                          item.providerOptions?.[providerOptionsName]
+                            ?.imageDetail,
+                        ...(promptCacheBreakpoint != null && {
+                          prompt_cache_breakpoint: promptCacheBreakpoint,
+                        }),
                       };
                     }
 
@@ -779,6 +949,9 @@ export async function convertToOpenAIResponsesInput({
                         type: 'input_file' as const,
                         filename: item.filename ?? 'data',
                         file_data: `data:${item.mediaType};base64,${item.data}`,
+                        ...(promptCacheBreakpoint != null && {
+                          prompt_cache_breakpoint: promptCacheBreakpoint,
+                        }),
                       };
                     }
 
@@ -786,6 +959,9 @@ export async function convertToOpenAIResponsesInput({
                       return {
                         type: 'input_file' as const,
                         file_url: item.url,
+                        ...(promptCacheBreakpoint != null && {
+                          prompt_cache_breakpoint: promptCacheBreakpoint,
+                        }),
                       };
                     }
 

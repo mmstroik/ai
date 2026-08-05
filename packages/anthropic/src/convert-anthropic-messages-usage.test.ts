@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   convertAnthropicMessagesUsage,
-  AnthropicMessagesUsage,
+  type AnthropicMessagesUsage,
 } from './convert-anthropic-messages-usage';
 
 describe('convertAnthropicMessagesUsage', () => {
@@ -57,6 +57,24 @@ describe('convertAnthropicMessagesUsage', () => {
       total: 20,
       text: undefined,
       reasoning: undefined,
+    });
+  });
+
+  it('should report thinking tokens as reasoning usage', () => {
+    const result = convertAnthropicMessagesUsage({
+      usage: {
+        input_tokens: 10,
+        output_tokens: 20,
+        output_tokens_details: {
+          thinking_tokens: 7,
+        },
+      },
+    });
+
+    expect(result.outputTokens).toEqual({
+      total: 20,
+      text: 13,
+      reasoning: 7,
     });
   });
 

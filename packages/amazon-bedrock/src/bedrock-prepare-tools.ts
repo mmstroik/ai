@@ -1,15 +1,19 @@
 import {
-  JSONObject,
-  LanguageModelV3CallOptions,
-  SharedV3Warning,
   UnsupportedFunctionalityError,
+  type JSONObject,
+  type LanguageModelV3CallOptions,
+  type SharedV3Warning,
 } from '@ai-sdk/provider';
 import { asSchema } from '@ai-sdk/provider-utils';
 import {
   anthropicTools,
   prepareTools as prepareAnthropicTools,
 } from '@ai-sdk/anthropic/internal';
-import { BedrockTool, BedrockToolConfiguration } from './bedrock-api-types';
+import { supportsStrictTools } from './bedrock-anthropic-model-support';
+import type {
+  BedrockTool,
+  BedrockToolConfiguration,
+} from './bedrock-api-types';
 
 export async function prepareTools({
   tools,
@@ -130,14 +134,26 @@ export async function prepareTools({
       ? functionTools.filter(t => t.name === toolChoice.toolName)
       : functionTools;
 
+  const supportsStrictOnTools = supportsStrictTools(modelId);
+
   for (const tool of filteredFunctionTools) {
+    if (!supportsStrictOnTools && tool.strict != null) {
+      toolWarnings.push({
+        type: 'unsupported',
+        feature: 'strict',
+        details: `Tool '${tool.name}' has strict: ${tool.strict}, but strict mode is not supported by this model on Amazon Bedrock. The strict property will be ignored.`,
+      });
+    }
+
     bedrockTools.push({
       toolSpec: {
         name: tool.name,
         ...(tool.description?.trim() !== ''
           ? { description: tool.description }
           : {}),
-        ...(tool.strict != null ? { strict: tool.strict } : {}),
+        ...(tool.strict != null && supportsStrictOnTools
+          ? { strict: tool.strict }
+          : {}),
         inputSchema: {
           json: tool.inputSchema as JSONObject,
         },

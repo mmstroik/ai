@@ -1,19 +1,19 @@
 import {
-  LanguageModelV3,
   NoSuchModelError,
-  ProviderV3,
+  type LanguageModelV3,
+  type ProviderV3,
 } from '@ai-sdk/provider';
 import {
-  FetchFunction,
-  Resolvable,
   loadOptionalSetting,
   withoutTrailingSlash,
+  type FetchFunction,
+  type Resolvable,
 } from '@ai-sdk/provider-utils';
 import {
   anthropicTools,
   AnthropicMessagesLanguageModel,
 } from '@ai-sdk/anthropic/internal';
-import { GoogleVertexAnthropicMessagesModelId } from './google-vertex-anthropic-messages-options';
+import type { GoogleVertexAnthropicMessagesModelId } from './google-vertex-anthropic-messages-options';
 
 /**
  * Tools supported by Google Vertex Anthropic.
@@ -173,9 +173,19 @@ export function createVertexAnthropic(
       environmentVariableName: 'GOOGLE_VERTEX_PROJECT',
     });
 
+    const getHost = () => {
+      if (location === 'global') {
+        return 'aiplatform.googleapis.com';
+      } else if (location === 'eu' || location === 'us') {
+        return `aiplatform.${location}.rep.googleapis.com`;
+      } else {
+        return `${location}-aiplatform.googleapis.com`;
+      }
+    };
+
     return (
       withoutTrailingSlash(options.baseURL) ??
-      `https://${location === 'global' ? '' : location + '-'}aiplatform.googleapis.com/v1/projects/${project}/locations/${location}/publishers/anthropic/models`
+      `https://${getHost()}/v1/projects/${project}/locations/${location}/publishers/anthropic/models`
     );
   };
 

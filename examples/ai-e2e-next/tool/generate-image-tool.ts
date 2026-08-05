@@ -1,5 +1,5 @@
 import { openai } from '@ai-sdk/openai';
-import { UIToolInvocation, tool, generateImage } from 'ai';
+import { tool, generateImage, type UIToolInvocation } from 'ai';
 import { z } from 'zod';
 
 export const generateImageTool = tool({
@@ -7,7 +7,7 @@ export const generateImageTool = tool({
   inputSchema: z.object({}),
   async execute() {
     const result = await generateImage({
-      model: openai.image('gpt-image-1'),
+      model: openai.image('gpt-image-2'),
       prompt: 'A beautiful image of a sunset over a calm ocean',
     });
 

@@ -1,4 +1,4 @@
-import { JSONObject } from '@ai-sdk/provider';
+import type { JSONObject } from '@ai-sdk/provider';
 
 export interface BedrockConverseInput {
   system?: BedrockSystemMessages;
@@ -165,16 +165,22 @@ export interface BedrockGuardrailConverseContentBlock {
 export interface BedrockImageBlock {
   image: {
     format: BedrockImageFormat;
-    source: {
-      bytes: string;
-    };
+    source:
+      | {
+          bytes: string;
+        }
+      | {
+          s3Location: {
+            uri: string;
+          };
+        };
   };
 }
 
 export interface BedrockToolResultBlock {
   toolResult: {
     toolUseId: string;
-    content: Array<BedrockTextBlock | BedrockImageBlock>;
+    content: Array<BedrockTextBlock | BedrockImageBlock | BedrockDocumentBlock>;
   };
 }
 

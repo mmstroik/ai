@@ -1,5 +1,421 @@
 # @ai-sdk/gateway
 
+## 3.0.164
+
+### Patch Changes
+
+- f615718: Export `GatewayEmbeddingModelId` and `GatewayImageModelId` from the package entry point.
+- 48d5dff: Backport: chore(provider/gateway): update gateway model settings files
+
+## 3.0.163
+
+### Patch Changes
+
+- 7e50c52: Backport: chore(provider/gateway): update gateway model settings files
+
+## 3.0.162
+
+### Patch Changes
+
+- b28367e: feat(provider/gateway): add `has` provider option for model capability filtering, supporting `'implicit-caching'` and `'vision'` (image input)
+
+## 3.0.161
+
+### Patch Changes
+
+- d3d9e0b: Backport: chore(provider/gateway): update gateway model settings files
+
+## 3.0.160
+
+### Patch Changes
+
+- 87fb433: Backport: chore(provider/gateway): update gateway model settings files
+- Updated dependencies [9ecdefe]
+  - @ai-sdk/provider-utils@4.0.41
+
+## 3.0.159
+
+### Patch Changes
+
+- de438f5: Backport: chore(provider/gateway): update gateway model settings files
+
+## 3.0.158
+
+### Patch Changes
+
+- 8418710: Backport: chore(provider/gateway): update gateway model settings files
+
+## 3.0.157
+
+### Patch Changes
+
+- 5d7b986: Backport: chore(provider/gateway): update gateway model settings files
+
+## 3.0.156
+
+### Patch Changes
+
+- e7d064f: Backport: chore(provider/gateway): update gateway model settings files
+
+## 3.0.155
+
+### Patch Changes
+
+- a09f944: feat(google): add `gemini-3.6-flash` and `gemini-3.5-flash-lite` models
+
+## 3.0.154
+
+### Patch Changes
+
+- 2dd1aab: chore(provider/gateway): remove `hipaaCompliant` provider option
+- e567091: Backport: chore(provider/gateway): update gateway model settings files
+
+## 3.0.153
+
+### Patch Changes
+
+- Updated dependencies [19093fd]
+  - @ai-sdk/provider-utils@4.0.40
+
+## 3.0.152
+
+### Patch Changes
+
+- 49a3098: Backport: chore(provider/gateway): update gateway model settings files
+
+## 3.0.151
+
+### Patch Changes
+
+- 5e624ac: Backport: chore(provider/gateway): update gateway model settings files
+
+## 3.0.150
+
+### Patch Changes
+
+- bc46977: Backport: chore(provider/gateway): update gateway model settings files
+- Updated dependencies [06fb54c]
+  - @ai-sdk/provider-utils@4.0.39
+
+## 3.0.149
+
+### Patch Changes
+
+- 7c48ed8: Backport: chore(provider/gateway): update gateway model settings files
+
+## 3.0.148
+
+### Patch Changes
+
+- 982aa3e: Backport: chore(provider/gateway): update gateway model settings files
+
+## 3.0.147
+
+### Patch Changes
+
+- a452291: Backport: chore(provider/gateway): update gateway model settings files
+
+## 3.0.146
+
+### Patch Changes
+
+- 2bfb16a: feat(gateway): expose ruleId on GatewayForbiddenError so callers can identify which routing rule denied a request
+- 34b5acc: feat(provider/openai,provider/gateway): add gpt-5.6 model ids
+- 1ce0d1c: feat (provider/xai): add grok-4.5 model id
+- Updated dependencies [e1af05f]
+  - @ai-sdk/provider@3.0.14
+  - @ai-sdk/provider-utils@4.0.38
+
+## 3.0.145
+
+### Patch Changes
+
+- 9c54a9f: fix(gateway): accept deprecated warnings in image, speech, transcription, and video responses
+- bbc4bd5: Backport: chore(provider/gateway): update gateway model settings files
+- Updated dependencies [d559de9]
+  - @ai-sdk/provider-utils@4.0.37
+
+## 3.0.144
+
+### Patch Changes
+
+- 7dea716: feat(alibaba): support wan2.7 text-to-video and reference-to-video models with the new protocol (`input.media`, `resolution` + `ratio`)
+- 4f7fe37: Backport: chore(provider/gateway): update gateway model settings files
+- 0952964: Prevent prototype pollution when synchronously parsing provider JSON inputs and expose `secureJsonParse` from provider-utils.
+- Updated dependencies [0952964]
+  - @ai-sdk/provider-utils@4.0.36
+
+## 3.0.143
+
+### Patch Changes
+
+- 8fbadac: Backport: chore(provider/gateway): update gateway model settings files
+
+## 3.0.142
+
+### Patch Changes
+
+- Updated dependencies [ea1e95b]
+  - @ai-sdk/provider-utils@4.0.35
+
+## 3.0.141
+
+### Patch Changes
+
+- 95bc6fd: feat (provider/anthropic): add `claude-sonnet-5` model id
+- f6b2159: Backport: chore(provider/gateway): update gateway model settings files
+- fa850e6: feat (video): add first-class `frameImages` and `inputReferences` call options for video generation
+- Updated dependencies [fa850e6]
+  - @ai-sdk/provider@3.0.13
+  - @ai-sdk/provider-utils@4.0.34
+
+## 3.0.140
+
+### Patch Changes
+
+- f6689df: feat(gateway): add `caching` provider option to `GatewayProviderOptions`
+- 13b6a72: Backport: chore(provider/gateway): update gateway model settings files
+
+## 3.0.139
+
+### Patch Changes
+
+- Updated dependencies [b30e43a]
+  - @ai-sdk/provider-utils@4.0.33
+
+## 3.0.138
+
+### Patch Changes
+
+- fb601aa: feat (provider/gateway): add Exa search tool support
+- f19334d: feat (video): add first-class `generateAudio` call option
+- Updated dependencies [f19334d]
+  - @ai-sdk/provider@3.0.12
+  - @ai-sdk/provider-utils@4.0.32
+
+## 3.0.137
+
+### Patch Changes
+
+- 932c680: Clarify `parallel_search` `source_policy` field descriptions so the model emits
+  values the Parallel API accepts: `include_domains`/`exclude_domains` must be plain
+  hosts (no scheme/path/port), and `after_date` must be an ISO 8601 calendar date
+  formatted `YYYY-MM-DD`.
+
+## 3.0.136
+
+### Patch Changes
+
+- 6ce12b0: Add Gateway speech and transcription model support.
+- 4cb4414: Backport: chore(provider/gateway): update gateway model settings files
+
+## 3.0.135
+
+### Patch Changes
+
+- 1b40ac7: Publish all packages under the `@ai-v6` dist tag.
+- Updated dependencies [1b40ac7]
+  - @ai-sdk/provider-utils@4.0.31
+  - @ai-sdk/provider@3.0.11
+
+## 3.0.134
+
+### Patch Changes
+
+- 709c0fa: Backport: chore(provider/gateway): update gateway model settings files
+
+## 3.0.133
+
+### Patch Changes
+
+- 5bfde36: Backport: chore(provider/gateway): update gateway model settings files
+- Updated dependencies [779f5cd]
+  - @ai-sdk/provider-utils@4.0.30
+
+## 3.0.132
+
+### Patch Changes
+
+- e962dda: Backport: chore(provider/gateway): update gateway model settings files
+
+## 3.0.131
+
+### Patch Changes
+
+- 6160ced: fix(gateway): surface provider warnings in embedding and reranking responses
+- c9b8abd: fix(provider/gateway): map `forbidden` error responses to GatewayForbiddenError instead of GatewayInternalServerError
+
+## 3.0.130
+
+### Patch Changes
+
+- c5d4716: Backport: chore(provider/gateway): update gateway model settings files
+
+## 3.0.129
+
+### Patch Changes
+
+- Updated dependencies [bfa5864]
+- Updated dependencies [f42aa79]
+  - @ai-sdk/provider-utils@4.0.29
+
+## 3.0.128
+
+### Patch Changes
+
+- Updated dependencies [942f2f8]
+  - @ai-sdk/provider-utils@4.0.28
+
+## 3.0.127
+
+### Patch Changes
+
+- 3851e29: Backport: chore(provider/gateway): update gateway model settings files
+- 2a91a17: feat(provider/anthropic): add support for `claude-fable-5` and the `fallbacks` API parameter
+
+## 3.0.126
+
+### Patch Changes
+
+- ff16d3b: feat(gateway): add GatewayFailedDependencyError (424)
+
+## 3.0.125
+
+### Patch Changes
+
+- fef3b24: Backport: chore(provider/gateway): update gateway model settings files
+
+## 3.0.124
+
+### Patch Changes
+
+- 286b7a2: Backport: chore(provider/gateway): update gateway model settings files
+
+## 3.0.123
+
+### Patch Changes
+
+- 537a022: Backport: chore(provider/gateway): update gateway model settings files
+
+## 3.0.122
+
+### Patch Changes
+
+- 9766034: Backport: chore(provider/gateway): update gateway model settings files
+
+## 3.0.121
+
+### Patch Changes
+
+- 4084fcd: feat(provider/anthropic): add support for `claude-opus-4-8`
+
+## 3.0.120
+
+### Patch Changes
+
+- 27a1b22: Add `serviceTier: 'flex' | 'priority'` to `GatewayProviderOptions`.
+
+## 3.0.119
+
+### Patch Changes
+
+- 33b10a2: Add `qwen3.7-max` model ID to Alibaba and AI Gateway.
+- f6e4146: Backport: chore(provider/gateway): update gateway model settings files
+
+## 3.0.118
+
+### Patch Changes
+
+- 6f4bb06: Backport: chore(provider/gateway): update gateway model settings files
+
+## 3.0.117
+
+### Patch Changes
+
+- 756fec1: feat(provider/google): add `gemini-3.5-flash`
+
+## 3.0.116
+
+### Patch Changes
+
+- 488ef33: Backport: chore(provider/gateway): update gateway model settings files
+
+## 3.0.115
+
+### Patch Changes
+
+- 363cefe: Backport: chore(provider/gateway): update gateway model settings files
+
+## 3.0.114
+
+### Patch Changes
+
+- 253bd5a: fix(gateway): enable retry support for gateway errors
+
+## 3.0.113
+
+### Patch Changes
+
+- ee4de68: Backport: chore(provider/gateway): update gateway model settings files
+
+## 3.0.112
+
+### Patch Changes
+
+- 5c73af8: Backport: chore(provider/gateway): update gateway model settings files
+
+## 3.0.111
+
+### Patch Changes
+
+- Updated dependencies [f591416]
+  - @ai-sdk/provider-utils@4.0.27
+
+## 3.0.110
+
+### Patch Changes
+
+- 9a88b1d: Backport: chore(provider/gateway): update gateway model settings files
+
+## 3.0.109
+
+### Patch Changes
+
+- 49f6d44: Backport: chore(provider/gateway): update gateway model settings files
+
+## 3.0.108
+
+### Patch Changes
+
+- Updated dependencies [7beadf0]
+  - @ai-sdk/provider-utils@4.0.26
+
+## 3.0.107
+
+### Patch Changes
+
+- 982af78: Backport: chore(provider/gateway): update gateway model settings files
+
+## 3.0.106
+
+### Patch Changes
+
+- a727da4: chore: ensure consistent import handling and avoid import duplicates or cycles
+- Updated dependencies [a727da4]
+  - @ai-sdk/provider-utils@4.0.25
+  - @ai-sdk/provider@3.0.10
+
+## 3.0.105
+
+### Patch Changes
+
+- a7f3c72: trigger release for all packages after provenance setup
+- 4368079: Backport: chore(provider/gateway): update gateway model settings files
+- c71ad14: feat(provider/openai): add gpt-image-2 model support
+- Updated dependencies [a7f3c72]
+  - @ai-sdk/provider@3.0.9
+  - @ai-sdk/provider-utils@4.0.24
+
 ## 3.0.104
 
 ### Patch Changes

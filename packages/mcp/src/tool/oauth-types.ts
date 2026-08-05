@@ -1,19 +1,5 @@
 import { z } from 'zod/v4';
 /**
- * OAuth 2.1 token response
- */
-export const OAuthTokensSchema = z
-  .object({
-    access_token: z.string(),
-    id_token: z.string().optional(), // Optional for OAuth 2.1, but necessary in OpenID Connect
-    token_type: z.string(),
-    expires_in: z.number().optional(),
-    scope: z.string().optional(),
-    refresh_token: z.string().optional(),
-  })
-  .strip();
-
-/**
  * Reusable URL validation that disallows javascript: scheme
  */
 export const SafeUrlSchema = z
@@ -41,6 +27,22 @@ export const SafeUrlSchema = z
     },
     { message: 'URL cannot use javascript:, data:, or vbscript: scheme' },
   );
+
+/**
+ * OAuth 2.1 token response
+ */
+export const OAuthTokensSchema = z
+  .object({
+    access_token: z.string(),
+    id_token: z.string().optional(), // Optional for OAuth 2.1, but necessary in OpenID Connect
+    token_type: z.string(),
+    expires_in: z.number().optional(),
+    scope: z.string().optional(),
+    refresh_token: z.string().optional(),
+    authorization_server: SafeUrlSchema.optional(),
+    token_endpoint: SafeUrlSchema.optional(),
+  })
+  .strip();
 
 export const OAuthProtectedResourceMetadataSchema = z
   .object({
@@ -70,7 +72,7 @@ export const OAuthMetadataSchema = z
     scopes_supported: z.array(z.string()).optional(),
     response_types_supported: z.array(z.string()),
     grant_types_supported: z.array(z.string()).optional(),
-    code_challenge_methods_supported: z.array(z.string()),
+    code_challenge_methods_supported: z.array(z.string()).optional(),
     token_endpoint_auth_methods_supported: z.array(z.string()).optional(),
     token_endpoint_auth_signing_alg_values_supported: z
       .array(z.string())
@@ -118,6 +120,8 @@ export const OAuthClientInformationSchema = z
     client_secret: z.string().optional(),
     client_id_issued_at: z.number().optional(),
     client_secret_expires_at: z.number().optional(),
+    authorization_server: SafeUrlSchema.optional(),
+    token_endpoint: SafeUrlSchema.optional(),
   })
   .strip();
 

@@ -1,4 +1,4 @@
-import { LanguageModelV3Prompt } from '@ai-sdk/provider';
+import type { LanguageModelV3Prompt } from '@ai-sdk/provider';
 import { createTestServer } from '@ai-sdk/test-server/with-vitest';
 import {
   convertReadableStreamToArray,
@@ -225,9 +225,9 @@ describe('doGenerate', () => {
     expect(usage).toMatchInlineSnapshot(`
       {
         "inputTokens": {
-          "cacheRead": undefined,
+          "cacheRead": 15,
           "cacheWrite": undefined,
-          "noCache": 20,
+          "noCache": 5,
           "total": 20,
         },
         "outputTokens": {
@@ -1252,6 +1252,11 @@ describe('doStream', () => {
         },
         {
           "delta": " ai"}",
+          "id": "chatcmpl-tool-b3b307239370432d9910d4b79b4dbbaa",
+          "type": "tool-input-delta",
+        },
+        {
+          "delta": "",
           "id": "chatcmpl-tool-b3b307239370432d9910d4b79b4dbbaa",
           "type": "tool-input-delta",
         },

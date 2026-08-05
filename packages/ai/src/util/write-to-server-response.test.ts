@@ -1,5 +1,5 @@
 import { EventEmitter } from 'node:events';
-import { ServerResponse } from 'node:http';
+import type { ServerResponse } from 'node:http';
 import { describe, it, expect } from 'vitest';
 import { writeToServerResponse } from './write-to-server-response';
 import { createMockServerResponse } from '../test/mock-server-response';
@@ -29,6 +29,25 @@ describe('writeToServerResponse', () => {
     expect(mockResponse.statusCode).toBe(200);
     expect(mockResponse.statusMessage).toBe('OK');
     expect(mockResponse.writtenChunks).toHaveLength(2);
+    expect(mockResponse.ended).toBe(true);
+  });
+
+  it('should reject when reading the stream fails', async () => {
+    const mockResponse = createMockServerResponse();
+    const error = new Error('stream read failed');
+    const stream = new ReadableStream<Uint8Array>({
+      pull() {
+        throw error;
+      },
+    });
+
+    await expect(
+      writeToServerResponse({
+        response: mockResponse,
+        stream,
+      }),
+    ).rejects.toBe(error);
+
     expect(mockResponse.ended).toBe(true);
   });
 

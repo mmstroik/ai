@@ -1,7 +1,7 @@
 import {
   AISDKError,
-  TranscriptionModelV3,
-  SharedV3Warning,
+  type TranscriptionModelV3,
+  type SharedV3Warning,
 } from '@ai-sdk/provider';
 import {
   combineHeaders,
@@ -10,14 +10,15 @@ import {
   mediaTypeToExtension,
   delay,
   getFromApi,
+  isSameOrigin,
   parseProviderOptions,
   postFormDataToApi,
   postJsonToApi,
 } from '@ai-sdk/provider-utils';
 import { z } from 'zod/v4';
-import { GladiaConfig } from './gladia-config';
+import type { GladiaConfig } from './gladia-config';
 import { gladiaFailedResponseHandler } from './gladia-error';
-import { GladiaTranscriptionInitiateAPITypes } from './gladia-api-types';
+import type { GladiaTranscriptionInitiateAPITypes } from './gladia-api-types';
 
 // https://docs.gladia.io/api-reference/v2/pre-recorded/init
 const gladiaTranscriptionModelOptionsSchema = z.object({
@@ -540,8 +541,11 @@ export class GladiaTranscriptionModel implements TranscriptionModelV3 {
       fetch: this.config.fetch,
     });
 
-    // Poll the result URL until the transcription is done or an error occurs
+    // Poll the result URL until the transcription is done or an error occurs.
+    // The result URL comes from the provider response; only send credentials
+    // when it stays on the provider's own origin.
     const resultUrl = transcriptionInitResponse.result_url;
+    const apiOrigin = this.config.url({ modelId: 'default', path: '' });
     let transcriptionResult;
     let transcriptionResultHeaders;
     const timeoutMs = 60 * 1000; // 60 seconds timeout
@@ -560,7 +564,9 @@ export class GladiaTranscriptionModel implements TranscriptionModelV3 {
 
       const response = await getFromApi({
         url: resultUrl,
-        headers: combineHeaders(this.config.headers(), options.headers),
+        headers: isSameOrigin(resultUrl, apiOrigin)
+          ? combineHeaders(this.config.headers(), options.headers)
+          : undefined,
         failedResponseHandler: gladiaFailedResponseHandler,
         successfulResponseHandler: createJsonResponseHandler(
           gladiaTranscriptionResultResponseSchema,

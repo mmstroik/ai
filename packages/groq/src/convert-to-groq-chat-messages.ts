@@ -1,8 +1,8 @@
 import {
-  LanguageModelV3Prompt,
   UnsupportedFunctionalityError,
+  type LanguageModelV3Prompt,
 } from '@ai-sdk/provider';
-import { GroqChatPrompt } from './groq-api-types';
+import type { GroqChatPrompt } from './groq-api-types';
 import { convertToBase64 } from '@ai-sdk/provider-utils';
 
 export function convertToGroqChatMessages(
@@ -118,7 +118,7 @@ export function convertToGroqChatMessages(
               contentValue = output.value;
               break;
             case 'execution-denied':
-              contentValue = output.reason ?? 'Tool execution denied.';
+              contentValue = output.reason ?? 'Tool call execution denied.';
               break;
             case 'content':
             case 'json':

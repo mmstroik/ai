@@ -1,13 +1,15 @@
-import { Tool } from '@ai-sdk/provider-utils';
-import { ProviderMetadata } from '../types';
-import { ValueOf } from '../util/value-of';
-import { ToolSet } from './tool-set';
+import type { JSONObject } from '@ai-sdk/provider';
+import type { Tool } from '@ai-sdk/provider-utils';
+import type { ProviderMetadata } from '../types';
+import type { ValueOf } from '../util/value-of';
+import type { ToolSet } from './tool-set';
 
 type BaseToolCall = {
   type: 'tool-call';
   toolCallId: string;
   providerExecuted?: boolean;
   providerMetadata?: ProviderMetadata;
+  toolMetadata?: JSONObject;
 };
 
 export type StaticToolCall<TOOLS extends ToolSet> = ValueOf<{

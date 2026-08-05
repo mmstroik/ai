@@ -1,18 +1,18 @@
 import {
   APICallError,
-  JSONValue,
-  LanguageModelV3,
-  LanguageModelV3Prompt,
-  LanguageModelV3CallOptions,
-  LanguageModelV3Content,
-  LanguageModelV3FinishReason,
-  LanguageModelV3GenerateResult,
-  LanguageModelV3ProviderTool,
-  LanguageModelV3StreamPart,
-  LanguageModelV3StreamResult,
-  LanguageModelV3ToolApprovalRequest,
-  SharedV3ProviderMetadata,
-  SharedV3Warning,
+  type JSONValue,
+  type LanguageModelV3,
+  type LanguageModelV3Prompt,
+  type LanguageModelV3CallOptions,
+  type LanguageModelV3Content,
+  type LanguageModelV3FinishReason,
+  type LanguageModelV3GenerateResult,
+  type LanguageModelV3ProviderTool,
+  type LanguageModelV3StreamPart,
+  type LanguageModelV3StreamResult,
+  type LanguageModelV3ToolApprovalRequest,
+  type SharedV3ProviderMetadata,
+  type SharedV3Warning,
 } from '@ai-sdk/provider';
 import {
   combineHeaders,
@@ -20,53 +20,54 @@ import {
   createJsonResponseHandler,
   createToolNameMapping,
   generateId,
-  InferSchema,
   parseProviderOptions,
-  ParseResult,
   postJsonToApi,
+  type InferSchema,
+  type ParseResult,
 } from '@ai-sdk/provider-utils';
-import { OpenAIConfig } from '../openai-config';
+import type { OpenAIConfig } from '../openai-config';
 import { openaiFailedResponseHandler } from '../openai-error';
 import { getOpenAILanguageModelCapabilities } from '../openai-language-model-capabilities';
-import { applyPatchInputSchema } from '../tool/apply-patch';
-import {
+import { throwIfOpenAIStreamErrorBeforeOutput } from '../openai-stream-error';
+import type { applyPatchInputSchema } from '../tool/apply-patch';
+import type {
   codeInterpreterInputSchema,
   codeInterpreterOutputSchema,
 } from '../tool/code-interpreter';
-import { fileSearchOutputSchema } from '../tool/file-search';
-import { imageGenerationOutputSchema } from '../tool/image-generation';
-import { localShellInputSchema } from '../tool/local-shell';
-import { mcpOutputSchema } from '../tool/mcp';
-import { shellInputSchema, shellOutputSchema } from '../tool/shell';
-import {
+import type { fileSearchOutputSchema } from '../tool/file-search';
+import type { imageGenerationOutputSchema } from '../tool/image-generation';
+import type { localShellInputSchema } from '../tool/local-shell';
+import type { mcpOutputSchema } from '../tool/mcp';
+import type { shellInputSchema, shellOutputSchema } from '../tool/shell';
+import type {
   toolSearchInputSchema,
   toolSearchOutputSchema,
 } from '../tool/tool-search';
-import { webSearchOutputSchema } from '../tool/web-search';
+import type { webSearchOutputSchema } from '../tool/web-search';
 import {
   convertOpenAIResponsesUsage,
-  OpenAIResponsesUsage,
+  type OpenAIResponsesUsage,
 } from './convert-openai-responses-usage';
 import { convertToOpenAIResponsesInput } from './convert-to-openai-responses-input';
 import { mapOpenAIResponseFinishReason } from './map-openai-responses-finish-reason';
 import {
-  OpenAIResponsesChunk,
   openaiResponsesChunkSchema,
-  OpenAIResponsesIncludeOptions,
-  OpenAIResponsesIncludeValue,
-  OpenAIResponsesLogprobs,
   openaiResponsesResponseSchema,
-  OpenAIResponsesWebSearchAction,
-  OpenAIResponsesApplyPatchOperationDiffDeltaChunk,
-  OpenAIResponsesApplyPatchOperationDiffDoneChunk,
+  type OpenAIResponsesChunk,
+  type OpenAIResponsesIncludeOptions,
+  type OpenAIResponsesIncludeValue,
+  type OpenAIResponsesLogprobs,
+  type OpenAIResponsesWebSearchAction,
+  type OpenAIResponsesApplyPatchOperationDiffDeltaChunk,
+  type OpenAIResponsesApplyPatchOperationDiffDoneChunk,
 } from './openai-responses-api';
 import {
-  OpenAIResponsesModelId,
   openaiLanguageModelResponsesOptionsSchema,
   TOP_LOGPROBS_MAX,
+  type OpenAIResponsesModelId,
 } from './openai-responses-options';
 import { prepareResponsesTools } from './openai-responses-prepare-tools';
-import {
+import type {
   ResponsesProviderMetadata,
   ResponsesReasoningProviderMetadata,
   ResponsesSourceDocumentProviderMetadata,
@@ -213,6 +214,7 @@ export class OpenAIResponsesLanguageModel implements LanguageModelV3 {
     } = await prepareResponsesTools({
       tools,
       toolChoice,
+      allowedTools: openaiOptions?.allowedTools ?? undefined,
       toolNameMapping,
       customProviderToolNames,
     });
@@ -228,8 +230,11 @@ export class OpenAIResponsesLanguageModel implements LanguageModelV3 {
             : modelCapabilities.systemMessageMode),
         providerOptionsName,
         fileIdPrefixes: this.config.fileIdPrefixes,
+        passThroughUnsupportedFiles:
+          openaiOptions?.passThroughUnsupportedFiles ?? false,
         store: openaiOptions?.store ?? true,
         hasConversation: openaiOptions?.conversation != null,
+        hasPreviousResponseId: openaiOptions?.previousResponseId != null,
         hasLocalShellTool: hasOpenAITool('openai.local_shell'),
         hasShellTool: hasOpenAITool('openai.shell'),
         hasApplyPatchTool: hasOpenAITool('openai.apply_patch'),
@@ -336,6 +341,7 @@ export class OpenAIResponsesLanguageModel implements LanguageModelV3 {
       service_tier: openaiOptions?.serviceTier,
       include,
       prompt_cache_key: openaiOptions?.promptCacheKey,
+      prompt_cache_options: openaiOptions?.promptCacheOptions,
       prompt_cache_retention: openaiOptions?.promptCacheRetention,
       safety_identifier: openaiOptions?.safetyIdentifier,
       top_logprobs: topLogprobs,
@@ -344,13 +350,21 @@ export class OpenAIResponsesLanguageModel implements LanguageModelV3 {
       // model-specific settings:
       ...(isReasoningModel &&
         (openaiOptions?.reasoningEffort != null ||
-          openaiOptions?.reasoningSummary != null) && {
+          openaiOptions?.reasoningSummary != null ||
+          openaiOptions?.reasoningMode != null ||
+          openaiOptions?.reasoningContext != null) && {
           reasoning: {
             ...(openaiOptions?.reasoningEffort != null && {
               effort: openaiOptions.reasoningEffort,
             }),
             ...(openaiOptions?.reasoningSummary != null && {
               summary: openaiOptions.reasoningSummary,
+            }),
+            ...(openaiOptions?.reasoningMode != null && {
+              mode: openaiOptions.reasoningMode,
+            }),
+            ...(openaiOptions?.reasoningContext != null && {
+              context: openaiOptions.reasoningContext,
             }),
           },
         }),
@@ -399,6 +413,22 @@ export class OpenAIResponsesLanguageModel implements LanguageModelV3 {
           type: 'unsupported',
           feature: 'reasoningSummary',
           details: 'reasoningSummary is not supported for non-reasoning models',
+        });
+      }
+
+      if (openaiOptions?.reasoningMode != null) {
+        warnings.push({
+          type: 'unsupported',
+          feature: 'reasoningMode',
+          details: 'reasoningMode is not supported for non-reasoning models',
+        });
+      }
+
+      if (openaiOptions?.reasoningContext != null) {
+        warnings.push({
+          type: 'unsupported',
+          feature: 'reasoningContext',
+          details: 'reasoningContext is not supported for non-reasoning models',
         });
       }
     }
@@ -775,6 +805,7 @@ export class OpenAIResponsesLanguageModel implements LanguageModelV3 {
             providerMetadata: {
               [providerOptionsName]: {
                 itemId: part.id,
+                ...(part.namespace != null && { namespace: part.namespace }),
               },
             },
           });
@@ -991,6 +1022,9 @@ export class OpenAIResponsesLanguageModel implements LanguageModelV3 {
         ...(typeof response.service_tier === 'string'
           ? { serviceTier: response.service_tier }
           : {}),
+        ...(response.reasoning?.context != null
+          ? { reasoningContext: response.reasoning.context }
+          : {}),
       } satisfies ResponsesProviderMetadata,
     };
 
@@ -1032,11 +1066,13 @@ export class OpenAIResponsesLanguageModel implements LanguageModelV3 {
       isShellProviderExecuted,
     } = await this.getArgs(options);
 
+    const url = this.config.url({
+      path: '/responses',
+      modelId: this.modelId,
+    });
+
     const { responseHeaders, value: response } = await postJsonToApi({
-      url: this.config.url({
-        path: '/responses',
-        modelId: this.modelId,
-      }),
+      url,
       headers: combineHeaders(this.config.headers(), options.headers),
       body: {
         ...body,
@@ -1048,6 +1084,19 @@ export class OpenAIResponsesLanguageModel implements LanguageModelV3 {
       ),
       abortSignal: options.abortSignal,
       fetch: this.config.fetch,
+    });
+
+    const checkedResponse = await throwIfOpenAIStreamErrorBeforeOutput({
+      stream: response,
+      getError: chunk =>
+        isErrorChunk(chunk) ||
+        (isResponseFailedChunk(chunk) && chunk.response.error != null)
+          ? chunk
+          : undefined,
+      isOutputChunk: isResponseOutputChunk,
+      url,
+      requestBodyValues: body,
+      responseHeaders,
     });
 
     const self = this;
@@ -1109,10 +1158,12 @@ export class OpenAIResponsesLanguageModel implements LanguageModelV3 {
     > = {};
 
     let serviceTier: string | undefined;
+    let reasoningContext: ResponsesProviderMetadata['reasoningContext'];
     const hostedToolSearchCallIds: string[] = [];
+    let encounteredStreamError = false;
 
-    return {
-      stream: response.pipeThrough(
+    const result = {
+      stream: checkedResponse.pipeThrough(
         new TransformStream<
           ParseResult<OpenAIResponsesChunk>,
           LanguageModelV3StreamPart
@@ -1128,8 +1179,18 @@ export class OpenAIResponsesLanguageModel implements LanguageModelV3 {
 
             // handle failed chunk parsing / validation:
             if (!chunk.success) {
+              const error = isOpenAIChatCompletionChunk(chunk.rawValue)
+                ? createOpenAIResponsesChatCompletionsMismatchError({
+                    value: chunk.rawValue,
+                    cause: chunk.error,
+                    url,
+                    requestBodyValues: body,
+                    responseHeaders,
+                  })
+                : chunk.error;
+
               finishReason = { unified: 'error', raw: undefined };
-              controller.enqueue({ type: 'error', error: chunk.error });
+              controller.enqueue({ type: 'error', error });
               return;
             }
 
@@ -1383,6 +1444,13 @@ export class OpenAIResponsesLanguageModel implements LanguageModelV3 {
                 controller.enqueue({
                   type: 'tool-input-end',
                   id: value.item.call_id,
+                  ...(value.item.namespace != null && {
+                    providerMetadata: {
+                      [providerOptionsName]: {
+                        namespace: value.item.namespace,
+                      },
+                    },
+                  }),
                 });
 
                 controller.enqueue({
@@ -1393,6 +1461,9 @@ export class OpenAIResponsesLanguageModel implements LanguageModelV3 {
                   providerMetadata: {
                     [providerOptionsName]: {
                       itemId: value.item.id,
+                      ...(value.item.namespace != null && {
+                        namespace: value.item.namespace,
+                      }),
                     },
                   },
                 });
@@ -2006,6 +2077,9 @@ export class OpenAIResponsesLanguageModel implements LanguageModelV3 {
               if (typeof value.response.service_tier === 'string') {
                 serviceTier = value.response.service_tier;
               }
+              if (value.response.reasoning?.context != null) {
+                reasoningContext = value.response.reasoning.context;
+              }
             } else if (isResponseFailedChunk(value)) {
               const incompleteReason =
                 value.response.incomplete_details?.reason;
@@ -2019,6 +2093,25 @@ export class OpenAIResponsesLanguageModel implements LanguageModelV3 {
                 raw: incompleteReason ?? 'error',
               };
               usage = value.response.usage ?? undefined;
+              if (value.response.reasoning?.context != null) {
+                reasoningContext = value.response.reasoning.context;
+              }
+
+              if (!encounteredStreamError && value.response.error != null) {
+                encounteredStreamError = true;
+                controller.enqueue({
+                  type: 'error',
+                  error: {
+                    type: 'response.failed',
+                    sequence_number: value.sequence_number,
+                    response: {
+                      error: value.response.error,
+                      incomplete_details: value.response.incomplete_details,
+                      service_tier: value.response.service_tier,
+                    },
+                  },
+                });
+              }
             } else if (isResponseAnnotationAddedChunk(value)) {
               ongoingAnnotations.push(value.annotation);
               if (value.annotation.type === 'url_citation') {
@@ -2088,6 +2181,8 @@ export class OpenAIResponsesLanguageModel implements LanguageModelV3 {
                 });
               }
             } else if (isErrorChunk(value)) {
+              encounteredStreamError = true;
+              finishReason = { unified: 'error', raw: 'error' };
               controller.enqueue({ type: 'error', error: value });
             }
           },
@@ -2098,6 +2193,7 @@ export class OpenAIResponsesLanguageModel implements LanguageModelV3 {
                 responseId: responseId,
                 ...(logprobs.length > 0 ? { logprobs } : {}),
                 ...(serviceTier !== undefined ? { serviceTier } : {}),
+                ...(reasoningContext !== undefined ? { reasoningContext } : {}),
               } satisfies ResponsesProviderMetadata,
             };
 
@@ -2113,6 +2209,8 @@ export class OpenAIResponsesLanguageModel implements LanguageModelV3 {
       request: { body },
       response: { headers: responseHeaders },
     };
+
+    return result;
   }
 }
 
@@ -2120,6 +2218,50 @@ function isTextDeltaChunk(
   chunk: OpenAIResponsesChunk,
 ): chunk is OpenAIResponsesChunk & { type: 'response.output_text.delta' } {
   return chunk.type === 'response.output_text.delta';
+}
+
+function isOpenAIChatCompletionChunk(value: unknown): boolean {
+  const chunk = asRecord(value);
+
+  return (
+    chunk != null &&
+    Array.isArray(chunk.choices) &&
+    typeof chunk.type !== 'string'
+  );
+}
+
+function createOpenAIResponsesChatCompletionsMismatchError({
+  value,
+  cause,
+  url,
+  requestBodyValues,
+  responseHeaders,
+}: {
+  value: unknown;
+  cause: unknown;
+  url: string;
+  requestBodyValues: unknown;
+  responseHeaders?: Record<string, string>;
+}): APICallError {
+  return new APICallError({
+    message:
+      'Received a Chat Completions stream while using the OpenAI Responses API. ' +
+      "The default OpenAI provider model uses the Responses API. If your custom baseURL targets a Chat Completions-compatible endpoint, use openai.chat('model-id') or createOpenAI(...).chat('model-id') instead. " +
+      'You can also use @ai-sdk/openai-compatible for OpenAI-compatible providers.',
+    url,
+    requestBodyValues,
+    responseHeaders,
+    responseBody: JSON.stringify(value),
+    cause,
+    data: value,
+    isRetryable: false,
+  });
+}
+
+function asRecord(value: unknown): Record<string, unknown> | undefined {
+  return typeof value === 'object' && value != null
+    ? (value as Record<string, unknown>)
+    : undefined;
 }
 
 function isResponseOutputItemDoneChunk(
@@ -2222,6 +2364,15 @@ function isErrorChunk(
   return chunk.type === 'error';
 }
 
+function isResponseOutputChunk(chunk: OpenAIResponsesChunk): boolean {
+  return !(
+    chunk.type === 'response.created' ||
+    chunk.type === 'response.failed' ||
+    chunk.type === 'error' ||
+    chunk.type === 'unknown_chunk'
+  );
+}
+
 function mapWebSearchOutput(
   action: OpenAIResponsesWebSearchAction | null | undefined,
 ): InferSchema<typeof webSearchOutputSchema> {
@@ -2232,7 +2383,11 @@ function mapWebSearchOutput(
   switch (action.type) {
     case 'search':
       return {
-        action: { type: 'search', query: action.query ?? undefined },
+        action: {
+          type: 'search',
+          query: action.query ?? undefined,
+          ...(action.queries != null && { queries: action.queries }),
+        },
         // include sources when provided by the Responses API (behind include flag)
         ...(action.sources != null && { sources: action.sources }),
       };

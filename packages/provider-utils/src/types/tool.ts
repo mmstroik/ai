@@ -1,8 +1,8 @@
-import { JSONValue } from '@ai-sdk/provider';
-import { FlexibleSchema } from '../schema';
-import { ToolResultOutput } from './content-part';
-import { ModelMessage } from './model-message';
-import { ProviderOptions } from './provider-options';
+import type { JSONValue, JSONObject } from '@ai-sdk/provider';
+import type { FlexibleSchema } from '../schema';
+import type { ToolResultOutput } from './content-part';
+import type { ModelMessage } from './model-message';
+import type { ProviderOptions } from './provider-options';
 
 /**
  * Additional options that are sent into each tool call.
@@ -129,6 +129,17 @@ export type Tool<
   providerOptions?: ProviderOptions;
 
   /**
+   * Optional metadata about the tool itself (e.g. its source).
+   *
+   * Unlike `providerOptions`, this metadata is not sent to the language
+   * model. Instead, it is propagated onto the resulting tool call's
+   * `toolMetadata` so consumers can read it from tool call / result parts
+   * and UI message parts. This is useful for sources of dynamic tools (e.g.
+   * an MCP server) to identify themselves.
+   */
+  metadata?: JSONObject;
+
+  /**
    * The schema of the input that the tool expects.
    * The language model will use this to generate the input.
    * It is also used to validate the output of the language model.
@@ -160,8 +171,8 @@ export type Tool<
   strict?: boolean;
 
   /**
-   * Optional function that is called when the argument streaming starts.
-   * Only called when the tool is used in a streaming context.
+   * Optional function that is called when the model starts generating the tool input.
+   * In non-streaming contexts, it is called immediately before `onInputAvailable`.
    */
   onInputStart?: (options: ToolExecutionOptions) => void | PromiseLike<void>;
 
@@ -187,6 +198,8 @@ export type Tool<
      * Optional conversion function that maps the tool result to an output that can be used by the language model.
      *
      * If not provided, the tool result will be sent as a JSON object.
+     *
+     * This function is invoked on the server by `convertToModelMessages`, so ensure that you pass the same "tools" (ToolSet) to both "convertToModelMessages" and "streamText" (or other generation APIs).
      */
     toModelOutput?: (options: {
       /**
@@ -288,6 +301,7 @@ export function dynamicTool(tool: {
   description?: string;
   title?: string;
   providerOptions?: ProviderOptions;
+  metadata?: JSONObject;
   inputSchema: FlexibleSchema<unknown>;
   execute: ToolExecuteFunction<unknown, unknown>;
 

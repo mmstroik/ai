@@ -1,5 +1,664 @@
 # ai
 
+## 6.0.242
+
+### Patch Changes
+
+- Updated dependencies [f615718]
+- Updated dependencies [48d5dff]
+  - @ai-sdk/gateway@3.0.164
+
+## 6.0.241
+
+### Patch Changes
+
+- Updated dependencies [7e50c52]
+  - @ai-sdk/gateway@3.0.163
+
+## 6.0.240
+
+### Patch Changes
+
+- Updated dependencies [b28367e]
+  - @ai-sdk/gateway@3.0.162
+
+## 6.0.239
+
+### Patch Changes
+
+- Updated dependencies [d3d9e0b]
+  - @ai-sdk/gateway@3.0.161
+
+## 6.0.238
+
+### Patch Changes
+
+- 9ecdefe: Prevent validated downloads on Node.js from reaching private or internal services through DNS aliases or DNS rebinding by validating and pinning every resolved address at connection time.
+- 26d10c0: support overriding model call settings for individual `prepareStep` invocations
+- 7767170: Preserve provider metadata from empty text deltas in `streamText`.
+- Updated dependencies [9ecdefe]
+- Updated dependencies [87fb433]
+  - @ai-sdk/provider-utils@4.0.41
+  - @ai-sdk/gateway@3.0.160
+
+## 6.0.237
+
+### Patch Changes
+
+- f6020d7: Avoid synthesizing client tool errors for invalid provider-executed tool calls.
+- Updated dependencies [de438f5]
+  - @ai-sdk/gateway@3.0.159
+
+## 6.0.236
+
+### Patch Changes
+
+- Updated dependencies [8418710]
+  - @ai-sdk/gateway@3.0.158
+
+## 6.0.235
+
+### Patch Changes
+
+- Updated dependencies [5d7b986]
+  - @ai-sdk/gateway@3.0.157
+
+## 6.0.234
+
+### Patch Changes
+
+- 1efdef8: fix(ai): bound media-type sniffing decode for ID3-prefixed input
+
+  Media-type detection stripped ID3 tags before the ~18-byte prefix cap, decoding the entire base64 attachment (plus a full-size copy) whenever the data began with `ID3`/`SUQz`. This turned the intended O(1) sniff into an O(N) decode of the whole attachment. Detection now decodes at most a bounded prefix and skips the ID3 tag within that bound, keeping cost O(1) in input size on all paths (image, audio, and combined).
+
+- 49414cf: Return response piping promises so callers can catch stream read and write errors.
+- Updated dependencies [e7d064f]
+  - @ai-sdk/gateway@3.0.156
+
+## 6.0.233
+
+### Patch Changes
+
+- fe410e7: fix: detect MP4 audio from its ftyp box during transcription
+- af7188c: fix(ai): preserve tool parts when tool call IDs repeat across steps
+- Updated dependencies [a09f944]
+  - @ai-sdk/gateway@3.0.155
+
+## 6.0.232
+
+### Patch Changes
+
+- 7644a61: Preserve provider options when combining consecutive tool messages.
+
+## 6.0.231
+
+### Patch Changes
+
+- 926f5a0: Allow UI message chunks to include fields added by newer server versions.
+- 4c5a22f: Propagate abort reasons when generation is cancelled during tool execution.
+- 842a383: Prevent tools excluded by `activeTools` from being parsed or executed.
+- Updated dependencies [2dd1aab]
+- Updated dependencies [e567091]
+  - @ai-sdk/gateway@3.0.154
+
+## 6.0.230
+
+### Patch Changes
+
+- 19093fd: fix(ai): call `onInputStart` before `onInputAvailable` during non-streaming tool calls
+- Updated dependencies [19093fd]
+  - @ai-sdk/provider-utils@4.0.40
+  - @ai-sdk/gateway@3.0.153
+
+## 6.0.229
+
+### Patch Changes
+
+- Updated dependencies [49a3098]
+  - @ai-sdk/gateway@3.0.152
+
+## 6.0.228
+
+### Patch Changes
+
+- Updated dependencies [5e624ac]
+  - @ai-sdk/gateway@3.0.151
+
+## 6.0.227
+
+### Patch Changes
+
+- 6ace546: Fix chat `onFinish` handling when overlapping requests clear the active response before a resume stream finishes.
+
+## 6.0.226
+
+### Patch Changes
+
+- 94219a2: Allow validating assistant UI messages with empty parts so persisted errored responses remain loadable.
+- b1be847: Prevent pending tool executions from enqueueing results after a model stream error closes the result stream.
+- Updated dependencies [06fb54c]
+- Updated dependencies [bc46977]
+  - @ai-sdk/provider-utils@4.0.39
+  - @ai-sdk/gateway@3.0.150
+
+## 6.0.225
+
+### Patch Changes
+
+- Updated dependencies [7c48ed8]
+  - @ai-sdk/gateway@3.0.149
+
+## 6.0.224
+
+### Patch Changes
+
+- Updated dependencies [982aa3e]
+  - @ai-sdk/gateway@3.0.148
+
+## 6.0.223
+
+### Patch Changes
+
+- Updated dependencies [a452291]
+  - @ai-sdk/gateway@3.0.147
+
+## 6.0.222
+
+### Patch Changes
+
+- e1af05f: feat (video): support video (not just image) reference inputs in `inputReferences` for reference-to-video generation
+- Updated dependencies [2bfb16a]
+- Updated dependencies [34b5acc]
+- Updated dependencies [e1af05f]
+- Updated dependencies [1ce0d1c]
+  - @ai-sdk/gateway@3.0.146
+  - @ai-sdk/provider@3.0.14
+  - @ai-sdk/provider-utils@4.0.38
+
+## 6.0.221
+
+### Patch Changes
+
+- 2958540: fix(ui): export `isDynamicToolUIPart` from `ai` package
+- aa2dbe6: Fix: `convertToModelMessages` no longer emits an empty assistant message when a block contains only unknown data parts (e.g. a data part before `step-start` with no `convertDataPart` provided)
+- faaef7c: fix(ai): enforce `timeout.stepMs` for the whole step in `streamText`
+
+  Previously `streamText`'s step timer was cleared synchronously right after the step's stream was registered, before the stream produced anything, so `stepMs` never aborted a step that stalled before emitting content. The step timer now survives until the step's stream finishes or aborts, matching `generateText`. `chunkMs`/`totalMs` and normal step-finish cleanup are unchanged.
+
+- 45a9cbf: Return validated elements from generateText array output
+- 2706461: fix(ai): include tool input on tool result for provider executed dynamic tools
+- 327642b: fix: more precise default message for tool execution denial
+- 89df298: Preserve signed tool approval metadata when recording approval responses.
+- 8ed1f83: fix(ai): tag step/chunk timeout aborts with `TimeoutError` reason
+
+  When `timeout: { stepMs }` or `timeout: { chunkMs }` fires, the abort reason is now a `TimeoutError` `DOMException`, matching what `AbortSignal.timeout()` produces natively. Consumers can distinguish a framework timeout from a user-initiated cancel via `signal.reason.name === 'TimeoutError'`.
+
+- Updated dependencies [d559de9]
+- Updated dependencies [9c54a9f]
+- Updated dependencies [bbc4bd5]
+  - @ai-sdk/provider-utils@4.0.37
+  - @ai-sdk/gateway@3.0.145
+
+## 6.0.220
+
+### Patch Changes
+
+- 158d027: Sort tool results by their tool call order when converting generation output to response messages.
+- eb3cdd9: Fix `extractJsonMiddleware` preserving leading whitespace in the final streamed text suffix when no markdown fence prefix was stripped.
+- Updated dependencies [7dea716]
+- Updated dependencies [4f7fe37]
+- Updated dependencies [0952964]
+  - @ai-sdk/gateway@3.0.144
+  - @ai-sdk/provider-utils@4.0.36
+
+## 6.0.219
+
+### Patch Changes
+
+- Updated dependencies [8fbadac]
+  - @ai-sdk/gateway@3.0.143
+
+## 6.0.218
+
+### Patch Changes
+
+- ea1e95b: feat(mcp): add maxRetries option for failed mcp tool calls
+- Updated dependencies [ea1e95b]
+  - @ai-sdk/provider-utils@4.0.35
+  - @ai-sdk/gateway@3.0.142
+
+## 6.0.217
+
+### Patch Changes
+
+- fa850e6: feat (video): add first-class `frameImages` and `inputReferences` call options for video generation
+- Updated dependencies [95bc6fd]
+- Updated dependencies [f6b2159]
+- Updated dependencies [fa850e6]
+  - @ai-sdk/gateway@3.0.141
+  - @ai-sdk/provider@3.0.13
+  - @ai-sdk/provider-utils@4.0.34
+
+## 6.0.216
+
+### Patch Changes
+
+- Updated dependencies [f6689df]
+- Updated dependencies [13b6a72]
+  - @ai-sdk/gateway@3.0.140
+
+## 6.0.215
+
+### Patch Changes
+
+- f66ac32: fix(ai): prune orphaned tool-approval responses in `pruneMessages`
+
+  When pruning a specific tool by name (`toolCalls: [{ type, tools: [...] }]`), `pruneMessages` left the tool's `tool-approval-response` in place while removing its `tool-approval-request` and `tool-call`. The tool name of an approval response was resolved per-message, but approval responses live in a separate `tool` message from their approval request, so the name could never be resolved and the response was always kept. Tool name resolution is now done across all messages, so approval requests and responses are pruned together.
+
+## 6.0.214
+
+### Patch Changes
+
+- Updated dependencies [b30e43a]
+  - @ai-sdk/provider-utils@4.0.33
+  - @ai-sdk/gateway@3.0.139
+
+## 6.0.213
+
+### Patch Changes
+
+- f19334d: feat (video): add first-class `generateAudio` call option
+- Updated dependencies [fb601aa]
+- Updated dependencies [f19334d]
+  - @ai-sdk/gateway@3.0.138
+  - @ai-sdk/provider@3.0.12
+  - @ai-sdk/provider-utils@4.0.32
+
+## 6.0.212
+
+### Patch Changes
+
+- Updated dependencies [932c680]
+  - @ai-sdk/gateway@3.0.137
+
+## 6.0.211
+
+### Patch Changes
+
+- Updated dependencies [6ce12b0]
+- Updated dependencies [4cb4414]
+  - @ai-sdk/gateway@3.0.136
+
+## 6.0.210
+
+### Patch Changes
+
+- 1b40ac7: Publish all packages under the `@ai-v6` dist tag.
+- Updated dependencies [1b40ac7]
+  - @ai-sdk/gateway@3.0.135
+  - @ai-sdk/provider-utils@4.0.31
+  - @ai-sdk/provider@3.0.11
+
+## 6.0.209
+
+### Patch Changes
+
+- d102dff: Sanitize OpenTelemetry array attributes so spans no longer emit invalid OTLP values (arrays containing `undefined`/`null`/objects, or arrays mixing primitive types). For example, `gen_ai.response.finish_reasons` could be emitted as `[undefined]` when a finish reason was missing. Such values previously failed telemetry ingestion with `deserializing message invalid value: map, expected map with a single key` and flooded function logs with errors.
+- Updated dependencies [709c0fa]
+  - @ai-sdk/gateway@3.0.134
+
+## 6.0.208
+
+### Patch Changes
+
+- 8261640: fix(ai): handle partial unicode escapes in fixJson
+- f994df3: Serialize `undefined` tool output to `null` in UI message chunks
+
+## 6.0.207
+
+### Patch Changes
+
+- 779f5cd: fix(provider-utils): cancel response body on download rejection to prevent socket leak
+
+  When a download was rejected early — because the `Content-Length` header exceeded the size limit, the response status was not ok, or a redirect resolved to a blocked URL — the fetch response body was left unconsumed and uncancelled. With WHATWG Fetch/undici this leaves the underlying TCP socket open instead of returning it to the connection pool, allowing an attacker-controlled origin to exhaust file descriptors and cause a denial of service. The body is now cancelled on all early-rejection paths in `readResponseWithSizeLimit`, `download`, and `downloadBlob`, and `fetchWithValidatedRedirects` cancels each redirect hop's body before following or rejecting the next hop.
+
+- Updated dependencies [5bfde36]
+- Updated dependencies [779f5cd]
+  - @ai-sdk/gateway@3.0.133
+  - @ai-sdk/provider-utils@4.0.30
+
+## 6.0.206
+
+### Patch Changes
+
+- Updated dependencies [e962dda]
+  - @ai-sdk/gateway@3.0.132
+
+## 6.0.205
+
+### Patch Changes
+
+- Updated dependencies [6160ced]
+- Updated dependencies [c9b8abd]
+  - @ai-sdk/gateway@3.0.131
+
+## 6.0.204
+
+### Patch Changes
+
+- Updated dependencies [c5d4716]
+  - @ai-sdk/gateway@3.0.130
+
+## 6.0.203
+
+### Patch Changes
+
+- f42aa79: fix: harden download URL SSRF guard against hostname and redirect bypasses
+
+  `validateDownloadUrl` and the file download helpers (`downloadBlob`, `download`) could be bypassed in several ways when handling untrusted URLs:
+
+  - A fully-qualified hostname with a trailing dot (e.g. `localhost.`, `myhost.local.`) skipped the localhost/`.local` blocklist.
+  - IPv6 addresses that embed an IPv4 address in their last 32 bits — IPv4-compatible (`::127.0.0.1`), IPv4-translated (`::ffff:0:127.0.0.1`), and NAT64 (`64:ff9b::127.0.0.1`, including the `64:ff9b:1::/48` local-use prefix) — were not decoded and checked against the private IPv4 ranges.
+  - Redirects were validated only _after_ `fetch` had already followed them, so the request to a redirect target (e.g. an internal/metadata address) had already been issued before the check ran.
+  - Several reserved/internal address ranges were not blocked: CGNAT (`100.64.0.0/10`, used by some cloud providers for internal traffic), benchmarking (`198.18.0.0/15`), IETF protocol assignments (`192.0.0.0/24`), the reserved `240.0.0.0/4` block (including the `255.255.255.255` broadcast address), and IPv6 site-local (`fec0::/10`) and multicast (`ff00::/8`).
+
+  The validator now strips trailing dots before the hostname checks and fully expands IPv6 addresses to detect embedded private IPv4 targets. The download helpers now follow redirects manually (`redirect: 'manual'`), re-validating each hop before requesting it, so an unsafe redirect target is never fetched. When a redirect cannot be inspected because the runtime returns an opaque response, the helpers fail closed (reject the redirect) on the server; only in a real browser — where SSRF is not reachable (fetch is constrained by CORS and cannot reach a server's internal network or cloud-metadata endpoints) — is the redirect followed natively so legitimate redirected downloads keep working.
+
+- 5291f7e: Harden stream text processing and middleware against prototype pollution from stream part IDs.
+- b4b575a: fix: redact server error details from UI message streams by default
+
+  `streamText(...).toUIMessageStream()` and `createUIMessageStream` defaulted their `onError` callback to `getErrorMessage`, which serializes the raw error (`error.toString()` / `JSON.stringify(error)`) into the client-facing `{ type: 'error', errorText }` chunk — and also into `tool-output-error` parts. The documented default was `() => 'An error occurred.'`, so applications relying on the documented behavior were unknowingly streaming server exception details (internal hostnames, paths, provider request data, validation inputs) to end users.
+
+  The default `onError` now returns the documented generic `'An error occurred.'`. Raw error details are only emitted when the developer explicitly supplies an `onError` handler. This also redacts `tool-output-error` and invalid-tool-input error text by default; pass an `onError` to surface richer messages.
+
+- Updated dependencies [bfa5864]
+- Updated dependencies [f42aa79]
+  - @ai-sdk/provider-utils@4.0.29
+  - @ai-sdk/gateway@3.0.129
+
+## 6.0.202
+
+### Patch Changes
+
+- 942f2f8: fix(security): re-validate tool approvals from client message history before execution
+
+  The approval-replay path in `generateText`/`streamText` reconstructed approved tool calls from the client-supplied messages array and executed them without re-validating input against the tool's schema or re-checking that the tool actually requires approval. A client could forge an assistant message with a pre-approved tool-call part and have the server execute a tool with attacker-chosen arguments.
+
+  The replay path now verifies the HMAC signature (when `experimental_toolApprovalSecret` is configured), re-validates tool-call input against the tool's input schema, and re-resolves whether the tool requires approval before execution.
+
+- Updated dependencies [942f2f8]
+  - @ai-sdk/provider-utils@4.0.28
+  - @ai-sdk/gateway@3.0.128
+
+## 6.0.201
+
+### Patch Changes
+
+- 0c8c0ed: fix(ai): return schema-transformed elements in array output mode
+
+  Previously final array output validation checked each element against the schema but returned the raw model output. Array output now returns the validated values so Zod transforms, coercions, defaults, and pipes are applied consistently with object output.
+
+## 6.0.200
+
+### Patch Changes
+
+- 14098e7: fix(ai): reject `streamText` result promises with `NoOutputGeneratedError` when the model stream ends without producing any output. Previously such streams resolved with an empty step. Incomplete streams with partial output still resolve with the partial result.
+- 2cabe9c: Harden UI message stream processing against prototype pollution from chunk IDs.
+
+## 6.0.199
+
+### Patch Changes
+
+- 49d9364: fix(ai): add approval guard for denied tool outputs
+- Updated dependencies [3851e29]
+- Updated dependencies [2a91a17]
+  - @ai-sdk/gateway@3.0.127
+
+## 6.0.198
+
+### Patch Changes
+
+- Updated dependencies [ff16d3b]
+  - @ai-sdk/gateway@3.0.126
+
+## 6.0.197
+
+### Patch Changes
+
+- Updated dependencies [fef3b24]
+  - @ai-sdk/gateway@3.0.125
+
+## 6.0.196
+
+### Patch Changes
+
+- Updated dependencies [286b7a2]
+  - @ai-sdk/gateway@3.0.124
+
+## 6.0.195
+
+### Patch Changes
+
+- Updated dependencies [537a022]
+  - @ai-sdk/gateway@3.0.123
+
+## 6.0.194
+
+### Patch Changes
+
+- Updated dependencies [9766034]
+  - @ai-sdk/gateway@3.0.122
+
+## 6.0.193
+
+### Patch Changes
+
+- af580ea: fix(ai): do not re-validate tool input for output-error parts in validateUIMessages
+
+## 6.0.192
+
+### Patch Changes
+
+- Updated dependencies [4084fcd]
+  - @ai-sdk/gateway@3.0.121
+
+## 6.0.191
+
+### Patch Changes
+
+- Updated dependencies [27a1b22]
+  - @ai-sdk/gateway@3.0.120
+
+## 6.0.190
+
+### Patch Changes
+
+- Updated dependencies [33b10a2]
+- Updated dependencies [f6e4146]
+  - @ai-sdk/gateway@3.0.119
+
+## 6.0.189
+
+### Patch Changes
+
+- 356c3cf: fix(ai): make input optional on input-streaming UIMessagePart variants
+
+## 6.0.188
+
+### Patch Changes
+
+- c98715a: Add `allowSystemInMessages` option to `ToolLoopAgent`.
+
+  This exposes the same option that exists on `streamText` and `generateText`, whether `role: "system"` messages are allowed in the `prompt` or `messages` fields. When unset, system messages are rejected because they can create a prompt injection attack risk. Ideally, use the `instructions` option instead. Set to `true` to allow system messages, or `false` to explicitly reject them.
+
+  ```ts
+  const agent = new ToolLoopAgent({
+    model,
+    allowSystemInMessages: true,
+  });
+
+  await agent.generate({
+    messages: [
+      { role: "system", content: "Server context" },
+      { role: "user", content: "Hello" },
+    ],
+  });
+  ```
+
+  The option can also be returned from `prepareCall` for dynamic per-call configuration.
+
+## 6.0.187
+
+### Patch Changes
+
+- Updated dependencies [6f4bb06]
+  - @ai-sdk/gateway@3.0.118
+
+## 6.0.186
+
+### Patch Changes
+
+- Updated dependencies [756fec1]
+  - @ai-sdk/gateway@3.0.117
+
+## 6.0.185
+
+### Patch Changes
+
+- Updated dependencies [488ef33]
+  - @ai-sdk/gateway@3.0.116
+
+## 6.0.184
+
+### Patch Changes
+
+- 40fc5e4: fix(ai): default missing embedding warnings to an empty array
+
+## 6.0.183
+
+### Patch Changes
+
+- Updated dependencies [363cefe]
+  - @ai-sdk/gateway@3.0.115
+
+## 6.0.182
+
+### Patch Changes
+
+- e76a29a: fix(ai): download tool-result file URLs
+
+## 6.0.181
+
+### Patch Changes
+
+- 538974a: fix(ui): make `input` optional on `output-error` tool and dynamic-tool UI message parts
+
+  `validateUIMessages` rejected persisted assistant messages whose `output-error` tool parts had no `input` key. This happened for any errored tool call where the SDK set `input: undefined` (e.g. `NoSuchToolError` / `InvalidToolInputError`): JSON serialization stripped the `undefined` value, and Zod 4.4+ treats a missing `z.unknown()` key as a validation failure (previously it was implicitly optional). The schema now matches the runtime shape produced by `process-ui-message-stream`, so reloading a thread that contains an errored tool call no longer throws `AI_TypeValidationError`.
+
+## 6.0.180
+
+### Patch Changes
+
+- 253bd5a: fix(gateway): enable retry support for gateway errors
+- 57ec10f: fix URL of hero animation in README
+- Updated dependencies [253bd5a]
+  - @ai-sdk/gateway@3.0.114
+
+## 6.0.179
+
+### Patch Changes
+
+- Updated dependencies [ee4de68]
+  - @ai-sdk/gateway@3.0.113
+
+## 6.0.178
+
+### Patch Changes
+
+- ac6f27e: fix(ai): update opentelemetry pinned version
+
+## 6.0.177
+
+### Patch Changes
+
+- Updated dependencies [5c73af8]
+  - @ai-sdk/gateway@3.0.112
+
+## 6.0.176
+
+### Patch Changes
+
+- f591416: feat(ai): add toolMetadata for tool specific metdata
+- Updated dependencies [f591416]
+  - @ai-sdk/provider-utils@4.0.27
+  - @ai-sdk/gateway@3.0.111
+
+## 6.0.175
+
+### Patch Changes
+
+- Updated dependencies [9a88b1d]
+  - @ai-sdk/gateway@3.0.110
+
+## 6.0.174
+
+### Patch Changes
+
+- Updated dependencies [49f6d44]
+  - @ai-sdk/gateway@3.0.109
+
+## 6.0.173
+
+### Patch Changes
+
+- 7beadf0: feat(mcp): propagate the server name through dynamic tool parts
+- Updated dependencies [7beadf0]
+  - @ai-sdk/provider-utils@4.0.26
+  - @ai-sdk/gateway@3.0.108
+
+## 6.0.172
+
+### Patch Changes
+
+- Updated dependencies [982af78]
+  - @ai-sdk/gateway@3.0.107
+
+## 6.0.171
+
+### Patch Changes
+
+- 48f842a: fix(ai): enforce `callOptionsSchema` at runtime in `ToolLoopAgent`
+
+  `ToolLoopAgentSettings.callOptionsSchema` was declared and documented as a runtime schema for `options`, but `tool-loop-agent.ts` never invoked it. Any invariant a developer encoded in the schema was silently bypassed at runtime, and unchecked `options` flowed straight into `prepareCall` and any `instructions` template that interpolated them.
+
+  `ToolLoopAgent.prepareCall` now validates caller-supplied `options` against `callOptionsSchema` (when set) via `safeValidateTypes`, throwing `InvalidArgumentError` on failure before forwarding to `prepareCall` / `generateText` / `streamText`.
+
+- a727da4: chore: ensure consistent import handling and avoid import duplicates or cycles
+- 5fee301: fix(mcp): prevent prototype pollution by using secureJsonParse
+- Updated dependencies [a727da4]
+  - @ai-sdk/provider-utils@4.0.25
+  - @ai-sdk/provider@3.0.10
+  - @ai-sdk/gateway@3.0.106
+
+## 6.0.170
+
+### Patch Changes
+
+- 19d587a: fix(ai): add allowSystemInMessages option and warn by default when system messages are found in prompt or messages
+
+## 6.0.169
+
+### Patch Changes
+
+- 2662bb5: skip validation for tool parts in terminal states when tool schema is no longer registered
+- a7f3c72: trigger release for all packages after provenance setup
+- Updated dependencies [a7f3c72]
+- Updated dependencies [4368079]
+- Updated dependencies [c71ad14]
+  - @ai-sdk/gateway@3.0.105
+  - @ai-sdk/provider@3.0.9
+  - @ai-sdk/provider-utils@4.0.24
+
 ## 6.0.168
 
 ### Patch Changes

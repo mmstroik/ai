@@ -1,6 +1,6 @@
 {
   "name": "@ai-sdk/baseten",
-  "version": "1.0.44",
+  "version": "1.1.0",
   "license": "Apache-2.0",
   "sideEffects": false,
   "main": "./dist/index.js",
@@ -44,10 +44,10 @@
   "dependencies": {
     "@ai-sdk/openai-compatible": "workspace:*",
     "@ai-sdk/provider": "workspace:*",
-    "@ai-sdk/provider-utils": "workspace:*",
-    "@basetenlabs/performance-client": "^0.0.10"
+    "@ai-sdk/provider-utils": "workspace:*"
   },
   "devDependencies": {
+    "@ai-sdk/test-server": "workspace:*",
     "@types/node": "20.17.24",
     "@vercel/ai-tsconfig": "workspace:*",
     "tsup": "^8",
@@ -66,7 +66,8 @@
   "homepage": "https://ai-sdk.dev/docs",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/vercel/ai.git"
+    "url": "https://github.com/vercel/ai",
+    "directory": "packages/baseten"
   },
   "bugs": {
     "url": "https://github.com/vercel/ai/issues"

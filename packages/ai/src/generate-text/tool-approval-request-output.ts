@@ -1,5 +1,5 @@
-import { TypedToolCall } from './tool-call';
-import { ToolSet } from './tool-set';
+import type { TypedToolCall } from './tool-call';
+import type { ToolSet } from './tool-set';
 
 /**
  * Output part that indicates that a tool approval request has been made.
@@ -18,4 +18,9 @@ export type ToolApprovalRequestOutput<TOOLS extends ToolSet> = {
    * Tool call that the approval request is for.
    */
   toolCall: TypedToolCall<TOOLS>;
+
+  /**
+   * HMAC-SHA256 signature binding this approval request to its tool call.
+   */
+  signature?: string;
 };

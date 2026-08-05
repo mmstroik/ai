@@ -1,39 +1,38 @@
 import {
-  APICallError,
   InvalidResponseDataError,
-  LanguageModelV3,
-  LanguageModelV3CallOptions,
-  LanguageModelV3Content,
-  LanguageModelV3FinishReason,
-  LanguageModelV3GenerateResult,
-  LanguageModelV3StreamPart,
-  LanguageModelV3StreamResult,
+  type APICallError,
+  type LanguageModelV3,
+  type LanguageModelV3CallOptions,
+  type LanguageModelV3Content,
+  type LanguageModelV3FinishReason,
+  type LanguageModelV3GenerateResult,
+  type LanguageModelV3StreamPart,
+  type LanguageModelV3StreamResult,
 } from '@ai-sdk/provider';
 import {
   combineHeaders,
   createEventSourceResponseHandler,
   createJsonErrorResponseHandler,
   createJsonResponseHandler,
-  FetchFunction,
   generateId,
-  InferSchema,
-  isParsableJson,
   parseProviderOptions,
-  ParseResult,
   postJsonToApi,
-  ResponseHandler,
+  type FetchFunction,
+  type InferSchema,
+  type ParseResult,
+  type ResponseHandler,
 } from '@ai-sdk/provider-utils';
 import { convertToDeepSeekChatMessages } from './convert-to-deepseek-chat-messages';
 import { convertDeepSeekUsage } from './convert-to-deepseek-usage';
 import {
   deepseekChatChunkSchema,
   deepseekChatResponseSchema,
-  DeepSeekChatTokenUsage,
   deepSeekErrorSchema,
+  type DeepSeekChatTokenUsage,
 } from './deepseek-chat-api-types';
 import {
-  DeepSeekChatModelId,
   deepseekLanguageModelOptions,
+  type DeepSeekChatModelId,
 } from './deepseek-chat-options';
 import { prepareTools } from './deepseek-prepare-tools';
 import { getResponseMetadata } from './get-response-metadata';
@@ -44,6 +43,8 @@ export type DeepSeekChatConfig = {
   headers: () => Record<string, string | undefined>;
   url: (options: { modelId: string; path: string }) => string;
   fetch?: FetchFunction;
+  supportsThinking?: boolean;
+  supportsStructuredOutputs?: boolean;
 };
 
 export class DeepSeekChatLanguageModel implements LanguageModelV3 {
@@ -96,9 +97,14 @@ export class DeepSeekChatLanguageModel implements LanguageModelV3 {
         schema: deepseekLanguageModelOptions,
       })) ?? {};
 
+    const supportsStructuredOutputs =
+      this.config.supportsStructuredOutputs === true;
+
     const { messages, warnings } = convertToDeepSeekChatMessages({
       prompt,
       responseFormat,
+      modelId: this.modelId,
+      supportsStructuredOutputs,
     });
 
     if (topK != null) {
@@ -118,6 +124,13 @@ export class DeepSeekChatLanguageModel implements LanguageModelV3 {
       toolChoice,
     });
 
+    const thinking =
+      this.config.supportsThinking === false
+        ? undefined
+        : deepseekOptions.thinking?.type != null
+          ? { type: deepseekOptions.thinking.type }
+          : undefined;
+
     return {
       args: {
         model: this.modelId,
@@ -127,15 +140,28 @@ export class DeepSeekChatLanguageModel implements LanguageModelV3 {
         frequency_penalty: frequencyPenalty,
         presence_penalty: presencePenalty,
         response_format:
-          responseFormat?.type === 'json' ? { type: 'json_object' } : undefined,
+          responseFormat?.type === 'json'
+            ? supportsStructuredOutputs && responseFormat.schema != null
+              ? {
+                  type: 'json_schema',
+                  json_schema: {
+                    schema: responseFormat.schema,
+                    strict: deepseekOptions.strictJsonSchema ?? true,
+                    name: responseFormat.name ?? 'response',
+                    description: responseFormat.description,
+                  },
+                }
+              : { type: 'json_object' }
+            : undefined,
         stop: stopSequences,
         messages,
         tools: deepseekTools,
         tool_choice: deepseekToolChoices,
-        thinking:
-          deepseekOptions.thinking?.type != null
-            ? { type: deepseekOptions.thinking.type }
-            : undefined,
+        thinking,
+        ...(thinking?.type !== 'disabled' &&
+          deepseekOptions.reasoningEffort != null && {
+            reasoning_effort: deepseekOptions.reasoningEffort,
+          }),
       },
       warnings: [...warnings, ...toolWarnings],
     };
@@ -421,23 +447,6 @@ export class DeepSeekChatLanguageModel implements LanguageModelV3 {
                         delta: toolCall.function.arguments,
                       });
                     }
-
-                    // check if tool call is complete
-                    // (some providers send the full tool call in one chunk):
-                    if (isParsableJson(toolCall.function.arguments)) {
-                      controller.enqueue({
-                        type: 'tool-input-end',
-                        id: toolCall.id,
-                      });
-
-                      controller.enqueue({
-                        type: 'tool-call',
-                        toolCallId: toolCall.id ?? generateId(),
-                        toolName: toolCall.function.name,
-                        input: toolCall.function.arguments,
-                      });
-                      toolCall.hasFinished = true;
-                    }
                   }
 
                   continue;
@@ -461,26 +470,6 @@ export class DeepSeekChatLanguageModel implements LanguageModelV3 {
                   id: toolCall.id,
                   delta: toolCallDelta.function.arguments ?? '',
                 });
-
-                // check if tool call is complete
-                if (
-                  toolCall.function?.name != null &&
-                  toolCall.function?.arguments != null &&
-                  isParsableJson(toolCall.function.arguments)
-                ) {
-                  controller.enqueue({
-                    type: 'tool-input-end',
-                    id: toolCall.id,
-                  });
-
-                  controller.enqueue({
-                    type: 'tool-call',
-                    toolCallId: toolCall.id ?? generateId(),
-                    toolName: toolCall.function.name,
-                    input: toolCall.function.arguments,
-                  });
-                  toolCall.hasFinished = true;
-                }
               }
             }
           },

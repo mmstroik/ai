@@ -1,5 +1,547 @@
 # @ai-sdk/google-vertex
 
+## 4.0.175
+
+### Patch Changes
+
+- Updated dependencies [0a295e3]
+  - @ai-sdk/anthropic@3.0.105
+
+## 4.0.174
+
+### Patch Changes
+
+- Updated dependencies [9ecdefe]
+  - @ai-sdk/provider-utils@4.0.41
+  - @ai-sdk/anthropic@3.0.104
+  - @ai-sdk/google@3.0.103
+  - @ai-sdk/openai-compatible@2.0.63
+
+## 4.0.173
+
+### Patch Changes
+
+- Updated dependencies [e728a98]
+  - @ai-sdk/google@3.0.102
+
+## 4.0.172
+
+### Patch Changes
+
+- Updated dependencies [7865a71]
+  - @ai-sdk/anthropic@3.0.103
+
+## 4.0.171
+
+### Patch Changes
+
+- Updated dependencies [326887b]
+  - @ai-sdk/google@3.0.101
+
+## 4.0.170
+
+### Patch Changes
+
+- Updated dependencies [b4c4426]
+- Updated dependencies [b4c4426]
+- Updated dependencies [b4c4426]
+  - @ai-sdk/anthropic@3.0.102
+
+## 4.0.169
+
+### Patch Changes
+
+- dae771a: feat(provider/google): default unknown Gemini model IDs to the newest supported capabilities
+- Updated dependencies [dae771a]
+- Updated dependencies [0608dca]
+  - @ai-sdk/google@3.0.100
+  - @ai-sdk/anthropic@3.0.101
+
+## 4.0.168
+
+### Patch Changes
+
+- Updated dependencies [2886d22]
+- Updated dependencies [b7afc80]
+  - @ai-sdk/google@3.0.99
+  - @ai-sdk/anthropic@3.0.100
+
+## 4.0.167
+
+### Patch Changes
+
+- a09f944: feat(google): add `gemini-3.6-flash` and `gemini-3.5-flash-lite` models
+- Updated dependencies [a09f944]
+  - @ai-sdk/google@3.0.98
+
+## 4.0.166
+
+### Patch Changes
+
+- Updated dependencies [db8cff6]
+- Updated dependencies [a6cb3c1]
+- Updated dependencies [94d0f86]
+  - @ai-sdk/anthropic@3.0.99
+  - @ai-sdk/google@3.0.97
+
+## 4.0.165
+
+### Patch Changes
+
+- Updated dependencies [0d51472]
+  - @ai-sdk/google@3.0.96
+
+## 4.0.164
+
+### Patch Changes
+
+- Updated dependencies [19093fd]
+- Updated dependencies [10366a2]
+  - @ai-sdk/provider-utils@4.0.40
+  - @ai-sdk/anthropic@3.0.98
+  - @ai-sdk/google@3.0.95
+  - @ai-sdk/openai-compatible@2.0.62
+
+## 4.0.163
+
+### Patch Changes
+
+- Updated dependencies [020836c]
+  - @ai-sdk/google@3.0.94
+
+## 4.0.162
+
+### Patch Changes
+
+- Updated dependencies [94fda5c]
+  - @ai-sdk/openai-compatible@2.0.61
+
+## 4.0.161
+
+### Patch Changes
+
+- Updated dependencies [cfba690]
+  - @ai-sdk/google@3.0.93
+
+## 4.0.160
+
+### Patch Changes
+
+- Updated dependencies [06fb54c]
+  - @ai-sdk/provider-utils@4.0.39
+  - @ai-sdk/anthropic@3.0.97
+  - @ai-sdk/google@3.0.92
+  - @ai-sdk/openai-compatible@2.0.60
+
+## 4.0.159
+
+### Patch Changes
+
+- e1af05f: feat (video): support video (not just image) reference inputs in `inputReferences` for reference-to-video generation
+- Updated dependencies [bbac4da]
+- Updated dependencies [3fda3bc]
+- Updated dependencies [e1af05f]
+  - @ai-sdk/google@3.0.91
+  - @ai-sdk/provider@3.0.14
+  - @ai-sdk/anthropic@3.0.96
+  - @ai-sdk/openai-compatible@2.0.59
+  - @ai-sdk/provider-utils@4.0.38
+
+## 4.0.158
+
+### Patch Changes
+
+- 1825ecc: Backport `vertex.interactions()` for the Gemini Interactions API on Vertex AI for AI SDK v6.
+- Updated dependencies [4d4e176]
+- Updated dependencies [bef93ae]
+- Updated dependencies [d559de9]
+- Updated dependencies [b585445]
+- Updated dependencies [1825ecc]
+- Updated dependencies [afee362]
+- Updated dependencies [327642b]
+  - @ai-sdk/openai-compatible@2.0.58
+  - @ai-sdk/provider-utils@4.0.37
+  - @ai-sdk/google@3.0.90
+  - @ai-sdk/anthropic@3.0.95
+
+## 4.0.157
+
+### Patch Changes
+
+- Updated dependencies [0952964]
+- Updated dependencies [764baab]
+- Updated dependencies [f0bfb31]
+  - @ai-sdk/anthropic@3.0.94
+  - @ai-sdk/google@3.0.89
+  - @ai-sdk/provider-utils@4.0.36
+  - @ai-sdk/openai-compatible@2.0.57
+
+## 4.0.156
+
+### Patch Changes
+
+- Updated dependencies [4241b49]
+  - @ai-sdk/anthropic@3.0.93
+
+## 4.0.155
+
+### Patch Changes
+
+- Updated dependencies [ea1e95b]
+  - @ai-sdk/provider-utils@4.0.35
+  - @ai-sdk/anthropic@3.0.92
+  - @ai-sdk/google@3.0.88
+  - @ai-sdk/openai-compatible@2.0.56
+
+## 4.0.154
+
+### Patch Changes
+
+- 95bc6fd: feat (provider/anthropic): add `claude-sonnet-5` model id
+- fa850e6: feat (video): add first-class `frameImages` and `inputReferences` call options for video generation
+- Updated dependencies [95bc6fd]
+- Updated dependencies [fa850e6]
+  - @ai-sdk/anthropic@3.0.91
+  - @ai-sdk/provider@3.0.13
+  - @ai-sdk/google@3.0.87
+  - @ai-sdk/openai-compatible@2.0.55
+  - @ai-sdk/provider-utils@4.0.34
+
+## 4.0.153
+
+### Patch Changes
+
+- Updated dependencies [28ff5a7]
+  - @ai-sdk/anthropic@3.0.90
+
+## 4.0.152
+
+### Patch Changes
+
+- Updated dependencies [b30e43a]
+  - @ai-sdk/provider-utils@4.0.33
+  - @ai-sdk/anthropic@3.0.89
+  - @ai-sdk/google@3.0.86
+  - @ai-sdk/openai-compatible@2.0.54
+
+## 4.0.151
+
+### Patch Changes
+
+- f19334d: feat (video): add first-class `generateAudio` call option
+- Updated dependencies [f19334d]
+  - @ai-sdk/provider@3.0.12
+  - @ai-sdk/anthropic@3.0.88
+  - @ai-sdk/google@3.0.85
+  - @ai-sdk/openai-compatible@2.0.53
+  - @ai-sdk/provider-utils@4.0.32
+
+## 4.0.150
+
+### Patch Changes
+
+- 1b40ac7: Publish all packages under the `@ai-v6` dist tag.
+- Updated dependencies [1b40ac7]
+  - @ai-sdk/anthropic@3.0.87
+  - @ai-sdk/google@3.0.84
+  - @ai-sdk/openai-compatible@2.0.52
+  - @ai-sdk/provider-utils@4.0.31
+  - @ai-sdk/provider@3.0.11
+
+## 4.0.149
+
+### Patch Changes
+
+- Updated dependencies [6086c60]
+  - @ai-sdk/anthropic@3.0.86
+
+## 4.0.148
+
+### Patch Changes
+
+- 402f7ca: Route `gemini-embedding-2` / `gemini-embedding-2-preview` to the `:embedContent` endpoint, which is the only one those models support (`:predict` returns 400 FAILED_PRECONDITION)
+
+## 4.0.147
+
+### Patch Changes
+
+- 454d804: feat(provider/google-vertex): add Google Cloud Speech-to-Text transcription model support
+
+## 4.0.146
+
+### Patch Changes
+
+- Updated dependencies [779f5cd]
+  - @ai-sdk/provider-utils@4.0.30
+  - @ai-sdk/anthropic@3.0.85
+  - @ai-sdk/google@3.0.83
+  - @ai-sdk/openai-compatible@2.0.51
+
+## 4.0.145
+
+### Patch Changes
+
+- Updated dependencies [3258f22]
+- Updated dependencies [bfa5864]
+- Updated dependencies [f42aa79]
+  - @ai-sdk/google@3.0.82
+  - @ai-sdk/provider-utils@4.0.29
+  - @ai-sdk/anthropic@3.0.84
+  - @ai-sdk/openai-compatible@2.0.50
+
+## 4.0.144
+
+### Patch Changes
+
+- Updated dependencies [942f2f8]
+  - @ai-sdk/provider-utils@4.0.28
+  - @ai-sdk/anthropic@3.0.83
+  - @ai-sdk/google@3.0.81
+  - @ai-sdk/openai-compatible@2.0.49
+
+## 4.0.143
+
+### Patch Changes
+
+- 2a91a17: feat(provider/anthropic): add support for `claude-fable-5` and the `fallbacks` API parameter
+- Updated dependencies [2a91a17]
+  - @ai-sdk/anthropic@3.0.82
+
+## 4.0.142
+
+### Patch Changes
+
+- 099de46: fix(google-vertex): support regional endpoints for vertex MaaS
+
+## 4.0.141
+
+### Patch Changes
+
+- 8584f2e: fix(vertex-anthropic): support eu/us multi-region anthropic endpoints
+- e96b286: fix(google-vertex): support for eu/us multi region gemini endpoints
+
+## 4.0.140
+
+### Patch Changes
+
+- 4084fcd: feat(provider/anthropic): add support for `claude-opus-4-8`
+- Updated dependencies [4084fcd]
+  - @ai-sdk/anthropic@3.0.81
+
+## 4.0.139
+
+### Patch Changes
+
+- Updated dependencies [f62ffe0]
+  - @ai-sdk/google@3.0.80
+
+## 4.0.138
+
+### Patch Changes
+
+- Updated dependencies [263d3e6]
+  - @ai-sdk/anthropic@3.0.80
+
+## 4.0.137
+
+### Patch Changes
+
+- Updated dependencies [e40e1d4]
+  - @ai-sdk/openai-compatible@2.0.48
+
+## 4.0.136
+
+### Patch Changes
+
+- Updated dependencies [d61a788]
+  - @ai-sdk/anthropic@3.0.79
+
+## 4.0.135
+
+### Patch Changes
+
+- Updated dependencies [cfa0cb2]
+  - @ai-sdk/google@3.0.79
+
+## 4.0.134
+
+### Patch Changes
+
+- Updated dependencies [cf63828]
+  - @ai-sdk/google@3.0.78
+
+## 4.0.133
+
+### Patch Changes
+
+- Updated dependencies [0f9f9bf]
+  - @ai-sdk/google@3.0.77
+
+## 4.0.132
+
+### Patch Changes
+
+- 756fec1: feat(provider/google): add `gemini-3.5-flash`
+- Updated dependencies [f259bd1]
+- Updated dependencies [756fec1]
+  - @ai-sdk/google@3.0.76
+
+## 4.0.131
+
+### Patch Changes
+
+- 00bd77f: fix(google-vertex): propagate project-id set in provider instance creation
+
+## 4.0.130
+
+### Patch Changes
+
+- Updated dependencies [ab15576]
+  - @ai-sdk/google@3.0.75
+
+## 4.0.129
+
+### Patch Changes
+
+- Updated dependencies [3ca0daa]
+- Updated dependencies [6e28d25]
+  - @ai-sdk/google@3.0.74
+  - @ai-sdk/anthropic@3.0.78
+
+## 4.0.128
+
+### Patch Changes
+
+- Updated dependencies [bb1eb98]
+  - @ai-sdk/google@3.0.73
+
+## 4.0.127
+
+### Patch Changes
+
+- Updated dependencies [d53314d]
+  - @ai-sdk/anthropic@3.0.77
+
+## 4.0.126
+
+### Patch Changes
+
+- Updated dependencies [b3642fe]
+  - @ai-sdk/google@3.0.72
+
+## 4.0.125
+
+### Patch Changes
+
+- Updated dependencies [59530cf]
+  - @ai-sdk/google@3.0.71
+
+## 4.0.124
+
+### Patch Changes
+
+- Updated dependencies [4f3f564]
+  - @ai-sdk/google@3.0.70
+
+## 4.0.123
+
+### Patch Changes
+
+- Updated dependencies [f591416]
+- Updated dependencies [bb377ba]
+  - @ai-sdk/provider-utils@4.0.27
+  - @ai-sdk/google@3.0.69
+  - @ai-sdk/anthropic@3.0.76
+  - @ai-sdk/openai-compatible@2.0.47
+
+## 4.0.122
+
+### Patch Changes
+
+- Updated dependencies [e0f8c9e]
+  - @ai-sdk/google@3.0.68
+
+## 4.0.121
+
+### Patch Changes
+
+- Updated dependencies [3f06680]
+  - @ai-sdk/anthropic@3.0.75
+
+## 4.0.120
+
+### Patch Changes
+
+- 5859749: fix(google-vertex): include CJS output for xai sub-module build
+
+## 4.0.119
+
+### Patch Changes
+
+- Updated dependencies [38966ab]
+  - @ai-sdk/openai-compatible@2.0.46
+
+## 4.0.118
+
+### Patch Changes
+
+- 7452642: fix(provider/google-vertex): avoid recreating Node GoogleAuth clients for repeated requests
+
+  Create Google auth token generators per provider instance instead of using a
+  module-level shared `GoogleAuth` cache. This avoids unnecessary `GoogleAuth`
+  recreation when `googleAuthOptions` are omitted or when multiple provider
+  instances use equivalent auth settings.
+
+## 4.0.117
+
+### Patch Changes
+
+- 6043d24: feat(vertex): add grok models to vertex provider
+- Updated dependencies [6043d24]
+  - @ai-sdk/openai-compatible@2.0.45
+
+## 4.0.116
+
+### Patch Changes
+
+- Updated dependencies [7beadf0]
+  - @ai-sdk/provider-utils@4.0.26
+  - @ai-sdk/anthropic@3.0.74
+  - @ai-sdk/google@3.0.67
+  - @ai-sdk/openai-compatible@2.0.44
+
+## 4.0.115
+
+### Patch Changes
+
+- 7639240: feat(provider/google-vertex): allow overriding Vertex Anthropic auth token generation
+
+## 4.0.114
+
+### Patch Changes
+
+- a727da4: chore: ensure consistent import handling and avoid import duplicates or cycles
+- Updated dependencies [f8c9ae4]
+- Updated dependencies [a727da4]
+  - @ai-sdk/anthropic@3.0.73
+  - @ai-sdk/openai-compatible@2.0.43
+  - @ai-sdk/provider-utils@4.0.25
+  - @ai-sdk/provider@3.0.10
+  - @ai-sdk/google@3.0.66
+
+## 4.0.113
+
+### Patch Changes
+
+- a7f3c72: trigger release for all packages after provenance setup
+- Updated dependencies [a7f3c72]
+- Updated dependencies [408a2ad]
+  - @ai-sdk/anthropic@3.0.72
+  - @ai-sdk/google@3.0.65
+  - @ai-sdk/openai-compatible@2.0.42
+  - @ai-sdk/provider@3.0.9
+  - @ai-sdk/provider-utils@4.0.24
+
 ## 4.0.112
 
 ### Patch Changes

@@ -1,6 +1,7 @@
 import {
   AISDKError,
   type Experimental_VideoModelV3,
+  type Experimental_VideoModelV3File,
   type SharedV3Warning,
 } from '@ai-sdk/provider';
 import {
@@ -121,6 +122,94 @@ interface ByteDanceVideoModelConfig extends ByteDanceConfig {
   };
 }
 
+function getFirstFrameImage(
+  options: Parameters<Experimental_VideoModelV3['doGenerate']>[0],
+): Experimental_VideoModelV3File | undefined {
+  return options.frameImages?.find(frame => frame.frameType === 'first_frame')
+    ?.image;
+}
+
+function resolveStartImage(
+  options: Parameters<Experimental_VideoModelV3['doGenerate']>[0],
+): Experimental_VideoModelV3File | undefined {
+  return getFirstFrameImage(options) ?? options.image;
+}
+
+function getTopLevelMediaType(mediaType: string): string {
+  const slashIndex = mediaType.indexOf('/');
+  return slashIndex === -1 ? mediaType : mediaType.substring(0, slashIndex);
+}
+
+const isVideoFile = (f: Experimental_VideoModelV3File) =>
+  f.mediaType != null && getTopLevelMediaType(f.mediaType) === 'video';
+
+function resolveReferenceContent(
+  options: Parameters<Experimental_VideoModelV3['doGenerate']>[0],
+  byteDanceOptions: ByteDanceVideoProviderOptions | undefined,
+  warnings: SharedV3Warning[],
+): Array<Record<string, unknown>> {
+  if (options.frameImages != null && options.frameImages.length > 0) {
+    return [];
+  }
+
+  const inputReferences = options.inputReferences;
+
+  if (inputReferences != null && inputReferences.length > 0) {
+    return inputReferences.map(reference => {
+      if (reference.type === 'url' && reference.mediaType == null) {
+        warnings.push({
+          type: 'unsupported',
+          feature: 'inputReferences',
+          details:
+            'ByteDance requires an explicit mediaType to route URL references as ' +
+            'video or image. Pass { data: url, mediaType: "video/mp4" } for video ' +
+            'references. The reference was treated as an image.',
+        });
+      }
+
+      const url = convertImageModelFileToDataUri(reference);
+      return isVideoFile(reference)
+        ? { type: 'video_url', video_url: { url }, role: 'reference_video' }
+        : { type: 'image_url', image_url: { url }, role: 'reference_image' };
+    });
+  }
+
+  const content: Array<Record<string, unknown>> = [];
+
+  for (const imageUrl of byteDanceOptions?.referenceImages ?? []) {
+    content.push({
+      type: 'image_url',
+      image_url: { url: imageUrl },
+      role: 'reference_image',
+    });
+  }
+
+  for (const videoUrl of byteDanceOptions?.referenceVideos ?? []) {
+    content.push({
+      type: 'video_url',
+      video_url: { url: videoUrl },
+      role: 'reference_video',
+    });
+  }
+
+  return content;
+}
+
+function resolveLastFrameImage(
+  options: Parameters<Experimental_VideoModelV3['doGenerate']>[0],
+  byteDanceOptions: ByteDanceVideoProviderOptions | undefined,
+): string | undefined {
+  const lastFrame = options.frameImages?.find(
+    frame => frame.frameType === 'last_frame',
+  )?.image;
+
+  if (lastFrame != null) {
+    return convertImageModelFileToDataUri(lastFrame);
+  }
+
+  return byteDanceOptions?.lastFrameImage ?? undefined;
+}
+
 export class ByteDanceVideoModel implements Experimental_VideoModelV3 {
   readonly specificationVersion = 'v3';
   readonly maxVideosPerCall = 1;
@@ -175,48 +264,33 @@ export class ByteDanceVideoModel implements Experimental_VideoModelV3 {
       });
     }
 
-    if (options.image != null) {
+    const startImage = resolveStartImage(options);
+    const lastFrameImageUrl = resolveLastFrameImage(options, byteDanceOptions);
+    const referenceContent = resolveReferenceContent(
+      options,
+      byteDanceOptions,
+      warnings,
+    );
+
+    if (startImage != null) {
       content.push({
         type: 'image_url',
-        image_url: { url: convertImageModelFileToDataUri(options.image) },
+        image_url: { url: convertImageModelFileToDataUri(startImage) },
+        ...(lastFrameImageUrl != null ? { role: 'first_frame' } : {}),
       });
     }
 
     // Add last frame image if provided
-    if (byteDanceOptions?.lastFrameImage != null) {
+    if (lastFrameImageUrl != null) {
       content.push({
         type: 'image_url',
-        image_url: { url: byteDanceOptions.lastFrameImage },
+        image_url: { url: lastFrameImageUrl },
         role: 'last_frame',
       });
     }
 
-    // Add reference images if provided
-    if (
-      byteDanceOptions?.referenceImages != null &&
-      byteDanceOptions.referenceImages.length > 0
-    ) {
-      for (const imageUrl of byteDanceOptions.referenceImages) {
-        content.push({
-          type: 'image_url',
-          image_url: { url: imageUrl },
-          role: 'reference_image',
-        });
-      }
-    }
-
-    // Add reference videos if provided
-    if (
-      byteDanceOptions?.referenceVideos != null &&
-      byteDanceOptions.referenceVideos.length > 0
-    ) {
-      for (const videoUrl of byteDanceOptions.referenceVideos) {
-        content.push({
-          type: 'video_url',
-          video_url: { url: videoUrl },
-          role: 'reference_video',
-        });
-      }
+    for (const entry of referenceContent) {
+      content.push(entry);
     }
 
     // Add reference audio if provided
@@ -259,12 +333,15 @@ export class ByteDanceVideoModel implements Experimental_VideoModelV3 {
       }
     }
 
+    const generateAudio =
+      options.generateAudio ?? byteDanceOptions?.generateAudio;
+    if (generateAudio != null) {
+      body.generate_audio = generateAudio;
+    }
+
     if (byteDanceOptions != null) {
       if (byteDanceOptions.watermark != null) {
         body.watermark = byteDanceOptions.watermark;
-      }
-      if (byteDanceOptions.generateAudio != null) {
-        body.generate_audio = byteDanceOptions.generateAudio;
       }
       if (byteDanceOptions.cameraFixed != null) {
         body.camera_fixed = byteDanceOptions.cameraFixed;

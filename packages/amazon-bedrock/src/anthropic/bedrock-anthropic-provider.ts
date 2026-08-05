@@ -1,28 +1,32 @@
 import {
-  LanguageModelV3,
   NoSuchModelError,
-  ProviderV3,
+  type LanguageModelV3,
+  type ProviderV3,
 } from '@ai-sdk/provider';
 import {
-  FetchFunction,
   loadOptionalSetting,
   loadSetting,
-  Resolvable,
   resolve,
   withoutTrailingSlash,
   withUserAgentSuffix,
+  type FetchFunction,
+  type Resolvable,
 } from '@ai-sdk/provider-utils';
 import {
   anthropicTools,
   AnthropicMessagesLanguageModel,
 } from '@ai-sdk/anthropic/internal';
 import {
-  BedrockCredentials,
   createApiKeyFetchFunction,
   createSigV4FetchFunction,
+  type BedrockCredentials,
 } from '../bedrock-sigv4-fetch';
+import {
+  supportsNativeStructuredOutput,
+  supportsStrictTools,
+} from '../bedrock-anthropic-model-support';
 import { createBedrockAnthropicFetch } from './bedrock-anthropic-fetch';
-import { BedrockAnthropicModelId } from './bedrock-anthropic-options';
+import type { BedrockAnthropicModelId } from './bedrock-anthropic-options';
 import { VERSION } from '../version';
 
 // Bedrock requires newer tool versions than the default Anthropic SDK versions
@@ -272,41 +276,52 @@ export function createBedrockAnthropic(
             : undefined;
 
         const requiredBetas = new Set<string>(betas);
-        const transformedTools = tools?.map((tool: Record<string, unknown>) => {
-          const toolType = tool.type as string | undefined;
-
-          if (toolType && toolType in BEDROCK_TOOL_VERSION_MAP) {
-            const newType =
-              BEDROCK_TOOL_VERSION_MAP[
-                toolType as keyof typeof BEDROCK_TOOL_VERSION_MAP
-              ];
-            if (newType in BEDROCK_TOOL_BETA_MAP) {
-              requiredBetas.add(BEDROCK_TOOL_BETA_MAP[newType]);
+        const transformedTools = tools?.map(
+          (rawTool: Record<string, unknown>) => {
+            // Bedrock rejects the per-tool eager_input_streaming field even when
+            // the fine-grained-tool-streaming beta is declared, but the beta alone
+            // enables the same behavior, so translate the field into the beta
+            const { eager_input_streaming: eagerInputStreaming, ...tool } =
+              rawTool;
+            if (eagerInputStreaming === true) {
+              requiredBetas.add('fine-grained-tool-streaming-2025-05-14');
             }
-            const newName =
-              newType in BEDROCK_TOOL_NAME_MAP
-                ? BEDROCK_TOOL_NAME_MAP[newType]
-                : tool.name;
-            return {
-              ...tool,
-              type: newType,
-              name: newName,
-            };
-          }
 
-          if (toolType && toolType in BEDROCK_TOOL_BETA_MAP) {
-            requiredBetas.add(BEDROCK_TOOL_BETA_MAP[toolType]);
-          }
+            const toolType = tool.type as string | undefined;
 
-          if (toolType && toolType in BEDROCK_TOOL_NAME_MAP) {
-            return {
-              ...tool,
-              name: BEDROCK_TOOL_NAME_MAP[toolType],
-            };
-          }
+            if (toolType && toolType in BEDROCK_TOOL_VERSION_MAP) {
+              const newType =
+                BEDROCK_TOOL_VERSION_MAP[
+                  toolType as keyof typeof BEDROCK_TOOL_VERSION_MAP
+                ];
+              if (newType in BEDROCK_TOOL_BETA_MAP) {
+                requiredBetas.add(BEDROCK_TOOL_BETA_MAP[newType]);
+              }
+              const newName =
+                newType in BEDROCK_TOOL_NAME_MAP
+                  ? BEDROCK_TOOL_NAME_MAP[newType]
+                  : tool.name;
+              return {
+                ...tool,
+                type: newType,
+                name: newName,
+              };
+            }
 
-          return tool;
-        });
+            if (toolType && toolType in BEDROCK_TOOL_BETA_MAP) {
+              requiredBetas.add(BEDROCK_TOOL_BETA_MAP[toolType]);
+            }
+
+            if (toolType && toolType in BEDROCK_TOOL_NAME_MAP) {
+              return {
+                ...tool,
+                name: BEDROCK_TOOL_NAME_MAP[toolType],
+              };
+            }
+
+            return tool;
+          },
+        );
 
         return {
           ...rest,
@@ -323,8 +338,8 @@ export function createBedrockAnthropic(
 
       // Bedrock Anthropic doesn't support URL sources, force download and base64 conversion
       supportedUrls: () => ({}),
-      // native structured output via output_config.format is supported on Bedrock
-      supportsNativeStructuredOutput: true,
+      supportsNativeStructuredOutput: supportsNativeStructuredOutput(modelId),
+      supportsStrictTools: supportsStrictTools(modelId),
     });
 
   const provider = function (modelId: BedrockAnthropicModelId) {

@@ -1,22 +1,26 @@
-import { CallWarning, FinishReason, ProviderMetadata } from '../types';
-import { Source } from '../types/language-model';
-import { LanguageModelRequestMetadata } from '../types/language-model-request-metadata';
-import { LanguageModelResponseMetadata } from '../types/language-model-response-metadata';
-import { LanguageModelUsage } from '../types/usage';
-import { ContentPart } from './content-part';
-import { GeneratedFile } from './generated-file';
-import { Output } from './output';
-import { InferCompleteOutput } from './output-utils';
-import { ReasoningOutput } from './reasoning-output';
-import { ResponseMessage } from './response-message';
-import { StepResult } from './step-result';
-import { DynamicToolCall, StaticToolCall, TypedToolCall } from './tool-call';
-import {
+import type { CallWarning, FinishReason, ProviderMetadata } from '../types';
+import type { Source } from '../types/language-model';
+import type { LanguageModelRequestMetadata } from '../types/language-model-request-metadata';
+import type { LanguageModelResponseMetadata } from '../types/language-model-response-metadata';
+import type { LanguageModelUsage } from '../types/usage';
+import type { ContentPart } from './content-part';
+import type { GeneratedFile } from './generated-file';
+import type { Output } from './output';
+import type { InferCompleteOutput } from './output-utils';
+import type { ReasoningOutput } from './reasoning-output';
+import type { ResponseMessage } from './response-message';
+import type { StepResult } from './step-result';
+import type {
+  DynamicToolCall,
+  StaticToolCall,
+  TypedToolCall,
+} from './tool-call';
+import type {
   DynamicToolResult,
   StaticToolResult,
   TypedToolResult,
 } from './tool-result';
-import { ToolSet } from './tool-set';
+import type { ToolSet } from './tool-set';
 
 /**
  * The result of a `generateText` call.
@@ -32,7 +36,9 @@ export interface GenerateTextResult<
   readonly content: Array<ContentPart<TOOLS>>;
 
   /**
-   * The text that was generated in the last step.
+   * The concatenation of all text parts generated in the final step.
+   * It is an empty string if the final step contains no text parts.
+   * Inspect `content` for a text part to distinguish that case.
    */
   readonly text: string;
 
@@ -161,8 +167,10 @@ export interface GenerateTextResult<
   readonly experimental_output: InferCompleteOutput<OUTPUT>;
 
   /**
-   * The generated structured output. It uses the `output` specification.
+   * The generated output according to the `output` specification.
    *
+   * @throws {NoOutputGeneratedError} When no output is available, for example
+   * when the final step does not finish with a `stop` reason.
    */
   readonly output: InferCompleteOutput<OUTPUT>;
 }

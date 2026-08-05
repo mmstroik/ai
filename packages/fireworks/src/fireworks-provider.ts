@@ -2,37 +2,47 @@ import {
   OpenAICompatibleChatLanguageModel,
   OpenAICompatibleCompletionLanguageModel,
   OpenAICompatibleEmbeddingModel,
-  ProviderErrorStructure,
+  type ProviderErrorStructure,
 } from '@ai-sdk/openai-compatible';
-import {
+import type {
   EmbeddingModelV3,
   ImageModelV3,
   LanguageModelV3,
   ProviderV3,
 } from '@ai-sdk/provider';
 import {
-  FetchFunction,
   loadApiKey,
   withoutTrailingSlash,
   withUserAgentSuffix,
+  type FetchFunction,
 } from '@ai-sdk/provider-utils';
 import { z } from 'zod/v4';
-import { FireworksChatModelId } from './fireworks-chat-options';
-import { FireworksCompletionModelId } from './fireworks-completion-options';
-import { FireworksEmbeddingModelId } from './fireworks-embedding-options';
+import type { FireworksChatModelId } from './fireworks-chat-options';
+import type { FireworksCompletionModelId } from './fireworks-completion-options';
+import type { FireworksEmbeddingModelId } from './fireworks-embedding-options';
 import { FireworksImageModel } from './fireworks-image-model';
-import { FireworksImageModelId } from './fireworks-image-options';
+import type { FireworksImageModelId } from './fireworks-image-options';
 import { VERSION } from './version';
 
 export type FireworksErrorData = z.infer<typeof fireworksErrorSchema>;
 
 const fireworksErrorSchema = z.object({
-  error: z.string(),
+  error: z.union([
+    z.string(),
+    z.object({
+      message: z.string(),
+      object: z.string().nullish(),
+      type: z.string().nullish(),
+      param: z.any().nullish(),
+      code: z.union([z.string(), z.number()]).nullish(),
+    }),
+  ]),
 });
 
 const fireworksErrorStructure: ProviderErrorStructure<FireworksErrorData> = {
   errorSchema: fireworksErrorSchema,
-  errorToMessage: data => data.error,
+  errorToMessage: data =>
+    typeof data.error === 'string' ? data.error : data.error.message,
 };
 
 export interface FireworksProviderSettings {
@@ -134,17 +144,32 @@ export function createFireworks(
   const createChatModel = (modelId: FireworksChatModelId) => {
     return new OpenAICompatibleChatLanguageModel(modelId, {
       ...getCommonModelConfig('chat'),
+      includeUsage: true,
       errorStructure: fireworksErrorStructure,
       transformRequestBody: args => {
         const thinking = args.thinking as
           | { type?: string; budgetTokens?: number }
           | undefined;
         const reasoningHistory = args.reasoningHistory as string | undefined;
+        const promptCacheKey = args.promptCacheKey as string | undefined;
+        const serviceTier = args.serviceTier as string | undefined;
 
-        const { thinking: _, reasoningHistory: __, ...rest } = args;
+        const {
+          thinking: _,
+          reasoningHistory: __,
+          promptCacheKey: ___,
+          serviceTier: ____,
+          ...rest
+        } = args;
 
         return {
           ...rest,
+          ...(promptCacheKey !== undefined && {
+            prompt_cache_key: promptCacheKey,
+          }),
+          ...(serviceTier !== undefined && {
+            service_tier: serviceTier,
+          }),
           ...(thinking && {
             thinking: {
               type: thinking.type,
@@ -164,6 +189,7 @@ export function createFireworks(
   const createCompletionModel = (modelId: FireworksCompletionModelId) =>
     new OpenAICompatibleCompletionLanguageModel(modelId, {
       ...getCommonModelConfig('completion'),
+      includeUsage: true,
       errorStructure: fireworksErrorStructure,
     });
 

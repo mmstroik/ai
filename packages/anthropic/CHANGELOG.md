@@ -1,5 +1,248 @@
 # @ai-sdk/anthropic
 
+## 3.0.105
+
+### Patch Changes
+
+- 0a295e3: Preserve Anthropic prompt-cache matches by replaying complete code-execution transcripts in their original wire shape.
+
+## 3.0.104
+
+### Patch Changes
+
+- Updated dependencies [9ecdefe]
+  - @ai-sdk/provider-utils@4.0.41
+
+## 3.0.103
+
+### Patch Changes
+
+- 7865a71: fix(anthropic): report thinking tokens as reasoning token usage
+
+## 3.0.102
+
+### Patch Changes
+
+- b4c4426: feat (provider/anthropic): support fallbacks 'default' mode, which routes safety classifier refusals to Anthropic's recommended fallback model (adds the server-side-fallback-2026-07-01 beta automatically)
+- b4c4426: feat (provider/anthropic): support mid-conversation tool changes via the toolChanges system message provider option, emitting tool_addition/tool_removal content blocks and the mid-conversation-tool-changes-2026-07-01 beta
+- b4c4426: feat (provider/anthropic): add claude-opus-5 model id with frontier-tier capabilities (128k output tokens, structured output, adaptive thinking, xhigh effort, sampling parameter rejection, thinking-disabled only at effort high or below)
+
+## 3.0.101
+
+### Patch Changes
+
+- 0608dca: fix (provider/anthropic): use current-generation capability defaults for unrecognized Claude model IDs while retaining conservative defaults for legacy Claude and non-Claude models.
+
+## 3.0.100
+
+### Patch Changes
+
+- b7afc80: Warn when an unknown model uses the default 4096 max output token limit.
+
+## 3.0.99
+
+### Patch Changes
+
+- db8cff6: fix(amazon-bedrock): sanitize unsupported JSON Schema constraints in native Anthropic structured output
+- 94d0f86: fix(provider/anthropic): warn when parallel tool use is requested with JSON tool structured output
+
+## 3.0.98
+
+### Patch Changes
+
+- 10366a2: fix(provider/anthropic): preserve web search citations when replaying assistant messages
+- Updated dependencies [19093fd]
+  - @ai-sdk/provider-utils@4.0.40
+
+## 3.0.97
+
+### Patch Changes
+
+- Updated dependencies [06fb54c]
+  - @ai-sdk/provider-utils@4.0.39
+
+## 3.0.96
+
+### Patch Changes
+
+- Updated dependencies [e1af05f]
+  - @ai-sdk/provider@3.0.14
+  - @ai-sdk/provider-utils@4.0.38
+
+## 3.0.95
+
+### Patch Changes
+
+- 327642b: fix: more precise default message for tool execution denial
+- Updated dependencies [d559de9]
+  - @ai-sdk/provider-utils@4.0.37
+
+## 3.0.94
+
+### Patch Changes
+
+- 0952964: Prevent prototype pollution when synchronously parsing provider JSON inputs and expose `secureJsonParse` from provider-utils.
+- 764baab: Normalize a bare `https://api.anthropic.com` base URL to include `/v1`.
+- Updated dependencies [0952964]
+  - @ai-sdk/provider-utils@4.0.36
+
+## 3.0.93
+
+### Patch Changes
+
+- 4241b49: fix(anthropic): forward `thinking: { type: 'disabled' }` to the API instead of stripping it
+
+  Previously, setting `providerOptions.anthropic.thinking = { type: 'disabled' }` was accepted by the schema but silently dropped from the outgoing request. For models that default thinking on (e.g. Sonnet 5), this left thinking enabled and could consume a small `max_tokens` budget entirely. The `disabled` value is now sent to the Anthropic Messages API.
+
+## 3.0.92
+
+### Patch Changes
+
+- Updated dependencies [ea1e95b]
+  - @ai-sdk/provider-utils@4.0.35
+
+## 3.0.91
+
+### Patch Changes
+
+- 95bc6fd: feat (provider/anthropic): add `claude-sonnet-5` model id
+- Updated dependencies [fa850e6]
+  - @ai-sdk/provider@3.0.13
+  - @ai-sdk/provider-utils@4.0.34
+
+## 3.0.90
+
+### Patch Changes
+
+- 28ff5a7: fix(anthropic): correctly map delta type when code execution tools are used
+
+## 3.0.89
+
+### Patch Changes
+
+- Updated dependencies [b30e43a]
+  - @ai-sdk/provider-utils@4.0.33
+
+## 3.0.88
+
+### Patch Changes
+
+- Updated dependencies [f19334d]
+  - @ai-sdk/provider@3.0.12
+  - @ai-sdk/provider-utils@4.0.32
+
+## 3.0.87
+
+### Patch Changes
+
+- 1b40ac7: Publish all packages under the `@ai-v6` dist tag.
+- Updated dependencies [1b40ac7]
+  - @ai-sdk/provider-utils@4.0.31
+  - @ai-sdk/provider@3.0.11
+
+## 3.0.86
+
+### Patch Changes
+
+- 6086c60: fix(anthropic): reorder assistant content b/w client and provider tool use
+
+## 3.0.85
+
+### Patch Changes
+
+- Updated dependencies [779f5cd]
+  - @ai-sdk/provider-utils@4.0.30
+
+## 3.0.84
+
+### Patch Changes
+
+- Updated dependencies [bfa5864]
+- Updated dependencies [f42aa79]
+  - @ai-sdk/provider-utils@4.0.29
+
+## 3.0.83
+
+### Patch Changes
+
+- Updated dependencies [942f2f8]
+  - @ai-sdk/provider-utils@4.0.28
+
+## 3.0.82
+
+### Patch Changes
+
+- 2a91a17: feat(provider/anthropic): add support for `claude-fable-5` and the `fallbacks` API parameter
+
+## 3.0.81
+
+### Patch Changes
+
+- 4084fcd: feat(provider/anthropic): add support for `claude-opus-4-8`
+
+## 3.0.80
+
+### Patch Changes
+
+- 263d3e6: fix(provider/anthropic): fix remaining errors with Anthropic `code_execution` tool dynamic calls from latest `web_fetch` or `web_search`
+
+## 3.0.79
+
+### Patch Changes
+
+- d61a788: Handle errors from anthropic websearch tool
+
+## 3.0.78
+
+### Patch Changes
+
+- 6e28d25: fix(anthropic): propagate toModelOutput providerOption to anthropic tool results
+
+## 3.0.77
+
+### Patch Changes
+
+- d53314d: feat(anthropic): add the new advisor tool
+
+## 3.0.76
+
+### Patch Changes
+
+- Updated dependencies [f591416]
+  - @ai-sdk/provider-utils@4.0.27
+
+## 3.0.75
+
+### Patch Changes
+
+- 3f06680: Remove stale `effort-2025-11-24` beta header — the extended thinking effort parameter is GA and no longer requires the beta flag. Vertex AI's strict validator was actively rejecting requests with this header.
+
+## 3.0.74
+
+### Patch Changes
+
+- Updated dependencies [7beadf0]
+  - @ai-sdk/provider-utils@4.0.26
+
+## 3.0.73
+
+### Patch Changes
+
+- f8c9ae4: feat(anthropic): sanitize the unsupported JSON schema validation properties
+- a727da4: chore: ensure consistent import handling and avoid import duplicates or cycles
+- Updated dependencies [a727da4]
+  - @ai-sdk/provider-utils@4.0.25
+  - @ai-sdk/provider@3.0.10
+
+## 3.0.72
+
+### Patch Changes
+
+- a7f3c72: trigger release for all packages after provenance setup
+- Updated dependencies [a7f3c72]
+  - @ai-sdk/provider@3.0.9
+  - @ai-sdk/provider-utils@4.0.24
+
 ## 3.0.71
 
 ### Patch Changes

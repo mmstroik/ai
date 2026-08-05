@@ -5,16 +5,18 @@ on:
     types: [opened]
 
 permissions:
-  pull-requests: write
+  contents: read
 
 jobs:
   assign:
     runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
     # Only assign pull requests by team members, ignore pull requests from forks
     # And only assign if pull request was created by a user, ignore bots
     if: github.event.pull_request.head.repo.full_name == github.repository && github.event.pull_request.user.type == 'User'
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
       - name: Assign pull request to author
         run: gh pr edit $PULL_REQUEST_URL --add-assignee $AUTHOR_LOGIN
         env:

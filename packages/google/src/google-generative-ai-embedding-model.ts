@@ -1,22 +1,22 @@
 import {
-  EmbeddingModelV3,
   TooManyEmbeddingValuesForCallError,
+  type EmbeddingModelV3,
 } from '@ai-sdk/provider';
 import {
   combineHeaders,
   createJsonResponseHandler,
-  FetchFunction,
   lazySchema,
   parseProviderOptions,
   postJsonToApi,
   resolve,
   zodSchema,
+  type FetchFunction,
 } from '@ai-sdk/provider-utils';
 import { z } from 'zod/v4';
 import { googleFailedResponseHandler } from './google-error';
 import {
-  GoogleGenerativeAIEmbeddingModelId,
   googleEmbeddingModelOptions,
+  type GoogleGenerativeAIEmbeddingModelId,
 } from './google-generative-ai-embedding-options';
 
 type GoogleGenerativeAIEmbeddingConfig = {
@@ -29,7 +29,7 @@ type GoogleGenerativeAIEmbeddingConfig = {
 export class GoogleGenerativeAIEmbeddingModel implements EmbeddingModelV3 {
   readonly specificationVersion = 'v3';
   readonly modelId: GoogleGenerativeAIEmbeddingModelId;
-  readonly maxEmbeddingsPerCall = 2048;
+  readonly maxEmbeddingsPerCall = 100;
   readonly supportsParallelCalls = true;
 
   private readonly config: GoogleGenerativeAIEmbeddingConfig;

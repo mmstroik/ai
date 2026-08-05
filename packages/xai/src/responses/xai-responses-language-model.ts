@@ -1,4 +1,4 @@
-import {
+import type {
   LanguageModelV3,
   LanguageModelV3CallOptions,
   LanguageModelV3Content,
@@ -13,25 +13,25 @@ import {
   combineHeaders,
   createEventSourceResponseHandler,
   createJsonResponseHandler,
-  FetchFunction,
   parseProviderOptions,
-  ParseResult,
   postJsonToApi,
+  type FetchFunction,
+  type ParseResult,
 } from '@ai-sdk/provider-utils';
-import { z } from 'zod/v4';
+import type { z } from 'zod/v4';
 import { getResponseMetadata } from '../get-response-metadata';
 import { xaiFailedResponseHandler } from '../xai-error';
 import { convertToXaiResponsesInput } from './convert-to-xai-responses-input';
 import { convertXaiResponsesUsage } from './convert-xai-responses-usage';
 import { mapXaiResponsesFinishReason } from './map-xai-responses-finish-reason';
 import {
-  XaiResponsesIncludeOptions,
   xaiResponsesChunkSchema,
   xaiResponsesResponseSchema,
+  type XaiResponsesIncludeOptions,
 } from './xai-responses-api';
 import {
-  XaiResponsesModelId,
   xaiLanguageModelResponsesOptions,
+  type XaiResponsesModelId,
 } from './xai-responses-options';
 import { prepareResponsesTools } from './xai-responses-prepare-tools';
 
@@ -61,6 +61,11 @@ export class XaiResponsesLanguageModel implements LanguageModelV3 {
 
   readonly supportedUrls: Record<string, RegExp[]> = {
     'image/*': [/^https?:\/\/.*$/],
+    // xAI's Responses API accepts non-image documents (PDF, plain text, CSV, etc.) as
+    // `{ type: 'input_file', file_url }`. Keeping these URLs intact here lets them pass
+    // through to the converter instead of being downloaded to bytes by the SDK.
+    'application/pdf': [/^https?:\/\/.*$/],
+    'text/*': [/^https?:\/\/.*$/],
   };
 
   private async getArgs({
@@ -68,6 +73,9 @@ export class XaiResponsesLanguageModel implements LanguageModelV3 {
     maxOutputTokens,
     temperature,
     topP,
+    topK,
+    frequencyPenalty,
+    presencePenalty,
     stopSequences,
     seed,
     responseFormat,
@@ -83,6 +91,18 @@ export class XaiResponsesLanguageModel implements LanguageModelV3 {
         providerOptions,
         schema: xaiLanguageModelResponsesOptions,
       })) ?? {};
+
+    if (topK != null) {
+      warnings.push({ type: 'unsupported', feature: 'topK' });
+    }
+
+    if (frequencyPenalty != null) {
+      warnings.push({ type: 'unsupported', feature: 'frequencyPenalty' });
+    }
+
+    if (presencePenalty != null) {
+      warnings.push({ type: 'unsupported', feature: 'presencePenalty' });
+    }
 
     if (stopSequences != null) {
       warnings.push({ type: 'unsupported', feature: 'stopSequences' });
@@ -362,11 +382,14 @@ export class XaiResponsesLanguageModel implements LanguageModelV3 {
         }
 
         case 'reasoning': {
-          const summaryTexts = part.summary
-            .map(s => s.text)
-            .filter(text => text && text.length > 0);
+          const texts =
+            part.summary.length > 0
+              ? part.summary.map(s => s.text)
+              : (part.content ?? []).map(c => c.text);
 
-          const reasoningText = summaryTexts.join('');
+          const reasoningText = texts
+            .filter(text => text && text.length > 0)
+            .join('');
 
           // condition changed here since encrypted content can now come with empty reasoning text
           if (reasoningText || part.encrypted_content) {
@@ -511,16 +534,18 @@ export class XaiResponsesLanguageModel implements LanguageModelV3 {
             if (event.type === 'response.reasoning_summary_part.added') {
               const blockId = `reasoning-${event.item_id}`;
 
-              activeReasoning[event.item_id] = {};
-              controller.enqueue({
-                type: 'reasoning-start',
-                id: blockId,
-                providerMetadata: {
-                  xai: {
-                    itemId: event.item_id,
+              if (activeReasoning[event.item_id] == null) {
+                activeReasoning[event.item_id] = {};
+                controller.enqueue({
+                  type: 'reasoning-start',
+                  id: blockId,
+                  providerMetadata: {
+                    xai: {
+                      itemId: event.item_id,
+                    },
                   },
-                },
-              });
+                });
+              }
             }
 
             if (event.type === 'response.reasoning_summary_text.delta') {
@@ -888,6 +913,15 @@ export class XaiResponsesLanguageModel implements LanguageModelV3 {
                     toolName,
                     input: toolInput,
                     providerExecuted: true,
+                  });
+                }
+
+                if (event.type === 'response.output_item.done') {
+                  controller.enqueue({
+                    type: 'tool-result',
+                    toolCallId: part.id,
+                    toolName,
+                    result: {},
                   });
                 }
 

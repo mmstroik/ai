@@ -1,4 +1,8 @@
-import { InferSchema, lazySchema, zodSchema } from '@ai-sdk/provider-utils';
+import {
+  lazySchema,
+  zodSchema,
+  type InferSchema,
+} from '@ai-sdk/provider-utils';
 import { z } from 'zod/v4';
 
 // https://vercel.com/docs/ai-gateway/provider-options
@@ -74,12 +78,6 @@ const gatewayProviderOptions = lazySchema(() =>
        */
       disallowPromptTraining: z.boolean().optional(),
       /**
-       * Whether to filter by only providers that are HIPAA compliant with
-       * Vercel AI Gateway. When enabled, only providers that have agreements
-       * with Vercel AI Gateway for HIPAA compliance will be used.
-       */
-      hipaaCompliant: z.boolean().optional(),
-      /**
        * The unique identifier for the entity against which quota is tracked.
        *
        * Used for quota management and enforcement purposes.
@@ -97,6 +95,35 @@ const gatewayProviderOptions = lazySchema(() =>
           byok: z.record(z.string(), z.number().int().min(1000)).optional(),
         })
         .optional(),
+      /**
+       * Unified service tier intent. Translated by the gateway into the
+       * per-provider option each provider expects, and overrides any tier
+       * also set in the per-provider options. Leave unset for provider
+       * default.
+       */
+      serviceTier: z.enum(['flex', 'priority']).optional(),
+      /**
+       * Enables automatic prompt caching across providers. When set to
+       * `'auto'`, the gateway applies the appropriate caching strategy for
+       * the routed provider: it adds a `cache_control` breakpoint to static
+       * content for providers that require explicit markers (such as
+       * Anthropic), while providers with implicit caching cache
+       * automatically. Leave unset to pass requests through unmodified.
+       */
+      caching: z.literal('auto').optional(),
+      /**
+       * Restrict routing to provider models that have all of the given
+       * capabilities:
+       *
+       * - `'implicit-caching'`: models that perform automatic (implicit)
+       *   prompt caching
+       * - `'vision'`: models that accept image input
+       *
+       * The capability is a property of the model, so the filter applies to
+       * both BYOK and system credentials. If no provider model for the
+       * requested model satisfies the capabilities, the request fails.
+       */
+      has: z.array(z.enum(['implicit-caching', 'vision'])).optional(),
     }),
   ),
 );

@@ -1,5 +1,302 @@
 # @ai-sdk/google
 
+## 3.0.103
+
+### Patch Changes
+
+- Updated dependencies [9ecdefe]
+  - @ai-sdk/provider-utils@4.0.41
+
+## 3.0.102
+
+### Patch Changes
+
+- e728a98: Forward `topK` through Google Interactions requests and warn when unsupported frequency or presence penalties are provided.
+
+## 3.0.101
+
+### Patch Changes
+
+- 326887b: fix(google): omit unsupported function call IDs
+
+## 3.0.100
+
+### Patch Changes
+
+- dae771a: feat(provider/google): default unknown Gemini model IDs to the newest supported capabilities
+
+## 3.0.99
+
+### Patch Changes
+
+- 2886d22: Avoid missing thought-signature warnings and skip-validator injection for valid unsigned Gemini 3 parallel function calls in the same model response.
+
+## 3.0.98
+
+### Patch Changes
+
+- a09f944: feat(google): add `gemini-3.6-flash` and `gemini-3.5-flash-lite` models
+
+## 3.0.97
+
+### Patch Changes
+
+- a6cb3c1: fix(provider/google): surface Gemini `responseId` as `response-metadata` (stream) and `response.id` (generate)
+
+## 3.0.96
+
+### Patch Changes
+
+- 0d51472: fix(provider/google): associate multiple code execution results with their tool call
+
+## 3.0.95
+
+### Patch Changes
+
+- Updated dependencies [19093fd]
+  - @ai-sdk/provider-utils@4.0.40
+
+## 3.0.94
+
+### Patch Changes
+
+- 020836c: fix(provider/google): forward Vertex-only imageConfig options (personGeneration, prominentPeople, imageOutputOptions)
+
+## 3.0.93
+
+### Patch Changes
+
+- cfba690: Allow google.interactions agent requests to include supported tools, including file_search.
+
+## 3.0.92
+
+### Patch Changes
+
+- Updated dependencies [06fb54c]
+  - @ai-sdk/provider-utils@4.0.39
+
+## 3.0.91
+
+### Patch Changes
+
+- bbac4da: Fix Google tool result conversion to send file data as inline data instead of JSON text on the legacy tool-result path.
+- 3fda3bc: Expand standalone Google `threshold` provider options into safety settings.
+- e1af05f: feat (video): support video (not just image) reference inputs in `inputReferences` for reference-to-video generation
+- Updated dependencies [e1af05f]
+  - @ai-sdk/provider@3.0.14
+  - @ai-sdk/provider-utils@4.0.38
+
+## 3.0.90
+
+### Patch Changes
+
+- b585445: Backport Gemini Interactions video output parsing and per-modality output token breakdown for AI SDK v6.
+- 1825ecc: Backport `vertex.interactions()` for the Gemini Interactions API on Vertex AI for AI SDK v6.
+- afee362: Pass documented Gemini external HTTPS file URLs through without downloading them.
+- 327642b: fix: more precise default message for tool execution denial
+- Updated dependencies [d559de9]
+  - @ai-sdk/provider-utils@4.0.37
+
+## 3.0.89
+
+### Patch Changes
+
+- 0952964: Prevent prototype pollution when synchronously parsing provider JSON inputs and expose `secureJsonParse` from provider-utils.
+- f0bfb31: Fix Google embedding batch size to respect the Gemini API limit of 100 requests per batch.
+- Updated dependencies [0952964]
+  - @ai-sdk/provider-utils@4.0.36
+
+## 3.0.88
+
+### Patch Changes
+
+- Updated dependencies [ea1e95b]
+  - @ai-sdk/provider-utils@4.0.35
+
+## 3.0.87
+
+### Patch Changes
+
+- fa850e6: feat (video): add first-class `frameImages` and `inputReferences` call options for video generation
+- Updated dependencies [fa850e6]
+  - @ai-sdk/provider@3.0.13
+  - @ai-sdk/provider-utils@4.0.34
+
+## 3.0.86
+
+### Patch Changes
+
+- Updated dependencies [b30e43a]
+  - @ai-sdk/provider-utils@4.0.33
+
+## 3.0.85
+
+### Patch Changes
+
+- Updated dependencies [f19334d]
+  - @ai-sdk/provider@3.0.12
+  - @ai-sdk/provider-utils@4.0.32
+
+## 3.0.84
+
+### Patch Changes
+
+- 1b40ac7: Publish all packages under the `@ai-v6` dist tag.
+- Updated dependencies [1b40ac7]
+  - @ai-sdk/provider-utils@4.0.31
+  - @ai-sdk/provider@3.0.11
+
+## 3.0.83
+
+### Patch Changes
+
+- Updated dependencies [779f5cd]
+  - @ai-sdk/provider-utils@4.0.30
+
+## 3.0.82
+
+### Patch Changes
+
+- 3258f22: fix(google): prevent prototype pollution when streaming tool args
+- bfa5864: fix: only send provider credentials to same-origin response-supplied URLs
+
+  Several provider clients followed a URL taken from the provider's API response (a polling/status URL or a final media URL such as `polling_url`, `urls.get`, `result_url`, `result.sample`, or `video.uri`) and reused the authenticated headers — or appended `?key=<API_KEY>` — on that request. Because the host of the response-supplied URL was never validated, the long-lived API key was sent to whatever host the response named (a CDN in the benign case, or an attacker-chosen host if the provider response was tampered with), allowing credential exfiltration.
+
+  A new `isSameOrigin` helper is added to `@ai-sdk/provider-utils`, and the affected fetches in `@ai-sdk/black-forest-labs`, `@ai-sdk/fireworks`, `@ai-sdk/replicate`, `@ai-sdk/gladia`, `@ai-sdk/fal`, and `@ai-sdk/google` now attach credentials only when the followed URL is same-origin with the provider's configured API origin. Requests to a foreign origin are made without the credential.
+
+- Updated dependencies [bfa5864]
+- Updated dependencies [f42aa79]
+  - @ai-sdk/provider-utils@4.0.29
+
+## 3.0.81
+
+### Patch Changes
+
+- Updated dependencies [942f2f8]
+  - @ai-sdk/provider-utils@4.0.28
+
+## 3.0.80
+
+### Patch Changes
+
+- f62ffe0: fix(google): auto-inject `skip_thought_signature_validator` for Gemini 3 tool-call replays without a signature
+
+  Gemini 3 models reject requests when an assistant `functionCall` part lacks a `thoughtSignature` with HTTP 400 `"Function call is missing a thought_signature in functionCall parts."` This is easy to hit when application code persists/serializes messages and drops `providerOptions.google.thoughtSignature` (custom DB schemas, `useChat` server routes that rebuild messages, synthetic tool-call injection).
+
+  The provider now detects this case (Gemini 3 model + missing signature under `google`, `googleVertex`, and `vertex` namespaces) and injects the documented `skip_thought_signature_validator` sentinel into the outbound `functionCall`, plus surfaces a one-shot warning per request listing the affected tool names so the developer can find and fix the upstream serialization. Non-Gemini-3 models are unaffected, and real signatures take precedence when present.
+
+## 3.0.79
+
+### Patch Changes
+
+- cfa0cb2: feat(provider/google): support Google search grounding when using `generateImage` with Gemini
+
+## 3.0.78
+
+### Patch Changes
+
+- cf63828: fix(google): read `serviceTier` from `usageMetadata.serviceTier` in both generate and stream paths
+
+  The previous implementation read `serviceTier` from the `x-gemini-service-tier`
+  response header, which is only populated on non-streaming responses. Gemini
+  streaming includes the value in `usageMetadata.serviceTier` on every chunk, so
+  `providerMetadata.google.serviceTier` was always `null` for streams. Read from
+  `usageMetadata` for both paths instead.
+
+## 3.0.77
+
+### Patch Changes
+
+- 0f9f9bf: feat(google): read `serviceTier` from `x-gemini-service-tier` response header in Gemini API and use PayGo for Vertex
+
+## 3.0.76
+
+### Patch Changes
+
+- f259bd1: fix(google): fix streaming tool call args
+- 756fec1: feat(provider/google): add `gemini-3.5-flash`
+
+## 3.0.75
+
+### Patch Changes
+
+- ab15576: feat(google): update Interactions API implementation to cater for upstream breaking changes coming May 26
+
+## 3.0.74
+
+### Patch Changes
+
+- 3ca0daa: fix(provider/google): support `functionCall.id` when returned by Gemini API and provide matching `functionResponse.id`
+
+## 3.0.73
+
+### Patch Changes
+
+- bb1eb98: feat(google): add `fileData` support to embedding model
+
+## 3.0.72
+
+### Patch Changes
+
+- b3642fe: feat(provider/google): support cancelling long-running Interactions API agents via AbortSignal, and process their intermittent stream
+
+## 3.0.71
+
+### Patch Changes
+
+- 59530cf: fix(google): emit Vertex no-args streaming tool calls and preserve thoughtSignature
+
+  Vertex emits a no-args function call as a single chunk shaped `{ functionCall: { name: 'X' } }` with no `args`, no `partialArgs`, and no `willContinue`. The streaming parser had no branch for this shape, so the call was dropped along with any `thoughtSignature` it carried. For Gemini 3 thinking models this caused the next multi-turn step to 400 with `missing thought_signature`. The unary (`doGenerate`) path had the same drop.
+
+  Both paths now emit the call as a complete tool call with `'{}'` input and propagate `thoughtSignature` provider metadata.
+
+  Fixes #14847.
+
+## 3.0.70
+
+### Patch Changes
+
+- 4f3f564: fix(provider/google): fix lack of image consistency when using Interactions API in stateless mode
+
+## 3.0.69
+
+### Patch Changes
+
+- bb377ba: fix(google): omit passing includeServerSideToolInvocations for Vertex tool_config
+- Updated dependencies [f591416]
+  - @ai-sdk/provider-utils@4.0.27
+
+## 3.0.68
+
+### Patch Changes
+
+- e0f8c9e: feat(provider/google): add support for the Gemini Interactions API
+
+## 3.0.67
+
+### Patch Changes
+
+- Updated dependencies [7beadf0]
+  - @ai-sdk/provider-utils@4.0.26
+
+## 3.0.66
+
+### Patch Changes
+
+- a727da4: chore: ensure consistent import handling and avoid import duplicates or cycles
+- Updated dependencies [a727da4]
+  - @ai-sdk/provider-utils@4.0.25
+  - @ai-sdk/provider@3.0.10
+
+## 3.0.65
+
+### Patch Changes
+
+- a7f3c72: trigger release for all packages after provenance setup
+- Updated dependencies [a7f3c72]
+  - @ai-sdk/provider@3.0.9
+  - @ai-sdk/provider-utils@4.0.24
+
 ## 3.0.64
 
 ### Patch Changes

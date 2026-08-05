@@ -1,4 +1,4 @@
-import { JSONObject, TranscriptionModelV3 } from '@ai-sdk/provider';
+import type { JSONObject, TranscriptionModelV3 } from '@ai-sdk/provider';
 import {
   afterEach,
   beforeEach,
@@ -11,7 +11,7 @@ import {
 import * as logWarningsModule from '../logger/log-warnings';
 import { MockTranscriptionModelV3 } from '../test/mock-transcription-model-v3';
 import { transcribe } from './transcribe';
-import { Warning } from '../types/warning';
+import type { Warning } from '../types/warning';
 
 vi.mock('../version', () => {
   return {
@@ -113,6 +113,38 @@ describe('transcribe', () => {
       abortSignal,
       providerOptions: {},
     });
+  });
+
+  it('should detect MP4 audio with an ftyp box', async () => {
+    const mp4AudioData = new Uint8Array([
+      0x00,
+      0x00,
+      0x00,
+      0x1c, // box size
+      0x66,
+      0x74,
+      0x79,
+      0x70, // "ftyp"
+      0x4d,
+      0x34,
+      0x41,
+      0x20, // "M4A "
+    ]);
+    let capturedArgs!: Parameters<TranscriptionModelV3['doGenerate']>[0];
+
+    await transcribe({
+      model: new MockTranscriptionModelV3({
+        doGenerate: async args => {
+          capturedArgs = args;
+          return createMockResponse({
+            ...sampleTranscript,
+          });
+        },
+      }),
+      audio: mp4AudioData,
+    });
+
+    expect(capturedArgs.mediaType).toMatchInlineSnapshot(`"audio/mp4"`);
   });
 
   it('should return warnings', async () => {

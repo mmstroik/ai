@@ -1,5 +1,69 @@
 # @ai-sdk/devtools
 
+## 0.0.24
+
+### Patch Changes
+
+- Updated dependencies [e1af05f]
+  - @ai-sdk/provider@3.0.14
+
+## 0.0.23
+
+### Patch Changes
+
+- Updated dependencies [fa850e6]
+  - @ai-sdk/provider@3.0.13
+
+## 0.0.22
+
+### Patch Changes
+
+- Updated dependencies [f19334d]
+  - @ai-sdk/provider@3.0.12
+
+## 0.0.21
+
+### Patch Changes
+
+- 1b40ac7: Publish all packages under the `@ai-v6` dist tag.
+- Updated dependencies [1b40ac7]
+  - @ai-sdk/provider@3.0.11
+
+## 0.0.20
+
+### Patch Changes
+
+- f9b94e1: fix(devtools): bump hono to ^4.12.25 to resolve CVE-2026-54290
+
+  hono's CORS Middleware reflected any request `Origin` together with `Access-Control-Allow-Credentials: true` when `credentials: true` was set and `origin` was left at the default wildcard, allowing any site to make credentialed cross-origin requests and read the responses (CVE-2026-54290, CVSS 7.1). Bumped `hono` from `^4.6.14` to `^4.12.25`, the first patched release.
+
+## 0.0.19
+
+### Patch Changes
+
+- f27afa8: fix(devtools): secure devtools viewer api access
+
+## 0.0.18
+
+### Patch Changes
+
+- 41aff6f: fix(devtools): add pointer cursor to DevTools buttons
+
+## 0.0.17
+
+### Patch Changes
+
+- a727da4: chore: ensure consistent import handling and avoid import duplicates or cycles
+- Updated dependencies [a727da4]
+  - @ai-sdk/provider@3.0.10
+
+## 0.0.16
+
+### Patch Changes
+
+- Updated dependencies [a7f3c72]
+  - @ai-sdk/provider@3.0.9
+
 ## 0.0.15
 
 ### Patch Changes

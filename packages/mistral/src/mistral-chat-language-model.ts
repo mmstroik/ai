@@ -1,4 +1,4 @@
-import {
+import type {
   LanguageModelV3,
   LanguageModelV3CallOptions,
   LanguageModelV3Content,
@@ -12,21 +12,24 @@ import {
   combineHeaders,
   createEventSourceResponseHandler,
   createJsonResponseHandler,
-  FetchFunction,
   generateId,
   injectJsonInstructionIntoMessages,
   parseProviderOptions,
-  ParseResult,
   postJsonToApi,
+  type FetchFunction,
+  type ParseResult,
 } from '@ai-sdk/provider-utils';
 import { z } from 'zod/v4';
-import { convertMistralUsage, MistralUsage } from './convert-mistral-usage';
+import {
+  convertMistralUsage,
+  type MistralUsage,
+} from './convert-mistral-usage';
 import { convertToMistralChatMessages } from './convert-to-mistral-chat-messages';
 import { getResponseMetadata } from './get-response-metadata';
 import { mapMistralFinishReason } from './map-mistral-finish-reason';
 import {
-  MistralChatModelId,
   mistralLanguageModelOptions,
+  type MistralChatModelId,
 } from './mistral-chat-options';
 import { mistralFailedResponseHandler } from './mistral-error';
 import { prepareTools } from './mistral-prepare-tools';
@@ -89,18 +92,6 @@ export class MistralChatLanguageModel implements LanguageModelV3 {
       warnings.push({ type: 'unsupported', feature: 'topK' });
     }
 
-    if (frequencyPenalty != null) {
-      warnings.push({ type: 'unsupported', feature: 'frequencyPenalty' });
-    }
-
-    if (presencePenalty != null) {
-      warnings.push({ type: 'unsupported', feature: 'presencePenalty' });
-    }
-
-    if (stopSequences != null) {
-      warnings.push({ type: 'unsupported', feature: 'stopSequences' });
-    }
-
     const structuredOutputs = options.structuredOutputs ?? true;
     const strictJsonSchema = options.strictJsonSchema ?? false;
 
@@ -124,6 +115,11 @@ export class MistralChatLanguageModel implements LanguageModelV3 {
       max_tokens: maxOutputTokens,
       temperature,
       top_p: topP,
+      ...(frequencyPenalty != null
+        ? { frequency_penalty: frequencyPenalty }
+        : {}),
+      ...(presencePenalty != null ? { presence_penalty: presencePenalty } : {}),
+      stop: stopSequences,
       random_seed: seed,
       reasoning_effort: options.reasoningEffort,
 
@@ -523,6 +519,13 @@ const mistralUsageSchema = z.object({
   prompt_tokens: z.number(),
   completion_tokens: z.number(),
   total_tokens: z.number(),
+  num_cached_tokens: z.number().nullish(),
+  prompt_tokens_details: z
+    .object({ cached_tokens: z.number().nullish() })
+    .nullish(),
+  prompt_token_details: z
+    .object({ cached_tokens: z.number().nullish() })
+    .nullish(),
 });
 
 // limited version of the schema, focussed on what is needed for the implementation

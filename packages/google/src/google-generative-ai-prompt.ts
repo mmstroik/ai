@@ -1,9 +1,9 @@
 import {
-  GroundingMetadataSchema,
-  PromptFeedbackSchema,
-  UrlContextMetadataSchema,
+  type GroundingMetadataSchema,
+  type PromptFeedbackSchema,
+  type UrlContextMetadataSchema,
+  type UsageMetadataSchema,
   type SafetyRatingSchema,
-  UsageMetadataSchema,
 } from './google-generative-ai-language-model';
 
 export type GoogleGenerativeAIPrompt = {
@@ -23,9 +23,13 @@ export type GoogleGenerativeAIContent = {
 export type GoogleGenerativeAIContentPart =
   | { text: string; thought?: boolean; thoughtSignature?: string }
   | { inlineData: { mimeType: string; data: string } }
-  | { functionCall: { name: string; args: unknown }; thoughtSignature?: string }
+  | {
+      functionCall: { id?: string; name: string; args: unknown };
+      thoughtSignature?: string;
+    }
   | {
       functionResponse: {
+        id?: string;
         name: string;
         response: unknown;
         parts?: Array<GoogleGenerativeAIFunctionResponsePart>;

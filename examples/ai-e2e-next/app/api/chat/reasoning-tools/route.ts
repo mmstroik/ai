@@ -1,10 +1,13 @@
-import { openai, OpenAILanguageModelResponsesOptions } from '@ai-sdk/openai';
+import {
+  openai,
+  type OpenAILanguageModelResponsesOptions,
+} from '@ai-sdk/openai';
 import {
   convertToModelMessages,
-  InferUITools,
   streamText,
-  UIDataTypes,
-  UIMessage,
+  type InferUITools,
+  type UIDataTypes,
+  type UIMessage,
 } from 'ai';
 
 const tools = {
@@ -34,7 +37,7 @@ export async function POST(req: Request) {
   console.log(JSON.stringify(messages, null, 2));
 
   const result = streamText({
-    model: openai('gpt-5'),
+    model: openai('gpt-5.6'),
     messages: await convertToModelMessages(messages),
     tools,
     providerOptions: {

@@ -1,20 +1,20 @@
 import {
-  EmbeddingModelV3,
   TooManyEmbeddingValuesForCallError,
+  type EmbeddingModelV3,
 } from '@ai-sdk/provider';
 import {
-  FetchFunction,
-  Resolvable,
   combineHeaders,
   createJsonErrorResponseHandler,
   createJsonResponseHandler,
   parseProviderOptions,
   postJsonToApi,
   resolve,
+  type FetchFunction,
+  type Resolvable,
 } from '@ai-sdk/provider-utils';
 import {
-  BedrockEmbeddingModelId,
   amazonBedrockEmbeddingModelOptionsSchema,
+  type BedrockEmbeddingModelId,
 } from './bedrock-embedding-options';
 import { BedrockErrorSchema } from './bedrock-error';
 import { z } from 'zod/v4';
@@ -30,8 +30,11 @@ type DoEmbedResponse = Awaited<ReturnType<EmbeddingModelV3['doEmbed']>>;
 export class BedrockEmbeddingModel implements EmbeddingModelV3 {
   readonly specificationVersion = 'v3';
   readonly provider = 'amazon-bedrock';
-  readonly maxEmbeddingsPerCall = 1;
   readonly supportsParallelCalls = true;
+
+  get maxEmbeddingsPerCall() {
+    return isCohereEmbeddingModel(this.modelId) ? 96 : 1;
+  }
 
   constructor(
     readonly modelId: BedrockEmbeddingModelId,
@@ -71,9 +74,8 @@ export class BedrockEmbeddingModel implements EmbeddingModelV3 {
     // Note: Different embedding model families expect different request/response
     // payloads (e.g. Titan vs Cohere vs Nova). We keep the public interface stable and
     // adapt here based on the modelId.
-    const isNovaModel =
-      this.modelId.startsWith('amazon.nova-') && this.modelId.includes('embed');
-    const isCohereModel = this.modelId.startsWith('cohere.embed-');
+    const isNovaModel = isNovaEmbeddingModel(this.modelId);
+    const isCohereModel = isCohereEmbeddingModel(this.modelId);
 
     const args = isNovaModel
       ? {
@@ -93,7 +95,7 @@ export class BedrockEmbeddingModel implements EmbeddingModelV3 {
             // Cohere embedding models on Bedrock require `input_type`.
             // Without it, the service attempts other schema branches and rejects the request.
             input_type: bedrockOptions.inputType ?? 'search_query',
-            texts: [values[0]],
+            texts: values,
             truncate: bedrockOptions.truncate,
             output_dimension: bedrockOptions.outputDimension,
           }
@@ -104,7 +106,7 @@ export class BedrockEmbeddingModel implements EmbeddingModelV3 {
           };
 
     const url = this.getUrl(this.modelId);
-    const { value: response } = await postJsonToApi({
+    const { value: response, responseHeaders } = await postJsonToApi({
       url,
       headers: await resolve(
         combineHeaders(await resolve(this.config.headers), headers),
@@ -121,11 +123,11 @@ export class BedrockEmbeddingModel implements EmbeddingModelV3 {
       abortSignal,
     });
 
-    // Extract embedding based on response format
-    let embedding: number[];
+    // Extract embeddings based on response format
+    let embeddings: number[][];
     if ('embedding' in response) {
       // Titan response
-      embedding = response.embedding;
+      embeddings = [response.embedding];
     } else if (Array.isArray(response.embeddings)) {
       const firstEmbedding = response.embeddings[0];
       if (
@@ -134,30 +136,43 @@ export class BedrockEmbeddingModel implements EmbeddingModelV3 {
         'embeddingType' in firstEmbedding
       ) {
         // Nova response
-        embedding = firstEmbedding.embedding;
+        embeddings = [firstEmbedding.embedding];
       } else {
         // Cohere v3 response
-        embedding = firstEmbedding as number[];
+        embeddings = response.embeddings as number[][];
       }
     } else {
       // Cohere v4 response
-      embedding = response.embeddings.float[0];
+      embeddings = response.embeddings.float;
     }
 
     // Extract token count based on response format
+    const headerTokenCount = Number(
+      responseHeaders?.['x-amzn-bedrock-input-token-count'],
+    );
     const tokens =
       'inputTextTokenCount' in response
         ? response.inputTextTokenCount // Titan response
         : 'inputTokenCount' in response
           ? (response.inputTokenCount ?? 0) // Nova response
-          : NaN; // Cohere doesn't return token count
+          : headerTokenCount;
 
     return {
-      embeddings: [embedding],
+      embeddings,
       usage: { tokens },
       warnings: [],
     };
   }
+}
+
+function isCohereEmbeddingModel(modelId: string) {
+  // Use `includes` so cross-region inference profile ids (e.g.
+  // `us.cohere.embed-v4:0`, `global.cohere.embed-v4:0`) are detected too.
+  return modelId.includes('cohere.embed-');
+}
+
+function isNovaEmbeddingModel(modelId: string) {
+  return modelId.startsWith('amazon.nova-') && modelId.includes('embed');
 }
 
 const BedrockEmbeddingResponseSchema = z.union([

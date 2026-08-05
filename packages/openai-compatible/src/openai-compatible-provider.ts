@@ -1,19 +1,19 @@
-import {
+import type {
   EmbeddingModelV3,
   ImageModelV3,
   LanguageModelV3,
   ProviderV3,
 } from '@ai-sdk/provider';
 import {
-  FetchFunction,
   withoutTrailingSlash,
   withUserAgentSuffix,
+  type FetchFunction,
 } from '@ai-sdk/provider-utils';
 import {
-  OpenAICompatibleChatConfig,
   OpenAICompatibleChatLanguageModel,
+  type OpenAICompatibleChatConfig,
 } from './chat/openai-compatible-chat-language-model';
-import { MetadataExtractor } from './chat/openai-compatible-metadata-extractor';
+import type { MetadataExtractor } from './chat/openai-compatible-metadata-extractor';
 import { OpenAICompatibleCompletionLanguageModel } from './completion/openai-compatible-completion-language-model';
 import { OpenAICompatibleEmbeddingModel } from './embedding/openai-compatible-embedding-model';
 import { OpenAICompatibleImageModel } from './image/openai-compatible-image-model';
@@ -104,6 +104,17 @@ export interface OpenAICompatibleProviderSettings {
    * or provider-specific metrics from both streaming and non-streaming responses.
    */
   metadataExtractor?: MetadataExtractor;
+
+  /**
+   * The supported URLs for chat models.
+   */
+  supportedUrls?: OpenAICompatibleChatConfig['supportedUrls'];
+
+  /**
+   * Optional usage converter for providers with token accounting semantics that
+   * differ from the default OpenAI-compatible shape.
+   */
+  convertUsage?: OpenAICompatibleChatConfig['convertUsage'];
 }
 
 /**
@@ -161,8 +172,10 @@ export function createOpenAICompatible<
       ...getCommonModelConfig('chat'),
       includeUsage: options.includeUsage,
       supportsStructuredOutputs: options.supportsStructuredOutputs,
+      supportedUrls: options.supportedUrls,
       transformRequestBody: options.transformRequestBody,
       metadataExtractor: options.metadataExtractor,
+      convertUsage: options.convertUsage,
     });
 
   const createCompletionModel = (modelId: COMPLETION_MODEL_IDS) =>

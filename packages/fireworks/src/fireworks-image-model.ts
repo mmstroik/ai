@@ -1,4 +1,4 @@
-import { ImageModelV3, SharedV3Warning } from '@ai-sdk/provider';
+import type { ImageModelV3, SharedV3Warning } from '@ai-sdk/provider';
 import {
   combineHeaders,
   convertImageModelFileToDataUri,
@@ -6,15 +6,16 @@ import {
   createJsonResponseHandler,
   createStatusCodeErrorResponseHandler,
   delay,
-  FetchFunction,
   getFromApi,
+  isSameOrigin,
   postJsonToApi,
+  type FetchFunction,
 } from '@ai-sdk/provider-utils';
 import {
   asyncPollResponseSchema,
   asyncSubmitResponseSchema,
 } from './fireworks-image-api';
-import { FireworksImageModelId } from './fireworks-image-options';
+import type { FireworksImageModelId } from './fireworks-image-options';
 
 const DEFAULT_POLL_INTERVAL_MILLIS = 500;
 const DEFAULT_POLL_TIMEOUT_MILLIS = 120000; // 2 minutes for image generation
@@ -269,10 +270,15 @@ export class FireworksImageModel implements ImageModelV3 {
       abortSignal,
     });
 
-    // Download the image from the URL
+    // Download the image from the URL. The URL comes from the provider
+    // response and typically points at a CDN, so only send credentials when it
+    // stays on the provider's own origin (never leak the API key to a CDN or an
+    // attacker-named host).
     const { value: imageBytes, responseHeaders } = await getFromApi({
       url: imageUrl,
-      headers,
+      headers: isSameOrigin(imageUrl, this.config.baseURL)
+        ? headers
+        : undefined,
       abortSignal,
       failedResponseHandler: createStatusCodeErrorResponseHandler(),
       successfulResponseHandler: createBinaryResponseHandler(),

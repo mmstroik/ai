@@ -73,10 +73,10 @@ You can use the following optional settings to customize the xAI provider instan
 ## Language Models
 
 You can create [xAI models](https://console.x.ai) using a provider instance. The
-first argument is the model id, e.g. `grok-4.20-non-reasoning`.
+first argument is the model id, e.g. `grok-4.5`.
 
 ```ts
-const model = xai('grok-4.20-non-reasoning');
+const model = xai('grok-4.5');
 ```
 
 By default, `xai(modelId)` uses the Chat API. To use the Responses API with server-side agentic tools, explicitly use `xai.responses(modelId)`.
@@ -90,7 +90,7 @@ import { xai } from '@ai-sdk/xai';
 import { generateText } from 'ai';
 
 const { text } = await generateText({
-  model: xai('grok-4.20-non-reasoning'),
+  model: xai('grok-4.5'),
   prompt: 'Write a vegetarian lasagna recipe for 4 people.',
 });
 ```
@@ -98,6 +98,26 @@ const { text } = await generateText({
 xAI language models can also be used in the `streamText` function
 and support structured data generation with [`Output`](/docs/reference/ai-sdk-core/output)
 (see [AI SDK Core](/docs/ai-sdk-core)).
+
+### Reasoning Effort
+
+For models with configurable reasoning, you can control how much effort the
+model spends thinking before responding with
+`providerOptions.xai.reasoningEffort`. The AI SDK option accepts `'none'`,
+`'low'`, `'medium'`, and `'high'`, but each xAI model supports a subset.
+
+<Note>
+  Support and defaults are model-specific. `grok-4.3` supports `'none'`,
+  `'low'`, `'medium'`, and `'high'`. `grok-4.5` supports `'low'`, `'medium'`,
+  and `'high'`, defaults to `'high'`, and cannot disable reasoning. The
+  `grok-4.20-reasoning` and `grok-4.20-non-reasoning` variants do not accept
+  this option, and neither does `grok-build-0.1`. For
+  `grok-4.20-multi-agent`, `'low'`, `'medium'`, and `'high'` control the number
+  of agents instead of reasoning depth. See xAI's [reasoning
+  docs](https://docs.x.ai/developers/model-capabilities/text/reasoning) and
+  [Grok 4.3 model page](https://docs.x.ai/developers/models/grok-4.3) for
+  current details.
+</Note>
 
 ### Provider Options
 
@@ -107,7 +127,7 @@ the [standard call settings](/docs/ai-sdk-core/settings). You can pass them in t
 ```ts
 import { xai, type XaiLanguageModelChatOptions } from '@ai-sdk/xai';
 
-const model = xai('grok-3-mini');
+const model = xai('grok-4.5');
 
 await generateText({
   model,
@@ -121,9 +141,9 @@ await generateText({
 
 The following optional provider options are available for xAI chat models:
 
-- **reasoningEffort** _'low' | 'high'_
+- **reasoningEffort** _'none' | 'low' | 'medium' | 'high'_
 
-  Reasoning effort for reasoning models.
+  Control the reasoning effort for supported models. See [Reasoning Effort](#reasoning-effort) for model-specific values and defaults.
 
 - **logprobs** _boolean_
 
@@ -142,7 +162,7 @@ The following optional provider options are available for xAI chat models:
 You can use the xAI Responses API with the `xai.responses(modelId)` factory method for server-side agentic tool calling. This enables the model to autonomously orchestrate tool calls and research on xAI's servers.
 
 ```ts
-const model = xai.responses('grok-4.20-non-reasoning');
+const model = xai.responses('grok-4.5');
 ```
 
 The Responses API provides server-side tools that the model can autonomously execute during its reasoning process:
@@ -164,7 +184,7 @@ import { xai } from '@ai-sdk/xai';
 import { generateText } from 'ai';
 
 const { text } = await generateText({
-  model: xai.responses('grok-3'),
+  model: xai.responses('grok-4.5'),
   messages: [
     {
       role: 'user',
@@ -176,6 +196,42 @@ const { text } = await generateText({
   ],
 });
 ```
+
+You can control the resolution at which the model processes an image with
+the `imageDetail` provider option on the image part:
+
+```ts
+import { xai } from '@ai-sdk/xai';
+import { generateText } from 'ai';
+
+const { text } = await generateText({
+  model: xai('grok-4.5'),
+  messages: [
+    {
+      role: 'user',
+      content: [
+        { type: 'text', text: 'What do you see in this image?' },
+        {
+          type: 'file',
+          mediaType: 'image/png',
+          data: fs.readFileSync('./image.png'),
+          providerOptions: {
+            xai: { imageDetail: 'low' },
+          },
+        },
+      ],
+    },
+  ],
+});
+```
+
+The following image detail values are supported:
+
+- **low**: processes the image at reduced resolution and consumes fewer input tokens.
+- **high**: processes the image at full resolution.
+- **auto**: lets the xAI API decide.
+
+When not set, the image is processed at full resolution.
 
 ### Web Search Tool
 
@@ -210,9 +266,13 @@ console.log('Citations:', sources);
 
   Exclude specified domains from search (max 5). Cannot be used with `allowedDomains`.
 
+- **enableImageSearch** _boolean_
+
+  Allow the model to perform image search as a separate Web Search mode when images are useful for the answer. The model can choose between regular web search and image search; responses can include Markdown image embeds when relevant.
+
 - **enableImageUnderstanding** _boolean_
 
-  Enable the model to view and analyze images found during search. Increases token usage.
+  Enable the model to view and analyze images found during search. Increases token usage. To allow explicitly searching for images, use `enableImageSearch`.
 
 ### X Search Tool
 
@@ -438,7 +498,7 @@ import { xai, type XaiLanguageModelResponsesOptions } from '@ai-sdk/xai';
 import { generateText } from 'ai';
 
 const result = await generateText({
-  model: xai.responses('grok-4.20-non-reasoning'),
+  model: xai.responses('grok-4.5'),
   providerOptions: {
     xai: {
       reasoningEffort: 'high',
@@ -450,9 +510,9 @@ const result = await generateText({
 
 The following provider options are available:
 
-- **reasoningEffort** _'low' | 'medium' | 'high'_
+- **reasoningEffort** _'none' | 'low' | 'medium' | 'high'_
 
-  Control the reasoning effort for the model. Higher effort may produce more thorough results at the cost of increased latency and token usage.
+  Control the reasoning effort for supported models. See [Reasoning Effort](#reasoning-effort) for model-specific values and defaults.
 
 - **logprobs** _boolean_
 
@@ -768,6 +828,7 @@ console.log('Sources:', await result.sources);
 
 | Model                         | Image Input         | Object Generation   | Tool Usage          | Tool Streaming      | Reasoning           |
 | ----------------------------- | ------------------- | ------------------- | ------------------- | ------------------- | ------------------- |
+| `grok-4.5`                    | <Check size={18} /> | <Check size={18} /> | <Check size={18} /> | <Check size={18} /> | <Check size={18} /> |
 | `grok-4.20-reasoning`         | <Check size={18} /> | <Check size={18} /> | <Check size={18} /> | <Check size={18} /> | <Check size={18} /> |
 | `grok-4.20-non-reasoning`     | <Check size={18} /> | <Check size={18} /> | <Check size={18} /> | <Check size={18} /> | <Cross size={18} /> |
 | `grok-4-1-fast-reasoning`     | <Check size={18} /> | <Check size={18} /> | <Check size={18} /> | <Check size={18} /> | <Check size={18} /> |
@@ -937,6 +998,7 @@ const { video } = await generateVideo({
   duration: 5,
   providerOptions: {
     xai: {
+      user: 'user-123',
       pollTimeoutMs: 600000, // 10 minutes
     } satisfies XaiVideoModelOptions,
   },
@@ -965,6 +1027,37 @@ const { video } = await generateVideo({
   },
 });
 ```
+
+You can also pass the starting frame via the top-level `frameImages` option using the `first_frame` role. This is provider-agnostic and accepts file data (e.g. a `Buffer`) or a `{ type: 'url', url }` object:
+
+```ts
+import { xai, type XaiVideoModelOptions } from '@ai-sdk/xai';
+import { experimental_generateVideo as generateVideo } from 'ai';
+import fs from 'node:fs';
+
+const { video } = await generateVideo({
+  model: xai.video('grok-imagine-video'),
+  prompt: 'The cat slowly turns its head and blinks',
+  frameImages: [
+    {
+      image: fs.readFileSync('./start-frame.png'),
+      frameType: 'first_frame',
+    },
+  ],
+  duration: 5,
+  providerOptions: {
+    xai: {
+      pollTimeoutMs: 600000, // 10 minutes
+    } satisfies XaiVideoModelOptions,
+  },
+});
+```
+
+<Note>
+  xAI does not support first-last-frame interpolation. A `last_frame` entry in
+  `frameImages` is ignored with a warning — use the `extend-video` mode to
+  continue from a video's last frame instead.
+</Note>
 
 ### Video Editing
 
@@ -1115,9 +1208,38 @@ const { video } = await generateVideo({
 
 Use `<IMAGE_1>`, `<IMAGE_2>`, etc. in your prompt to reference specific images. Up to 7 reference images are supported per request.
 
+Alternatively, use the provider-agnostic top-level `inputReferences` option. Providing it automatically selects reference-to-video mode, and it accepts file data (e.g. a `Buffer`) or `{ type: 'url', url }` objects:
+
+```ts
+import { xai, type XaiVideoModelOptions } from '@ai-sdk/xai';
+import { experimental_generateVideo as generateVideo } from 'ai';
+import fs from 'node:fs';
+
+const { video } = await generateVideo({
+  model: xai.video('grok-imagine-video'),
+  prompt:
+    'The comic cat and the comic dog are having a playful chase ' +
+    'through a sunlit park. Cinematic slow-motion, warm afternoon light.',
+  inputReferences: [
+    fs.readFileSync('./comic-cat.png'),
+    fs.readFileSync('./comic-dog.png'),
+  ],
+  duration: 8,
+  aspectRatio: '16:9',
+  providerOptions: {
+    xai: {
+      pollTimeoutMs: 600000,
+    } satisfies XaiVideoModelOptions,
+  },
+});
+```
+
 <Note>
   Reference-to-video supports `duration`, `aspectRatio`, and `resolution`. Use
-  `mode` to select the operation — each mode is mutually exclusive.
+  `mode` to select the operation — each mode is mutually exclusive. When both
+  are provided, `frameImages` takes precedence over `inputReferences`, and
+  `inputReferences` takes precedence over the legacy `referenceImageUrls`
+  provider option. Reference-to-video requires the `grok-imagine-video` model.
 </Note>
 
 ### Video Provider Options
@@ -1138,6 +1260,14 @@ You can validate the provider options using the `XaiVideoModelOptions` type.
   Video resolution. When using the SDK's standard `resolution` parameter,
   `1280x720` maps to `720p` and `854x480` maps to `480p`.
   Use this provider option to pass the native format directly.
+
+- **user** _string_
+
+  Optional identifier for the end user responsible for the request. xAI uses
+  this value for abuse monitoring. It is sent unchanged for video generation
+  (including reference-to-video) and video editing requests, and is omitted
+  when not configured. It is not sent for video extension requests. Use an
+  opaque stable identifier and avoid sending unnecessary personal information.
 
 - **mode** _'edit-video' | 'extend-video' | 'reference-to-video'_
 

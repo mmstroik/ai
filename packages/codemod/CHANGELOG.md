@@ -1,5 +1,23 @@
 # @ai-sdk/codemod
 
+## 3.0.7
+
+### Patch Changes
+
+- 1b40ac7: Publish all packages under the `@ai-v6` dist tag.
+
+## 3.0.6
+
+### Patch Changes
+
+- a727da4: chore: ensure consistent import handling and avoid import duplicates or cycles
+
+## 3.0.5
+
+### Patch Changes
+
+- a7f3c72: trigger release for all packages after provenance setup
+
 ## 3.0.4
 
 ### Patch Changes

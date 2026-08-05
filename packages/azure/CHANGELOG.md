@@ -1,5 +1,343 @@
 # @ai-sdk/azure
 
+## 3.0.95
+
+### Patch Changes
+
+- Updated dependencies [9ecdefe]
+  - @ai-sdk/provider-utils@4.0.41
+  - @ai-sdk/deepseek@2.0.51
+  - @ai-sdk/openai@3.0.90
+
+## 3.0.94
+
+### Patch Changes
+
+- 23632b1: Add blocked domain filters to the OpenAI and Azure Responses API web search tools.
+- Updated dependencies [23632b1]
+  - @ai-sdk/openai@3.0.89
+
+## 3.0.93
+
+### Patch Changes
+
+- Updated dependencies [8100830]
+  - @ai-sdk/openai@3.0.88
+
+## 3.0.92
+
+### Patch Changes
+
+- Updated dependencies [2f11af1]
+  - @ai-sdk/openai@3.0.87
+
+## 3.0.91
+
+### Patch Changes
+
+- Updated dependencies [19093fd]
+  - @ai-sdk/provider-utils@4.0.40
+  - @ai-sdk/deepseek@2.0.50
+  - @ai-sdk/openai@3.0.86
+
+## 3.0.90
+
+### Patch Changes
+
+- 55be323: fix: Azure DeepSeek structured output returns JSON in reasoning with empty text
+- Updated dependencies [55be323]
+  - @ai-sdk/deepseek@2.0.49
+
+## 3.0.89
+
+### Patch Changes
+
+- Updated dependencies [06fb54c]
+  - @ai-sdk/provider-utils@4.0.39
+  - @ai-sdk/deepseek@2.0.48
+  - @ai-sdk/openai@3.0.85
+
+## 3.0.88
+
+### Patch Changes
+
+- Updated dependencies [356918c]
+  - @ai-sdk/openai@3.0.84
+
+## 3.0.87
+
+### Patch Changes
+
+- Updated dependencies [34b5acc]
+- Updated dependencies [e1af05f]
+  - @ai-sdk/openai@3.0.83
+  - @ai-sdk/provider@3.0.14
+  - @ai-sdk/deepseek@2.0.47
+  - @ai-sdk/provider-utils@4.0.38
+
+## 3.0.86
+
+### Patch Changes
+
+- Updated dependencies [bef93ae]
+- Updated dependencies [d559de9]
+- Updated dependencies [327642b]
+- Updated dependencies [ae00aeb]
+  - @ai-sdk/openai@3.0.82
+  - @ai-sdk/deepseek@2.0.46
+  - @ai-sdk/provider-utils@4.0.37
+
+## 3.0.85
+
+### Patch Changes
+
+- Updated dependencies [0952964]
+  - @ai-sdk/provider-utils@4.0.36
+  - @ai-sdk/deepseek@2.0.45
+  - @ai-sdk/openai@3.0.81
+
+## 3.0.84
+
+### Patch Changes
+
+- 58c5e3f: fix(azure): use custom base urls if provided
+
+## 3.0.83
+
+### Patch Changes
+
+- Updated dependencies [ea1e95b]
+  - @ai-sdk/provider-utils@4.0.35
+  - @ai-sdk/deepseek@2.0.44
+  - @ai-sdk/openai@3.0.80
+
+## 3.0.82
+
+### Patch Changes
+
+- Updated dependencies [fa850e6]
+  - @ai-sdk/provider@3.0.13
+  - @ai-sdk/deepseek@2.0.43
+  - @ai-sdk/openai@3.0.79
+  - @ai-sdk/provider-utils@4.0.34
+
+## 3.0.81
+
+### Patch Changes
+
+- Updated dependencies [64a701d]
+  - @ai-sdk/openai@3.0.78
+
+## 3.0.80
+
+### Patch Changes
+
+- Updated dependencies [b30e43a]
+  - @ai-sdk/provider-utils@4.0.33
+  - @ai-sdk/deepseek@2.0.42
+  - @ai-sdk/openai@3.0.77
+
+## 3.0.79
+
+### Patch Changes
+
+- Updated dependencies [2ee1700]
+- Updated dependencies [f19334d]
+  - @ai-sdk/openai@3.0.76
+  - @ai-sdk/provider@3.0.12
+  - @ai-sdk/deepseek@2.0.41
+  - @ai-sdk/provider-utils@4.0.32
+
+## 3.0.78
+
+### Patch Changes
+
+- 1b40ac7: Publish all packages under the `@ai-v6` dist tag.
+- Updated dependencies [1b40ac7]
+  - @ai-sdk/deepseek@2.0.40
+  - @ai-sdk/openai@3.0.75
+  - @ai-sdk/provider-utils@4.0.31
+  - @ai-sdk/provider@3.0.11
+
+## 3.0.77
+
+### Patch Changes
+
+- Updated dependencies [466544d]
+  - @ai-sdk/openai@3.0.74
+
+## 3.0.76
+
+### Patch Changes
+
+- Updated dependencies [1274c07]
+  - @ai-sdk/openai@3.0.73
+
+## 3.0.75
+
+### Patch Changes
+
+- Updated dependencies [779f5cd]
+  - @ai-sdk/provider-utils@4.0.30
+  - @ai-sdk/deepseek@2.0.39
+  - @ai-sdk/openai@3.0.72
+
+## 3.0.74
+
+### Patch Changes
+
+- Updated dependencies [bfa5864]
+- Updated dependencies [f42aa79]
+  - @ai-sdk/provider-utils@4.0.29
+  - @ai-sdk/deepseek@2.0.38
+  - @ai-sdk/openai@3.0.71
+
+## 3.0.73
+
+### Patch Changes
+
+- Updated dependencies [942f2f8]
+  - @ai-sdk/provider-utils@4.0.28
+  - @ai-sdk/deepseek@2.0.37
+  - @ai-sdk/openai@3.0.70
+
+## 3.0.72
+
+### Patch Changes
+
+- 79f0ae6: feat(azure): add deepseek model support to azure
+- Updated dependencies [79f0ae6]
+  - @ai-sdk/deepseek@2.0.36
+
+## 3.0.71
+
+### Patch Changes
+
+- Updated dependencies [9a55f6d]
+  - @ai-sdk/openai@3.0.69
+
+## 3.0.70
+
+### Patch Changes
+
+- Updated dependencies [c65c952]
+  - @ai-sdk/openai@3.0.68
+
+## 3.0.69
+
+### Patch Changes
+
+- cbc161a: Add Microsoft Entra ID token provider authentication for Azure OpenAI.
+
+## 3.0.68
+
+### Patch Changes
+
+- c679fec: feat(provider/azure):web search tool in the Azure OpenAI Responses API.
+- Updated dependencies [c679fec]
+  - @ai-sdk/openai@3.0.67
+
+## 3.0.67
+
+### Patch Changes
+
+- Updated dependencies [c82ab42]
+  - @ai-sdk/openai@3.0.66
+
+## 3.0.66
+
+### Patch Changes
+
+- Updated dependencies [eb52378]
+  - @ai-sdk/openai@3.0.65
+
+## 3.0.65
+
+### Patch Changes
+
+- Updated dependencies [b7ed8bd]
+  - @ai-sdk/openai@3.0.64
+
+## 3.0.64
+
+### Patch Changes
+
+- Updated dependencies [f591416]
+  - @ai-sdk/provider-utils@4.0.27
+  - @ai-sdk/openai@3.0.63
+
+## 3.0.63
+
+### Patch Changes
+
+- Updated dependencies [65edcca]
+  - @ai-sdk/openai@3.0.62
+
+## 3.0.62
+
+### Patch Changes
+
+- Updated dependencies [b93f9b4]
+  - @ai-sdk/openai@3.0.61
+
+## 3.0.61
+
+### Patch Changes
+
+- Updated dependencies [6dcd8e6]
+  - @ai-sdk/openai@3.0.60
+
+## 3.0.60
+
+### Patch Changes
+
+- Updated dependencies [38966ab]
+  - @ai-sdk/openai@3.0.59
+
+## 3.0.59
+
+### Patch Changes
+
+- Updated dependencies [2370948]
+  - @ai-sdk/openai@3.0.58
+
+## 3.0.58
+
+### Patch Changes
+
+- Updated dependencies [d33e7cc]
+  - @ai-sdk/openai@3.0.57
+
+## 3.0.57
+
+### Patch Changes
+
+- Updated dependencies [7beadf0]
+  - @ai-sdk/provider-utils@4.0.26
+  - @ai-sdk/openai@3.0.56
+
+## 3.0.56
+
+### Patch Changes
+
+- a727da4: chore: ensure consistent import handling and avoid import duplicates or cycles
+- Updated dependencies [a727da4]
+  - @ai-sdk/provider-utils@4.0.25
+  - @ai-sdk/provider@3.0.10
+  - @ai-sdk/openai@3.0.55
+
+## 3.0.55
+
+### Patch Changes
+
+- a7f3c72: trigger release for all packages after provenance setup
+- Updated dependencies [a7f3c72]
+- Updated dependencies [408a2ad]
+- Updated dependencies [c71ad14]
+  - @ai-sdk/openai@3.0.54
+  - @ai-sdk/provider@3.0.9
+  - @ai-sdk/provider-utils@4.0.24
+
 ## 3.0.54
 
 ### Patch Changes

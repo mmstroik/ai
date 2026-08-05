@@ -1,10 +1,12 @@
 import {
-  SharedV3Warning,
-  LanguageModelV3Message,
   UnsupportedFunctionalityError,
+  type SharedV3Warning,
+  type LanguageModelV3Message,
 } from '@ai-sdk/provider';
-import { convertToBase64 } from '@ai-sdk/provider-utils';
-import {
+import { convertToBase64, parseProviderOptions } from '@ai-sdk/provider-utils';
+import { xaiFilePartProviderOptions } from '../xai-file-part-options';
+import type {
+  XaiResponsesFunctionCallOutput,
   XaiResponsesInput,
   XaiResponsesUserMessageContentPart,
 } from './xai-responses-api';
@@ -53,10 +55,32 @@ export async function convertToXaiResponsesInput({
                     ? block.data.toString()
                     : `data:${mediaType};base64,${convertToBase64(block.data)}`;
 
-                contentParts.push({ type: 'input_image', image_url: imageUrl });
+                const filePartOptions = await parseProviderOptions({
+                  provider: 'xai',
+                  providerOptions: block.providerOptions,
+                  schema: xaiFilePartProviderOptions,
+                });
+
+                contentParts.push({
+                  type: 'input_image',
+                  image_url: imageUrl,
+                  ...(filePartOptions?.imageDetail != null && {
+                    detail: filePartOptions.imageDetail,
+                  }),
+                });
+              } else if (block.data instanceof URL) {
+                // xAI's Responses API accepts non-image documents (PDF, text, CSV, etc.)
+                // via `{ type: 'input_file', file_url }`. See
+                // https://docs.x.ai/docs/guides/chat-with-files. Inline bytes for
+                // non-image files are not supported by xAI; callers must upload via
+                // the Files API and pass a provider reference (file_id) instead.
+                contentParts.push({
+                  type: 'input_file',
+                  file_url: block.data.toString(),
+                });
               } else {
                 throw new UnsupportedFunctionalityError({
-                  functionality: `file part media type ${block.mediaType}`,
+                  functionality: `file part media type ${block.mediaType} as inline data (xAI Responses requires a URL or a Files API reference for non-image files)`,
                 });
               }
               break;
@@ -193,7 +217,7 @@ export async function convertToXaiResponsesInput({
           }
           const output = part.output;
 
-          let outputValue: string;
+          let outputValue: XaiResponsesFunctionCallOutput['output'];
           switch (output.type) {
             case 'text':
             case 'error-text':
@@ -207,14 +231,42 @@ export async function convertToXaiResponsesInput({
               outputValue = JSON.stringify(output.value);
               break;
             case 'content':
-              outputValue = output.value
-                .map(item => {
-                  if (item.type === 'text') {
-                    return item.text;
+              outputValue = [];
+              for (const item of output.value) {
+                switch (item.type) {
+                  case 'text': {
+                    outputValue.push({
+                      type: 'input_text',
+                      text: item.text,
+                    });
+                    break;
                   }
-                  return '';
-                })
-                .join('');
+                  case 'image-data': {
+                    outputValue.push({
+                      type: 'input_image',
+                      image_url: `data:${item.mediaType};base64,${item.data}`,
+                    });
+                    break;
+                  }
+                  case 'image-url': {
+                    outputValue.push({
+                      type: 'input_image',
+                      image_url: item.url,
+                    });
+                    break;
+                  }
+                  case 'file-data':
+                  case 'file-url':
+                  case 'file-id':
+                  case 'image-file-id':
+                  case 'custom': {
+                    break;
+                  }
+                  default: {
+                    const _exhaustiveCheck: never = item;
+                  }
+                }
+              }
               break;
             default: {
               const _exhaustiveCheck: never = output;

@@ -1,10 +1,10 @@
-import { FetchFunction, resolve } from '@ai-sdk/provider-utils';
-import { GoogleAuthOptions } from 'google-auth-library';
-import { generateAuthToken } from '../google-vertex-auth-google-auth-library';
+import { resolve, type FetchFunction } from '@ai-sdk/provider-utils';
+import type { GoogleAuthOptions } from 'google-auth-library';
+import { createAuthTokenGenerator } from '../google-vertex-auth-google-auth-library';
 import {
   createVertexMaas as createVertexMaasOriginal,
-  GoogleVertexMaasProvider,
-  GoogleVertexMaasProviderSettings as GoogleVertexMaasProviderSettingsOriginal,
+  type GoogleVertexMaasProvider,
+  type GoogleVertexMaasProviderSettings as GoogleVertexMaasProviderSettingsOriginal,
 } from './google-vertex-maas-provider';
 
 export type { GoogleVertexMaasProvider };
@@ -29,9 +29,11 @@ export interface GoogleVertexMaasProviderSettings extends GoogleVertexMaasProvid
 export function createVertexMaas(
   options: GoogleVertexMaasProviderSettings = {},
 ): GoogleVertexMaasProvider {
+  const generateAuthToken = createAuthTokenGenerator(options.googleAuthOptions);
+
   // Create a custom fetch wrapper that adds auth headers
   const customFetch: FetchFunction = async (url, init) => {
-    const token = await generateAuthToken(options.googleAuthOptions);
+    const token = await generateAuthToken();
     const resolvedHeaders = await resolve(options.headers);
     const authHeaders = {
       ...resolvedHeaders,
