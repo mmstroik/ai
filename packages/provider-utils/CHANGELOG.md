@@ -1,5 +1,80 @@
 # @ai-sdk/provider-utils
 
+## 4.0.53
+
+### Patch Changes
+
+- Updated dependencies [da2e17b]
+  - @ai-sdk/provider@3.0.17
+
+## 4.0.52
+
+### Patch Changes
+
+- 82e18b0: fix(provider-utils): avoid excessive memory usage when base64 encoding byte arrays
+
+## 4.0.51
+
+### Patch Changes
+
+- Updated dependencies [1a4dbb1]
+  - @ai-sdk/provider@3.0.16
+
+## 4.0.50
+
+### Patch Changes
+
+- cc23556: Mark transient network errors that occur while reading successful response bodies as retryable.
+
+## 4.0.49
+
+### Patch Changes
+
+- 9a521b9: Split OpenAI and Azure OpenAI embedding requests by a conservative UTF-8 byte budget derived from their aggregate token limit, in addition to input count limits.
+
+## 4.0.48
+
+### Patch Changes
+
+- 5642849: fix(provider-utils): allow imports in runtimes without a global fetch function
+
+## 4.0.47
+
+### Patch Changes
+
+- 2d172fb: Preserve schema-valued additional properties when converting Zod 4 schemas.
+
+## 4.0.46
+
+### Patch Changes
+
+- 31205a4: chore(provider-utils): upgrade undici to a maintained release
+
+## 4.0.45
+
+### Patch Changes
+
+- b2a4d5a: Preserve streamed download size-limit errors when response cancellation fails.
+
+## 4.0.44
+
+### Patch Changes
+
+- Updated dependencies [2171d15]
+  - @ai-sdk/provider@3.0.15
+
+## 4.0.43
+
+### Patch Changes
+
+- dab0a08: fix(provider-utils): drop Function-constructor dynamic import shim rejected by Next.js Edge Runtime builds
+
+## 4.0.42
+
+### Patch Changes
+
+- ee2bf30: fix(provider-utils): prevent Metro from parsing the Node 18 dynamic import fallback
+
 ## 4.0.41
 
 ### Patch Changes

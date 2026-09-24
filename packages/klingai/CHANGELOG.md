@@ -1,5 +1,92 @@
 # @ai-sdk/klingai
 
+## 3.0.45
+
+### Patch Changes
+
+- Updated dependencies [da2e17b]
+  - @ai-sdk/provider@3.0.17
+  - @ai-sdk/provider-utils@4.0.53
+
+## 3.0.44
+
+### Patch Changes
+
+- Updated dependencies [82e18b0]
+  - @ai-sdk/provider-utils@4.0.52
+
+## 3.0.43
+
+### Patch Changes
+
+- Updated dependencies [1a4dbb1]
+  - @ai-sdk/provider@3.0.16
+  - @ai-sdk/provider-utils@4.0.51
+
+## 3.0.42
+
+### Patch Changes
+
+- Updated dependencies [cc23556]
+  - @ai-sdk/provider-utils@4.0.50
+
+## 3.0.41
+
+### Patch Changes
+
+- Updated dependencies [9a521b9]
+  - @ai-sdk/provider-utils@4.0.49
+
+## 3.0.40
+
+### Patch Changes
+
+- Updated dependencies [5642849]
+  - @ai-sdk/provider-utils@4.0.48
+
+## 3.0.39
+
+### Patch Changes
+
+- Updated dependencies [2d172fb]
+  - @ai-sdk/provider-utils@4.0.47
+
+## 3.0.38
+
+### Patch Changes
+
+- Updated dependencies [31205a4]
+  - @ai-sdk/provider-utils@4.0.46
+
+## 3.0.37
+
+### Patch Changes
+
+- Updated dependencies [b2a4d5a]
+  - @ai-sdk/provider-utils@4.0.45
+
+## 3.0.36
+
+### Patch Changes
+
+- Updated dependencies [2171d15]
+  - @ai-sdk/provider@3.0.15
+  - @ai-sdk/provider-utils@4.0.44
+
+## 3.0.35
+
+### Patch Changes
+
+- Updated dependencies [dab0a08]
+  - @ai-sdk/provider-utils@4.0.43
+
+## 3.0.34
+
+### Patch Changes
+
+- Updated dependencies [ee2bf30]
+  - @ai-sdk/provider-utils@4.0.42
+
 ## 3.0.33
 
 ### Patch Changes

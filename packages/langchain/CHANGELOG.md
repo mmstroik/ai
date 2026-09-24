@@ -1,5 +1,341 @@
 # @ai-sdk/langchain
 
+## 2.0.297
+
+### Patch Changes
+
+- Updated dependencies [86f0089]
+- Updated dependencies [da2e17b]
+- Updated dependencies [f211ce5]
+- Updated dependencies [2f1488e]
+  - ai@6.0.289
+
+## 2.0.296
+
+### Patch Changes
+
+- ai@6.0.288
+
+## 2.0.295
+
+### Patch Changes
+
+- Updated dependencies [9af6cfa]
+  - ai@6.0.287
+
+## 2.0.294
+
+### Patch Changes
+
+- Updated dependencies [8a9722e]
+- Updated dependencies [6a0f2d9]
+- Updated dependencies [db02971]
+- Updated dependencies [4d91999]
+- Updated dependencies [b2ad994]
+- Updated dependencies [9c85bd4]
+- Updated dependencies [becaa32]
+  - ai@6.0.286
+
+## 2.0.293
+
+### Patch Changes
+
+- ai@6.0.285
+
+## 2.0.292
+
+### Patch Changes
+
+- Updated dependencies [124aa53]
+- Updated dependencies [0f48555]
+  - ai@6.0.284
+
+## 2.0.291
+
+### Patch Changes
+
+- ai@6.0.283
+
+## 2.0.290
+
+### Patch Changes
+
+- ai@6.0.282
+
+## 2.0.289
+
+### Patch Changes
+
+- ai@6.0.281
+
+## 2.0.288
+
+### Patch Changes
+
+- Updated dependencies [04783ca]
+- Updated dependencies [1a4dbb1]
+  - ai@6.0.280
+
+## 2.0.287
+
+### Patch Changes
+
+- Updated dependencies [6517262]
+  - ai@6.0.279
+
+## 2.0.286
+
+### Patch Changes
+
+- ai@6.0.278
+
+## 2.0.285
+
+### Patch Changes
+
+- ai@6.0.277
+
+## 2.0.284
+
+### Patch Changes
+
+- Updated dependencies [760ac87]
+- Updated dependencies [5e43974]
+  - ai@6.0.276
+
+## 2.0.283
+
+### Patch Changes
+
+- ai@6.0.275
+
+## 2.0.282
+
+### Patch Changes
+
+- Updated dependencies [0b790f3]
+  - ai@6.0.274
+
+## 2.0.281
+
+### Patch Changes
+
+- Updated dependencies [6e632b8]
+  - ai@6.0.273
+
+## 2.0.280
+
+### Patch Changes
+
+- Updated dependencies [e822a1d]
+- Updated dependencies [8c51a25]
+  - ai@6.0.272
+
+## 2.0.279
+
+### Patch Changes
+
+- Updated dependencies [9310140]
+- Updated dependencies [b503790]
+  - ai@6.0.271
+
+## 2.0.278
+
+### Patch Changes
+
+- Updated dependencies [8bc01a1]
+- Updated dependencies [fa01949]
+  - ai@6.0.270
+
+## 2.0.277
+
+### Patch Changes
+
+- Updated dependencies [9a521b9]
+  - ai@6.0.269
+
+## 2.0.276
+
+### Patch Changes
+
+- ai@6.0.268
+
+## 2.0.275
+
+### Patch Changes
+
+- Updated dependencies [cd29175]
+- Updated dependencies [e88c835]
+  - ai@6.0.267
+
+## 2.0.274
+
+### Patch Changes
+
+- Updated dependencies [a1bafb1]
+- Updated dependencies [3cb50fc]
+  - ai@6.0.266
+
+## 2.0.273
+
+### Patch Changes
+
+- ai@6.0.265
+
+## 2.0.272
+
+### Patch Changes
+
+- Updated dependencies [6a7e701]
+  - ai@6.0.264
+
+## 2.0.271
+
+### Patch Changes
+
+- ai@6.0.263
+
+## 2.0.270
+
+### Patch Changes
+
+- Updated dependencies [30526e9]
+  - ai@6.0.262
+
+## 2.0.269
+
+### Patch Changes
+
+- Updated dependencies [f1afbf9]
+  - ai@6.0.261
+
+## 2.0.268
+
+### Patch Changes
+
+- 5b63247: Preserve tool input lifecycles when LangGraph steps reuse a provider tool call ID.
+- Updated dependencies [98c656f]
+- Updated dependencies [b253d52]
+- Updated dependencies [9e15cb4]
+  - ai@6.0.260
+
+## 2.0.267
+
+### Patch Changes
+
+- ai@6.0.259
+
+## 2.0.266
+
+### Patch Changes
+
+- ai@6.0.258
+
+## 2.0.265
+
+### Patch Changes
+
+- ai@6.0.257
+
+## 2.0.264
+
+### Patch Changes
+
+- ai@6.0.256
+
+## 2.0.263
+
+### Patch Changes
+
+- Updated dependencies [35a94b0]
+- Updated dependencies [93d24c6]
+- Updated dependencies [1bd1caf]
+  - ai@6.0.255
+
+## 2.0.262
+
+### Patch Changes
+
+- ai@6.0.254
+
+## 2.0.261
+
+### Patch Changes
+
+- Updated dependencies [d91d30b]
+  - ai@6.0.253
+
+## 2.0.260
+
+### Patch Changes
+
+- Updated dependencies [2f96d3f]
+- Updated dependencies [afb1965]
+  - ai@6.0.252
+
+## 2.0.259
+
+### Patch Changes
+
+- Updated dependencies [d13c2e9]
+  - ai@6.0.251
+
+## 2.0.258
+
+### Patch Changes
+
+- Updated dependencies [a077695]
+- Updated dependencies [7ce3b8c]
+  - ai@6.0.250
+
+## 2.0.257
+
+### Patch Changes
+
+- Updated dependencies [a774b7b]
+  - ai@6.0.249
+
+## 2.0.256
+
+### Patch Changes
+
+- 5995d53: Preserve LangGraph subgraph namespaces and step lifecycles without letting concurrent namespace counters split active text or reasoning streams.
+- Updated dependencies [2171d15]
+  - ai@6.0.248
+
+## 2.0.255
+
+### Patch Changes
+
+- ai@6.0.247
+
+## 2.0.254
+
+### Patch Changes
+
+- ai@6.0.246
+
+## 2.0.253
+
+### Patch Changes
+
+- Updated dependencies [0de0715]
+  - ai@6.0.245
+
+## 2.0.252
+
+### Patch Changes
+
+- Updated dependencies [79e58aa]
+  - ai@6.0.244
+
+## 2.0.251
+
+### Patch Changes
+
+- Updated dependencies [dd5d344]
+  - ai@6.0.243
+
 ## 2.0.250
 
 ### Patch Changes

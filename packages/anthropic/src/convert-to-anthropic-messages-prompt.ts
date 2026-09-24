@@ -23,6 +23,7 @@ import {
   type AnthropicSystemMessage,
   type AnthropicTextContent,
   type AnthropicToolChangeContent,
+  type AnthropicToolCallCaller,
   type AnthropicToolResultContent,
   type AnthropicUserMessage,
   type AnthropicWebFetchToolResultContent,
@@ -116,12 +117,20 @@ export async function convertToAnthropicMessagesPrompt({
   warnings,
   cacheControlValidator,
   toolNameMapping,
+  toolsetNames = {},
 }: {
   prompt: LanguageModelV3Prompt;
   sendReasoning: boolean;
   warnings: SharedV3Warning[];
   cacheControlValidator?: CacheControlValidator;
   toolNameMapping: ToolNameMapping;
+
+  /**
+   * Maps custom tool names of toolset tools (e.g. the computer toolset) to
+   * the Anthropic `toolset_name`. Tool calls and results of these tools are
+   * serialized as toolset member calls.
+   */
+  toolsetNames?: Record<string, string>;
 }): Promise<{
   prompt: AnthropicMessagesPrompt;
   betas: Set<string>;
@@ -167,8 +176,9 @@ export async function convertToAnthropicMessagesPrompt({
 
     switch (type) {
       case 'system': {
-        const content: AnthropicSystemMessage['content'] = [];
+        const systemMessages: AnthropicSystemMessage[] = [];
         let toolChangeCount = 0;
+        let hasMidConversationOptions = false;
 
         for (const { content: text, providerOptions } of block.messages) {
           const systemMessageOptions = await parseProviderOptions({
@@ -177,10 +187,16 @@ export async function convertToAnthropicMessagesPrompt({
             schema: anthropicSystemMessageProviderOptions,
           });
           const toolChanges = systemMessageOptions?.toolChanges ?? [];
+          const clearAt = systemMessageOptions?.clearAt;
+          const effort = systemMessageOptions?.effort;
+          const content: AnthropicSystemMessage['content'] = [];
 
-          // A system message that only carries tool changes may have empty
-          // text; do not emit an empty text block for it.
-          if (text !== '' || toolChanges.length === 0) {
+          // A system message that only carries message-level options or tool
+          // changes may have empty text; do not emit an empty text block for it.
+          if (
+            text !== '' ||
+            (toolChanges.length === 0 && clearAt == null && effort == null)
+          ) {
             content.push({
               type: 'text' as const,
               text,
@@ -201,14 +217,29 @@ export async function convertToAnthropicMessagesPrompt({
               },
             } satisfies AnthropicToolChangeContent);
           }
+
+          hasMidConversationOptions ||= clearAt != null || effort != null;
+
+          systemMessages.push({
+            role: 'system',
+            content,
+            ...(clearAt != null && { clear_at: clearAt }),
+            ...(effort != null && { output_config: { effort } }),
+          });
         }
 
         // The first block becomes the top-level system prompt. Later system
         // blocks are sent as inline system messages — always when they carry
-        // tool changes (which are only valid mid-conversation), and otherwise
-        // only when a top-level system prompt already exists (preserving the
-        // existing hoisting behavior for plain text).
-        if (i === 0 || (system == null && toolChangeCount === 0)) {
+        // tool changes or per-turn options (which are only valid
+        // mid-conversation), and otherwise only when a top-level system prompt
+        // already exists (preserving the existing hoisting behavior for plain
+        // text).
+        if (
+          i === 0 ||
+          (system == null &&
+            toolChangeCount === 0 &&
+            !hasMidConversationOptions)
+        ) {
           if (toolChangeCount > 0) {
             warnings.push({
               type: 'other',
@@ -218,14 +249,31 @@ export async function convertToAnthropicMessagesPrompt({
                 'The tool changes have been ignored.',
             });
           }
-          system = content.filter(
-            (part): part is AnthropicTextContent => part.type === 'text',
+          if (hasMidConversationOptions) {
+            warnings.push({
+              type: 'other',
+              message:
+                'clearAt and effort on the initial system message are not supported by Anthropic. ' +
+                'Configure these options on a mid-conversation system message instead. ' +
+                'The options have been ignored.',
+            });
+          }
+          system = systemMessages.flatMap(message =>
+            message.content.filter(
+              (part): part is AnthropicTextContent => part.type === 'text',
+            ),
           );
         } else {
-          messages.push({ role: 'system', content });
+          messages.push(...systemMessages);
           betas.add('mid-conversation-system-2026-04-07');
           if (toolChangeCount > 0) {
             betas.add('mid-conversation-tool-changes-2026-07-01');
+          }
+          if (systemMessages.some(message => message.clear_at != null)) {
+            betas.add('mid-conversation-system-clear-at-2026-08-21');
+          }
+          if (systemMessages.some(message => message.output_config != null)) {
+            betas.add('mid-conversation-output-config-2026-07-01');
           }
         }
 
@@ -524,9 +572,16 @@ export async function convertToAnthropicMessagesPrompt({
                     break;
                 }
 
+                const toolsetName = getAnthropicToolsetName({
+                  toolName: part.toolName,
+                  providerOptions: part.providerOptions,
+                  toolsetNames,
+                });
+
                 anthropicContent.push({
                   type: 'tool_result',
                   tool_use_id: part.toolCallId,
+                  ...(toolsetName != null && { toolset_name: toolsetName }),
                   content: contentValue,
                   is_error:
                     output.type === 'error-text' || output.type === 'error-json'
@@ -669,6 +724,8 @@ export async function convertToAnthropicMessagesPrompt({
               }
 
               case 'tool-call': {
+                const caller = getAnthropicCaller(part.providerOptions);
+
                 if (part.providerExecuted) {
                   const providerToolName = toolNameMapping.toProviderToolName(
                     part.toolName,
@@ -715,6 +772,7 @@ export async function convertToAnthropicMessagesPrompt({
                       id: part.toolCallId,
                       name: subtoolName, // map back to subtool name
                       input,
+                      ...(caller && { caller }),
                       cache_control: cacheControl,
                     });
                   } else if (
@@ -735,6 +793,7 @@ export async function convertToAnthropicMessagesPrompt({
                       id: part.toolCallId,
                       name: 'code_execution',
                       input: inputWithoutType,
+                      ...(caller && { caller }),
                       cache_control: cacheControl,
                     });
                   } else {
@@ -748,6 +807,7 @@ export async function convertToAnthropicMessagesPrompt({
                         id: part.toolCallId,
                         name: providerToolName,
                         input: part.input,
+                        ...(caller && { caller }),
                         cache_control: cacheControl,
                       });
                     } else if (
@@ -759,6 +819,7 @@ export async function convertToAnthropicMessagesPrompt({
                         id: part.toolCallId,
                         name: providerToolName,
                         input: part.input,
+                        ...(caller && { caller }),
                         cache_control: cacheControl,
                       });
                     } else if (providerToolName === 'advisor') {
@@ -768,6 +829,7 @@ export async function convertToAnthropicMessagesPrompt({
                         id: part.toolCallId,
                         name: 'advisor',
                         input: {},
+                        ...(caller && { caller }),
                         cache_control: cacheControl,
                       });
                     } else {
@@ -781,25 +843,40 @@ export async function convertToAnthropicMessagesPrompt({
                   break;
                 }
 
-                // Extract caller info from provider options for programmatic tool calling
-                const callerOptions = part.providerOptions?.anthropic as
-                  | { caller?: { type: string; toolId?: string } }
-                  | undefined;
-                const caller = callerOptions?.caller
-                  ? (callerOptions.caller.type === 'code_execution_20250825' ||
-                      callerOptions.caller.type ===
-                        'code_execution_20260120') &&
-                    callerOptions.caller.toolId
-                    ? {
-                        type: callerOptions.caller.type as
-                          | 'code_execution_20250825'
-                          | 'code_execution_20260120',
-                        tool_id: callerOptions.caller.toolId,
-                      }
-                    : callerOptions.caller.type === 'direct'
-                      ? { type: 'direct' as const }
-                      : undefined
-                  : undefined;
+                const toolsetName = getAnthropicToolsetName({
+                  toolName: part.toolName,
+                  providerOptions: part.providerOptions,
+                  toolsetNames,
+                });
+
+                if (toolsetName != null) {
+                  // toolset member call: the `action` is the member tool name
+                  const { action, ...memberInput } =
+                    typeof part.input === 'object' &&
+                    part.input !== null &&
+                    !Array.isArray(part.input)
+                      ? (part.input as Record<string, unknown>)
+                      : {};
+
+                  if (typeof action !== 'string') {
+                    warnings.push({
+                      type: 'other',
+                      message: `toolset tool call for tool ${part.toolName} is missing the action`,
+                    });
+                    break;
+                  }
+
+                  anthropicContent.push({
+                    type: 'tool_use',
+                    id: part.toolCallId,
+                    name: action,
+                    toolset_name: toolsetName,
+                    input: memberInput,
+                    ...(caller && { caller }),
+                    cache_control: cacheControl,
+                  });
+                  break;
+                }
 
                 anthropicContent.push({
                   type: 'tool_use',
@@ -816,6 +893,7 @@ export async function convertToAnthropicMessagesPrompt({
                 const providerToolName = toolNameMapping.toProviderToolName(
                   part.toolName,
                 );
+                const caller = getAnthropicCaller(part.providerOptions);
 
                 if (mcpToolUseIds.has(part.toolCallId)) {
                   const output = part.output;
@@ -1022,6 +1100,7 @@ export async function convertToAnthropicMessagesPrompt({
                           (await extractErrorValue(output.value)).errorCode ??
                           'unavailable',
                       },
+                      ...(caller && { caller }),
                       cache_control: cacheControl,
                     });
 
@@ -1066,6 +1145,7 @@ export async function convertToAnthropicMessagesPrompt({
                         >['content']['source'],
                       },
                     },
+                    ...(caller && { caller }),
                     cache_control: cacheControl,
                   });
 
@@ -1085,6 +1165,7 @@ export async function convertToAnthropicMessagesPrompt({
                           (await extractErrorValue(output.value)).errorCode ??
                           'unavailable',
                       },
+                      ...(caller && { caller }),
                       cache_control: cacheControl,
                     });
 
@@ -1118,6 +1199,7 @@ export async function convertToAnthropicMessagesPrompt({
                       encrypted_content: result.encryptedContent,
                       type: result.type,
                     })),
+                    ...(caller && { caller }),
                     cache_control: cacheControl,
                   });
 
@@ -1342,4 +1424,53 @@ function moveToolUseBlocksToEnd(
   flushSegment();
 
   return result;
+}
+
+/**
+ * Resolves the Anthropic `toolset_name` for a tool call or tool result. The
+ * toolset is identified either through the tools passed to the request or
+ * through the `toolsetName` provider metadata of a previous response.
+ */
+function getAnthropicToolsetName({
+  toolName,
+  providerOptions,
+  toolsetNames,
+}: {
+  toolName: string;
+  providerOptions: SharedV3ProviderMetadata | undefined;
+  toolsetNames: Record<string, string>;
+}): string | undefined {
+  const fromTools = toolsetNames[toolName];
+  if (fromTools != null) {
+    return fromTools;
+  }
+
+  const fromMetadata = (
+    providerOptions?.anthropic as { toolsetName?: unknown } | undefined
+  )?.toolsetName;
+
+  return typeof fromMetadata === 'string' ? fromMetadata : undefined;
+}
+
+function getAnthropicCaller(
+  providerOptions: SharedV3ProviderMetadata | undefined,
+): AnthropicToolCallCaller | undefined {
+  const caller = (
+    providerOptions?.anthropic as
+      | { caller?: { type: string; toolId?: string } }
+      | undefined
+  )?.caller;
+
+  if (
+    (caller?.type === 'code_execution_20250825' ||
+      caller?.type === 'code_execution_20260120') &&
+    caller.toolId
+  ) {
+    return {
+      type: caller.type,
+      tool_id: caller.toolId,
+    };
+  }
+
+  return caller?.type === 'direct' ? { type: 'direct' } : undefined;
 }

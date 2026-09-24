@@ -299,13 +299,16 @@ export class OpenAICompatibleChatLanguageModel implements LanguageModelV3 {
     });
 
     const choice = responseBody.choices[0];
+    if (choice == null) {
+      throw new InvalidResponseDataError({
+        data: rawResponse,
+        message: 'Response did not contain any choices.',
+      });
+    }
+
     const content: Array<LanguageModelV3Content> = [];
 
-    // text content:
-    const text = choice.message.content;
-    if (text != null && text.length > 0) {
-      content.push({ type: 'text', text });
-    }
+    content.push(...convertOpenAICompatibleContent(choice.message.content));
 
     // reasoning content:
     const reasoning =
@@ -430,10 +433,7 @@ export class OpenAICompatibleChatLanguageModel implements LanguageModelV3 {
       }
     >();
 
-    let finishReason: LanguageModelV3FinishReason = {
-      unified: 'other',
-      raw: undefined,
-    };
+    let finishReason: LanguageModelV3FinishReason | undefined;
     let usage: z.infer<typeof openaiCompatibleTokenUsageSchema> | undefined =
       undefined;
     let isFirstChunk = true;
@@ -511,9 +511,12 @@ export class OpenAICompatibleChatLanguageModel implements LanguageModelV3 {
 
             const delta = choice.delta;
 
-            // enqueue reasoning before text deltas:
-            const reasoningContent = delta.reasoning_content ?? delta.reasoning;
-            if (reasoningContent) {
+            const enqueueReasoningDelta = (reasoningDelta: string) => {
+              if (isActiveText) {
+                controller.enqueue({ type: 'text-end', id: 'txt-0' });
+                isActiveText = false;
+              }
+
               if (!isActiveReasoning) {
                 controller.enqueue({
                   type: 'reasoning-start',
@@ -525,12 +528,11 @@ export class OpenAICompatibleChatLanguageModel implements LanguageModelV3 {
               controller.enqueue({
                 type: 'reasoning-delta',
                 id: 'reasoning-0',
-                delta: reasoningContent,
+                delta: reasoningDelta,
               });
-            }
+            };
 
-            if (delta.content) {
-              // end active reasoning block before text starts
+            const enqueueTextDelta = (textDelta: string) => {
               if (isActiveReasoning) {
                 controller.enqueue({
                   type: 'reasoning-end',
@@ -547,11 +549,27 @@ export class OpenAICompatibleChatLanguageModel implements LanguageModelV3 {
               controller.enqueue({
                 type: 'text-delta',
                 id: 'txt-0',
-                delta: delta.content,
+                delta: textDelta,
               });
+            };
+
+            // enqueue reasoning before text deltas:
+            const reasoningContent = delta.reasoning_content ?? delta.reasoning;
+            if (reasoningContent) {
+              enqueueReasoningDelta(reasoningContent);
             }
 
-            if (delta.tool_calls != null) {
+            for (const contentPart of convertOpenAICompatibleContent(
+              delta.content,
+            )) {
+              if (contentPart.type === 'reasoning') {
+                enqueueReasoningDelta(contentPart.text);
+              } else {
+                enqueueTextDelta(contentPart.text);
+              }
+            }
+
+            if (delta.tool_calls != null && delta.tool_calls.length > 0) {
               // end active reasoning block before tool calls start
               if (isActiveReasoning) {
                 controller.enqueue({
@@ -752,6 +770,17 @@ export class OpenAICompatibleChatLanguageModel implements LanguageModelV3 {
               });
             }
 
+            if (finishReason == null) {
+              finishReason = { unified: 'error', raw: undefined };
+              controller.enqueue({
+                type: 'error',
+                error: new InvalidResponseDataError({
+                  data: undefined,
+                  message: 'Response stream ended without a finish reason.',
+                }),
+              });
+            }
+
             const providerMetadata: SharedV3ProviderMetadata = {
               [providerOptionsName]: {},
               ...metadataExtractor?.buildMetadata(),
@@ -786,18 +815,19 @@ export class OpenAICompatibleChatLanguageModel implements LanguageModelV3 {
   }
 }
 
+// Loose, nested objects included: the parsed value is returned as `usage.raw`.
 const openaiCompatibleTokenUsageSchema = z
   .looseObject({
     prompt_tokens: z.number().nullish(),
     completion_tokens: z.number().nullish(),
     total_tokens: z.number().nullish(),
     prompt_tokens_details: z
-      .object({
+      .looseObject({
         cached_tokens: z.number().nullish(),
       })
       .nullish(),
     completion_tokens_details: z
-      .object({
+      .looseObject({
         reasoning_tokens: z.number().nullish(),
         accepted_prediction_tokens: z.number().nullish(),
         rejected_prediction_tokens: z.number().nullish(),
@@ -805,6 +835,60 @@ const openaiCompatibleTokenUsageSchema = z
       .nullish(),
   })
   .nullish();
+
+const openAICompatibleContentSchema = z
+  .union([
+    z.string(),
+    z.array(
+      z.looseObject({
+        type: z.string(),
+      }),
+    ),
+  ])
+  .nullish();
+
+function convertOpenAICompatibleContent(
+  content: z.infer<typeof openAICompatibleContentSchema>,
+): Array<Extract<LanguageModelV3Content, { type: 'text' | 'reasoning' }>> {
+  if (content == null) {
+    return [];
+  }
+
+  if (typeof content === 'string') {
+    return content.length > 0 ? [{ type: 'text', text: content }] : [];
+  }
+
+  const result: Array<
+    Extract<LanguageModelV3Content, { type: 'text' | 'reasoning' }>
+  > = [];
+
+  for (const part of content) {
+    if (part.type === 'text' && typeof part.text === 'string') {
+      if (part.text.length > 0) {
+        result.push({ type: 'text', text: part.text });
+      }
+    } else if (part.type === 'thinking' && Array.isArray(part.thinking)) {
+      const reasoningText = part.thinking
+        .filter(
+          chunk =>
+            chunk != null &&
+            typeof chunk === 'object' &&
+            'type' in chunk &&
+            chunk.type === 'text' &&
+            'text' in chunk &&
+            typeof chunk.text === 'string',
+        )
+        .map(chunk => chunk.text)
+        .join('');
+
+      if (reasoningText.length > 0) {
+        result.push({ type: 'reasoning', text: reasoningText });
+      }
+    }
+  }
+
+  return result;
+}
 
 // limited version of the schema, focussed on what is needed for the implementation
 // this approach limits breakages when the API changes and increases efficiency
@@ -816,7 +900,7 @@ const OpenAICompatibleChatResponseSchema = z.looseObject({
     z.object({
       message: z.object({
         role: z.literal('assistant').nullish(),
-        content: z.string().nullish(),
+        content: openAICompatibleContentSchema,
         reasoning_content: z.string().nullish(),
         reasoning: z.string().nullish(),
         tool_calls: z
@@ -856,7 +940,7 @@ const chunkBaseSchema = z.looseObject({
       delta: z
         .object({
           role: z.enum(['assistant', '']).nullish(),
-          content: z.string().nullish(),
+          content: openAICompatibleContentSchema,
           // Most openai-compatible models set `reasoning_content`, but some
           // providers serving `gpt-oss` set `reasoning`. See #7866
           reasoning_content: z.string().nullish(),

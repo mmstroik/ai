@@ -1,5 +1,98 @@
 # @ai-sdk/black-forest-labs
 
+## 1.0.63
+
+### Patch Changes
+
+- Updated dependencies [da2e17b]
+  - @ai-sdk/provider@3.0.17
+  - @ai-sdk/provider-utils@4.0.53
+
+## 1.0.62
+
+### Patch Changes
+
+- Updated dependencies [82e18b0]
+  - @ai-sdk/provider-utils@4.0.52
+
+## 1.0.61
+
+### Patch Changes
+
+- Updated dependencies [1a4dbb1]
+  - @ai-sdk/provider@3.0.16
+  - @ai-sdk/provider-utils@4.0.51
+
+## 1.0.60
+
+### Patch Changes
+
+- Updated dependencies [cc23556]
+  - @ai-sdk/provider-utils@4.0.50
+
+## 1.0.59
+
+### Patch Changes
+
+- Updated dependencies [9a521b9]
+  - @ai-sdk/provider-utils@4.0.49
+
+## 1.0.58
+
+### Patch Changes
+
+- Updated dependencies [5642849]
+  - @ai-sdk/provider-utils@4.0.48
+
+## 1.0.57
+
+### Patch Changes
+
+- Updated dependencies [2d172fb]
+  - @ai-sdk/provider-utils@4.0.47
+
+## 1.0.56
+
+### Patch Changes
+
+- Updated dependencies [31205a4]
+  - @ai-sdk/provider-utils@4.0.46
+
+## 1.0.55
+
+### Patch Changes
+
+- Updated dependencies [b2a4d5a]
+  - @ai-sdk/provider-utils@4.0.45
+
+## 1.0.54
+
+### Patch Changes
+
+- Updated dependencies [2171d15]
+  - @ai-sdk/provider@3.0.15
+  - @ai-sdk/provider-utils@4.0.44
+
+## 1.0.53
+
+### Patch Changes
+
+- Updated dependencies [dab0a08]
+  - @ai-sdk/provider-utils@4.0.43
+
+## 1.0.52
+
+### Patch Changes
+
+- Updated dependencies [ee2bf30]
+  - @ai-sdk/provider-utils@4.0.42
+
+## 1.0.51
+
+### Patch Changes
+
+- 129101d: Report the settled cost for FLUX 3 video generations. The submit response can only estimate, and returns no cost when the price depends on the finished video; the result endpoint answers with `SettledCostResultResponse`, whose cost was being dropped.
+
 ## 1.0.50
 
 ### Patch Changes

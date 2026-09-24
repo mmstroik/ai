@@ -191,7 +191,7 @@ export abstract class HttpChatTransport<
     const response = await fetch(api, {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json',
+        'content-type': 'application/json',
         ...headers,
       },
       body: JSON.stringify(body),
@@ -247,6 +247,7 @@ export abstract class HttpChatTransport<
       method: 'GET',
       headers,
       credentials,
+      signal: options.abortSignal,
     });
 
     // no active stream found, so we do not resume

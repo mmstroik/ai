@@ -1,5 +1,163 @@
 # @ai-sdk/google
 
+## 3.0.126
+
+### Patch Changes
+
+- da2e17b: fix(provider): preserve opaque file URI strings for provider serialization
+- Updated dependencies [da2e17b]
+  - @ai-sdk/provider@3.0.17
+  - @ai-sdk/provider-utils@4.0.53
+
+## 3.0.125
+
+### Patch Changes
+
+- Updated dependencies [82e18b0]
+  - @ai-sdk/provider-utils@4.0.52
+
+## 3.0.124
+
+### Patch Changes
+
+- 9548d8e: fix(google): ignore default prompt block reasons in non-streaming responses
+
+## 3.0.123
+
+### Patch Changes
+
+- c36c87c: fix(google): preserve prompt feedback and metadata across streaming chunks
+
+## 3.0.122
+
+### Patch Changes
+
+- 1a4dbb1: Retry unclassified empty image results, preserve retry-attempt accounting, add provider-independent result retryability classification, preserve it through the AI Gateway, and mark Google and Google Vertex content-filtered results as terminal.
+- Updated dependencies [1a4dbb1]
+  - @ai-sdk/provider@3.0.16
+  - @ai-sdk/provider-utils@4.0.51
+
+## 3.0.121
+
+### Patch Changes
+
+- 13507cb: feat(google): add gemini-3.8-flash model
+
+## 3.0.120
+
+### Patch Changes
+
+- daaa769: fix(google): support video response formats in Gemini Interactions
+
+## 3.0.119
+
+### Patch Changes
+
+- 1912e88: Preserve complete Google Generative Language usage metadata in raw usage results.
+- Updated dependencies [cc23556]
+  - @ai-sdk/provider-utils@4.0.50
+
+## 3.0.118
+
+### Patch Changes
+
+- 35430d7: Omit unsupported frequency and presence penalties from Gemini 2.5 requests and return warnings instead.
+
+## 3.0.117
+
+### Patch Changes
+
+- b068651: Surface prompt-level Google safety blocks without candidates as content-filter results with prompt feedback metadata.
+
+## 3.0.116
+
+### Patch Changes
+
+- 9a1656e: fix(google): convert enum values to the Gemini schema format
+- cfdc8df: feat (provider/google, provider/google-vertex): Gemini 3.5 Transcribe support — unary transcription (`gemini-3.5-transcribe`) via generateContent with language detection, speaker diarization, word timestamps, custom vocabulary, and `mode: 'VERBATIM' | 'SMART'` transcription formatting
+
+## 3.0.115
+
+### Patch Changes
+
+- Updated dependencies [9a521b9]
+  - @ai-sdk/provider-utils@4.0.49
+
+## 3.0.114
+
+### Patch Changes
+
+- 1df2ced: Preserve recursive tool input schemas without aborting Google model calls.
+
+## 3.0.113
+
+### Patch Changes
+
+- Updated dependencies [5642849]
+  - @ai-sdk/provider-utils@4.0.48
+
+## 3.0.112
+
+### Patch Changes
+
+- Updated dependencies [2d172fb]
+  - @ai-sdk/provider-utils@4.0.47
+
+## 3.0.111
+
+### Patch Changes
+
+- c715588: Inline local JSON Schema references in Google tool and structured-output schemas.
+
+## 3.0.110
+
+### Patch Changes
+
+- Updated dependencies [31205a4]
+  - @ai-sdk/provider-utils@4.0.46
+
+## 3.0.109
+
+### Patch Changes
+
+- 71e94ad: feat(google): add `gemini-3.7-flash` model
+
+## 3.0.108
+
+### Patch Changes
+
+- dd7ecd7: Preserve forced tool calls when strict function tools are configured.
+
+## 3.0.107
+
+### Patch Changes
+
+- c29b64f: Preserve Google API error details in `APICallError.data`.
+- Updated dependencies [b2a4d5a]
+  - @ai-sdk/provider-utils@4.0.45
+
+## 3.0.106
+
+### Patch Changes
+
+- Updated dependencies [2171d15]
+  - @ai-sdk/provider@3.0.15
+  - @ai-sdk/provider-utils@4.0.44
+
+## 3.0.105
+
+### Patch Changes
+
+- Updated dependencies [dab0a08]
+  - @ai-sdk/provider-utils@4.0.43
+
+## 3.0.104
+
+### Patch Changes
+
+- Updated dependencies [ee2bf30]
+  - @ai-sdk/provider-utils@4.0.42
+
 ## 3.0.103
 
 ### Patch Changes

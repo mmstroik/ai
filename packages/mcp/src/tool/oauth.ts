@@ -27,8 +27,11 @@ import {
   resourceUrlStripSlash,
 } from '../util/oauth-util';
 import { LATEST_PROTOCOL_VERSION } from './types';
-import { parseJSON, type FetchFunction } from '@ai-sdk/provider-utils';
-
+import {
+  parseJSON,
+  validateDownloadUrl,
+  type FetchFunction,
+} from '@ai-sdk/provider-utils';
 export type AuthResult = 'AUTHORIZED' | 'REDIRECT';
 
 export interface OAuthAuthorizationServerInformation {
@@ -121,6 +124,45 @@ export class UnauthorizedError extends Error {
 
 function normalizeUrl(url: string | URL): string {
   return new URL(url).href;
+}
+
+/** Allow loopback HTTP(S) for local MCP OAuth (RFC 8252 §7.3, RFC 6761 §6.3). */
+function isOAuthLoopbackHost(hostname: string): boolean {
+  const normalized = hostname.toLowerCase().replace(/\.+$/, '');
+  return (
+    normalized === 'localhost' ||
+    normalized.endsWith('.localhost') ||
+    normalized === '127.0.0.1' ||
+    normalized === '[::1]' ||
+    normalized === '::1'
+  );
+}
+
+/**
+ * Guards metadata-derived token/registration URLs before credentials are sent.
+ * Loopback is allowed for local OAuth; every other target uses the shared
+ * download URL guard (http(s) only, no private/link-local IPs).
+ *
+ * Credential POSTs use `redirect: 'error'` instead of
+ * `fetchWithValidatedRedirects`, which is GET-only and would follow hops with
+ * the authorization code, PKCE verifier, and client secret still attached.
+ */
+function assertSafeOAuthEndpoint(endpointUrl: URL): void {
+  if (
+    (endpointUrl.protocol === 'http:' || endpointUrl.protocol === 'https:') &&
+    isOAuthLoopbackHost(endpointUrl.hostname)
+  ) {
+    return;
+  }
+
+  try {
+    validateDownloadUrl(endpointUrl.href);
+  } catch (error) {
+    throw new MCPClientOAuthError({
+      message: `OAuth endpoint URL is not allowed: ${endpointUrl.href}`,
+      cause: error,
+    });
+  }
 }
 
 function createAuthorizationServerInformation(
@@ -271,37 +313,65 @@ function assertAuthorizationServerInformationMatches({
   }
 }
 
-/**
- * Extracts the OAuth 2.0 Protected Resource Metadata URL from a WWW-Authenticate header (RFC9728).
- * Looks for a resource="..." parameter.
- */
-export function extractResourceMetadataUrl(
-  response: Response,
-): URL | undefined {
+export function extractWWWAuthenticateParams(response: Response): {
+  resourceMetadataUrl?: URL;
+  scope?: string;
+} {
   const header =
     response.headers.get('www-authenticate') ??
     response.headers.get('WWW-Authenticate');
   if (!header) {
-    return undefined;
+    return {};
   }
 
   const [type, scheme] = header.split(' ');
-  if (type.toLowerCase() !== 'bearer' || !scheme) {
-    return undefined;
+  if (type.replace(/,$/, '').toLowerCase() !== 'bearer' || !scheme) {
+    return {};
   }
 
-  // regex taken from MCP spec
-  const regex = /resource_metadata="([^"]*)"/;
-  const match = header.match(regex);
-  if (!match) {
-    return undefined;
-  }
+  const resourceMetadataMatch = header.match(
+    /(?:^|[,\s])resource_metadata="([^"]*)"/i,
+  );
+  const scope = header.match(/(?:^|[,\s])scope="([^"]*)"/i)?.[1];
 
+  let resourceMetadataUrl: URL | undefined;
   try {
-    return new URL(match[1]);
-  } catch {
-    return undefined;
+    resourceMetadataUrl = resourceMetadataMatch
+      ? new URL(resourceMetadataMatch[1])
+      : undefined;
+  } catch {}
+
+  return { resourceMetadataUrl, scope };
+}
+
+/**
+ * Extracts the OAuth 2.0 Protected Resource Metadata URL from a WWW-Authenticate header (RFC9728).
+ */
+export function extractResourceMetadataUrl(
+  response: Response,
+): URL | undefined {
+  return extractWWWAuthenticateParams(response).resourceMetadataUrl;
+}
+
+function selectScope({
+  scope,
+  resourceMetadata,
+  clientMetadata,
+}: {
+  scope?: string;
+  resourceMetadata?: OAuthProtectedResourceMetadata;
+  clientMetadata: OAuthClientMetadata;
+}): string | undefined {
+  if (scope) {
+    return scope;
   }
+
+  const resourceScopes = resourceMetadata?.scopes_supported?.join(' ');
+  if (resourceScopes) {
+    return resourceScopes;
+  }
+
+  return clientMetadata.scope;
 }
 
 /**
@@ -512,7 +582,12 @@ function assertMetadataIssuerMatches(
   metadata: AuthorizationServerMetadata,
   expectedIssuer: string,
 ): void {
-  if (metadata.issuer !== expectedIssuer) {
+  const issuerMatches =
+    metadata.issuer === expectedIssuer ||
+    (expectedIssuer === new URL(expectedIssuer).origin &&
+      metadata.issuer === `${expectedIssuer}/`);
+
+  if (!issuerMatches) {
     throw new MCPClientOAuthError({
       message: `OAuth authorization server metadata issuer ${metadata.issuer} does not match expected issuer ${expectedIssuer}`,
     });
@@ -844,6 +919,7 @@ export async function exchangeAuthorization(
   const tokenUrl = metadata?.token_endpoint
     ? new URL(metadata.token_endpoint)
     : new URL('/token', authorizationServerUrl);
+  assertSafeOAuthEndpoint(tokenUrl);
 
   if (
     metadata?.grant_types_supported &&
@@ -891,6 +967,7 @@ export async function exchangeAuthorization(
     method: 'POST',
     headers,
     body: params,
+    redirect: 'error',
   });
 
   if (!response.ok) {
@@ -947,6 +1024,7 @@ export async function refreshAuthorization(
   } else {
     tokenUrl = new URL('/token', authorizationServerUrl);
   }
+  assertSafeOAuthEndpoint(tokenUrl);
 
   const headers = new Headers({
     'Content-Type': 'application/x-www-form-urlencoded',
@@ -983,6 +1061,7 @@ export async function refreshAuthorization(
     method: 'POST',
     headers,
     body: params,
+    redirect: 'error',
   });
   if (!response.ok) {
     throw await parseErrorResponse(response);
@@ -1022,6 +1101,7 @@ export async function registerClient(
   } else {
     registrationUrl = new URL('/register', authorizationServerUrl);
   }
+  assertSafeOAuthEndpoint(registrationUrl);
 
   const response = await (fetchFn ?? fetch)(registrationUrl, {
     method: 'POST',
@@ -1029,6 +1109,7 @@ export async function registerClient(
       'Content-Type': 'application/json',
     },
     body: JSON.stringify(clientMetadata),
+    redirect: 'error',
   });
 
   if (!response.ok) {
@@ -1118,6 +1199,10 @@ async function authInternal(
 ): Promise<AuthResult> {
   let resourceMetadata: OAuthProtectedResourceMetadata | undefined;
   let authorizationServerUrl: string | URL | undefined;
+  let clientInformation: OAuthClientInformation | undefined;
+  let callbackAuthorizationServerInformation:
+    | OAuthAuthorizationServerInformation
+    | undefined;
 
   /** Reject Protected Resource Metadata URLs outside the configured MCP server origin. */
   assertResourceMetadataUrlSameOrigin(serverUrl, resourceMetadataUrl);
@@ -1137,9 +1222,27 @@ async function authInternal(
     }
   } catch {}
 
-  /** Fall back to legacy MCP behavior where the MCP server is the Authorization Server */
+  /**
+   * A callback may not have the original PRM URL from the authentication
+   * challenge. Use the authorization server pinned before redirecting when
+   * rediscovery does not select one.
+   */
+  if (authorizationCode !== undefined) {
+    clientInformation = await Promise.resolve(provider.clientInformation());
+    if (clientInformation) {
+      callbackAuthorizationServerInformation =
+        await getStoredAuthorizationServerInformation({
+          provider,
+          clientInformation,
+        });
+    }
+  }
+
+  /** Reuse the callback pin, then fall back to the legacy MCP-as-AS behavior. */
   if (!authorizationServerUrl) {
-    authorizationServerUrl = serverUrl;
+    authorizationServerUrl =
+      callbackAuthorizationServerInformation?.authorizationServerUrl ??
+      serverUrl;
   }
 
   /** Validate and select the resource value sent to the AS */
@@ -1164,9 +1267,17 @@ async function authInternal(
   );
   const currentAuthorizationServerInformation =
     createAuthorizationServerInformation(authorizationServerUrl, metadata);
+  const clientMetadata = provider.clientMetadata;
+  const selectedScope = selectScope({
+    scope,
+    resourceMetadata,
+    clientMetadata,
+  });
 
   /** Load or register client credentials with the AS pin attached. */
-  let clientInformation = await Promise.resolve(provider.clientInformation());
+  if (authorizationCode === undefined) {
+    clientInformation = await Promise.resolve(provider.clientInformation());
+  }
   if (!clientInformation) {
     if (authorizationCode !== undefined) {
       throw new Error(
@@ -1182,7 +1293,10 @@ async function authInternal(
 
     const fullInformation = await registerClient(authorizationServerUrl, {
       metadata,
-      clientMetadata: provider.clientMetadata,
+      clientMetadata: {
+        ...clientMetadata,
+        scope: selectedScope,
+      },
       fetchFn,
     });
 
@@ -1205,10 +1319,11 @@ async function authInternal(
     }
 
     const storedAuthorizationServerInformation =
-      await getStoredAuthorizationServerInformation({
+      callbackAuthorizationServerInformation ??
+      (await getStoredAuthorizationServerInformation({
         provider,
         clientInformation,
-      });
+      }));
     if (!storedAuthorizationServerInformation) {
       throw new MCPClientOAuthError({
         message:
@@ -1309,7 +1424,7 @@ async function authInternal(
       clientInformation,
       state,
       redirectUrl: provider.redirectUrl,
-      scope: scope || provider.clientMetadata.scope,
+      scope: selectedScope,
       resource,
     },
   );

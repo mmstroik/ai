@@ -73,6 +73,82 @@ describe('system messages', () => {
     expect(result.betas.has('mid-conversation-system-2026-04-07')).toBe(true);
   });
 
+  it('should serialize clearAt and effort on mid-conversation system messages with their betas', async () => {
+    const result = await convertToAnthropicMessagesPrompt({
+      prompt: [
+        { role: 'system', content: 'initial' },
+        { role: 'user', content: [{ type: 'text', text: 'hi' }] },
+        { role: 'assistant', content: [{ type: 'text', text: 'hello' }] },
+        {
+          role: 'system',
+          content: 'Use extra effort for this turn only.',
+          providerOptions: {
+            anthropic: {
+              clearAt: 'next_user_message',
+              effort: 'xhigh',
+            },
+          },
+        },
+        { role: 'user', content: [{ type: 'text', text: 'solve it' }] },
+      ],
+      sendReasoning: true,
+      warnings: [],
+      toolNameMapping: defaultToolNameMapping,
+    });
+
+    expect(result.prompt.messages).toContainEqual({
+      role: 'system',
+      content: [{ type: 'text', text: 'Use extra effort for this turn only.' }],
+      clear_at: 'next_user_message',
+      output_config: { effort: 'xhigh' },
+    });
+    expect(
+      result.betas.has('mid-conversation-system-clear-at-2026-08-21'),
+    ).toBe(true);
+    expect(result.betas.has('mid-conversation-output-config-2026-07-01')).toBe(
+      true,
+    );
+  });
+
+  it('should preserve per-message options on consecutive mid-conversation system messages', async () => {
+    const result = await convertToAnthropicMessagesPrompt({
+      prompt: [
+        { role: 'system', content: 'initial' },
+        { role: 'user', content: [{ type: 'text', text: 'hi' }] },
+        {
+          role: 'system',
+          content: 'temporary',
+          providerOptions: {
+            anthropic: { clearAt: 'next_user_message' },
+          },
+        },
+        {
+          role: 'system',
+          content: '',
+          providerOptions: {
+            anthropic: { effort: 'high' },
+          },
+        },
+      ],
+      sendReasoning: true,
+      warnings: [],
+      toolNameMapping: defaultToolNameMapping,
+    });
+
+    expect(result.prompt.messages.slice(-2)).toEqual([
+      {
+        role: 'system',
+        content: [{ type: 'text', text: 'temporary' }],
+        clear_at: 'next_user_message',
+      },
+      {
+        role: 'system',
+        content: [],
+        output_config: { effort: 'high' },
+      },
+    ]);
+  });
+
   it('should emit tool change blocks on a mid-conversation system message and add the beta', async () => {
     const result = await convertToAnthropicMessagesPrompt({
       prompt: [
@@ -3013,6 +3089,294 @@ describe('assistant messages', () => {
   });
 
   describe('code_execution 20260120', () => {
+    it('should preserve caller metadata and response order for dynamic filtering', async () => {
+      const caller = {
+        anthropic: {
+          caller: {
+            type: 'code_execution_20260120',
+            toolId: 'code-execution-call',
+          },
+        },
+      } as const;
+      const result = await convertToAnthropicMessagesPrompt({
+        prompt: [
+          {
+            role: 'assistant',
+            content: [
+              {
+                type: 'tool-call',
+                toolCallId: 'code-execution-call',
+                toolName: 'code_execution',
+                input: {
+                  type: 'programmatic-tool-call',
+                  code: 'await web_search({ query: "AI SDK" })',
+                },
+                providerExecuted: true,
+                providerOptions: {
+                  anthropic: { caller: { type: 'direct' } },
+                },
+              },
+              {
+                type: 'tool-call',
+                toolCallId: 'web-search-call-1',
+                toolName: 'web_search',
+                input: { query: 'AI SDK' },
+                providerExecuted: true,
+                providerOptions: caller,
+              },
+              {
+                type: 'tool-result',
+                toolCallId: 'web-search-call-1',
+                toolName: 'web_search',
+                output: { type: 'json', value: [] },
+                providerOptions: caller,
+              },
+              {
+                type: 'tool-call',
+                toolCallId: 'web-search-call-2',
+                toolName: 'web_search',
+                input: { query: 'Anthropic' },
+                providerExecuted: true,
+                providerOptions: caller,
+              },
+              {
+                type: 'tool-result',
+                toolCallId: 'web-search-call-2',
+                toolName: 'web_search',
+                output: { type: 'json', value: [] },
+                providerOptions: caller,
+              },
+              {
+                type: 'tool-result',
+                toolCallId: 'code-execution-call',
+                toolName: 'code_execution',
+                output: {
+                  type: 'json',
+                  value: {
+                    type: 'encrypted_code_execution_result',
+                    encrypted_stdout: 'encrypted-output',
+                    stderr: '',
+                    return_code: 0,
+                    content: [],
+                  },
+                },
+              },
+            ],
+          },
+        ],
+        sendReasoning: false,
+        warnings: [],
+        toolNameMapping: defaultToolNameMapping,
+      });
+
+      expect(result.prompt.messages).toHaveLength(1);
+      expect(result.prompt.messages[0]).toMatchObject({
+        role: 'assistant',
+        content: [
+          {
+            type: 'server_tool_use',
+            id: 'code-execution-call',
+            caller: { type: 'direct' },
+          },
+          {
+            type: 'server_tool_use',
+            id: 'web-search-call-1',
+            caller: {
+              type: 'code_execution_20260120',
+              tool_id: 'code-execution-call',
+            },
+          },
+          {
+            type: 'web_search_tool_result',
+            tool_use_id: 'web-search-call-1',
+            caller: {
+              type: 'code_execution_20260120',
+              tool_id: 'code-execution-call',
+            },
+          },
+          {
+            type: 'server_tool_use',
+            id: 'web-search-call-2',
+            caller: {
+              type: 'code_execution_20260120',
+              tool_id: 'code-execution-call',
+            },
+          },
+          {
+            type: 'web_search_tool_result',
+            tool_use_id: 'web-search-call-2',
+            caller: {
+              type: 'code_execution_20260120',
+              tool_id: 'code-execution-call',
+            },
+          },
+          {
+            type: 'code_execution_tool_result',
+            tool_use_id: 'code-execution-call',
+          },
+        ],
+      });
+    });
+
+    it('should preserve a deferred server result across a client tool continuation', async () => {
+      const result = await convertToAnthropicMessagesPrompt({
+        prompt: [
+          {
+            role: 'assistant',
+            content: [
+              {
+                type: 'tool-call',
+                toolCallId: 'code-execution-call',
+                toolName: 'code_execution',
+                input: {
+                  type: 'programmatic-tool-call',
+                  code: 'await fetch_url({ url: "https://example.com" })',
+                },
+                providerExecuted: true,
+                providerOptions: {
+                  anthropic: { caller: { type: 'direct' } },
+                },
+              },
+              {
+                type: 'tool-call',
+                toolCallId: 'client-tool-call',
+                toolName: 'fetch_url',
+                input: { url: 'https://example.com' },
+                providerOptions: {
+                  anthropic: {
+                    caller: {
+                      type: 'code_execution_20260120',
+                      toolId: 'code-execution-call',
+                    },
+                  },
+                },
+              },
+            ],
+          },
+          {
+            role: 'tool',
+            content: [
+              {
+                type: 'tool-result',
+                toolCallId: 'client-tool-call',
+                toolName: 'fetch_url',
+                output: { type: 'text', value: 'Example Domain' },
+              },
+            ],
+          },
+          {
+            role: 'assistant',
+            content: [
+              {
+                type: 'tool-result',
+                toolCallId: 'code-execution-call',
+                toolName: 'code_execution',
+                output: {
+                  type: 'json',
+                  value: {
+                    type: 'encrypted_code_execution_result',
+                    encrypted_stdout: 'encrypted-output',
+                    stderr: '',
+                    return_code: 0,
+                    content: [],
+                  },
+                },
+              },
+            ],
+          },
+        ],
+        sendReasoning: false,
+        warnings: [],
+        toolNameMapping: defaultToolNameMapping,
+      });
+
+      // Anthropic pairs a deferred server result by tool_use_id across
+      // responses; the intervening client tool exchange must stay intact.
+      expect(result.prompt.messages).toHaveLength(3);
+      expect(result.prompt.messages).toMatchObject([
+        {
+          role: 'assistant',
+          content: [
+            {
+              type: 'server_tool_use',
+              id: 'code-execution-call',
+              caller: { type: 'direct' },
+            },
+            {
+              type: 'tool_use',
+              id: 'client-tool-call',
+              caller: {
+                type: 'code_execution_20260120',
+                tool_id: 'code-execution-call',
+              },
+            },
+          ],
+        },
+        {
+          role: 'user',
+          content: [
+            {
+              type: 'tool_result',
+              tool_use_id: 'client-tool-call',
+            },
+          ],
+        },
+        {
+          role: 'assistant',
+          content: [
+            {
+              type: 'code_execution_tool_result',
+              tool_use_id: 'code-execution-call',
+            },
+          ],
+        },
+      ]);
+    });
+
+    it('should replay server_tool_use input without the internal discriminator', async () => {
+      const warnings: SharedV3Warning[] = [];
+      const result = await convertToAnthropicMessagesPrompt({
+        prompt: [
+          {
+            role: 'assistant',
+            content: [
+              {
+                type: 'tool-call',
+                toolCallId: 'srvtoolu_cache_replay',
+                toolName: 'code_execution',
+                input: {
+                  type: 'bash_code_execution',
+                  command: 'echo cache-compatible',
+                },
+                providerExecuted: true,
+              },
+            ],
+          },
+        ],
+        sendReasoning: false,
+        warnings,
+        toolNameMapping: defaultToolNameMapping,
+      });
+
+      expect(result.prompt.messages).toEqual([
+        {
+          role: 'assistant',
+          content: [
+            {
+              type: 'server_tool_use',
+              id: 'srvtoolu_cache_replay',
+              name: 'bash_code_execution',
+              input: {
+                command: 'echo cache-compatible',
+              },
+              cache_control: undefined,
+            },
+          ],
+        },
+      ]);
+      expect(warnings).toEqual([]);
+    });
+
     it('should convert anthropic code_execution tool call and result parts', async () => {
       const warnings: SharedV3Warning[] = [];
       const result = await convertToAnthropicMessagesPrompt({
@@ -4346,5 +4710,174 @@ describe('citations', () => {
         }
       `);
     });
+  });
+});
+
+describe('toolsets', () => {
+  const toolsetToolNameMapping = createToolNameMapping({
+    tools: [
+      {
+        type: 'provider',
+        id: 'anthropic.computer_toolset_20260801',
+        name: 'computer',
+        args: {},
+      },
+    ],
+    providerToolNames: { 'anthropic.computer_toolset_20260801': 'computer' },
+  });
+
+  it('should serialize toolset tool calls and results with toolset_name', async () => {
+    const result = await convertToAnthropicMessagesPrompt({
+      prompt: [
+        {
+          role: 'assistant',
+          content: [
+            {
+              type: 'tool-call',
+              toolCallId: 'toolu_click',
+              toolName: 'computer',
+              input: { action: 'left_click', coordinate: [640, 60] },
+            },
+          ],
+        },
+        {
+          role: 'tool',
+          content: [
+            {
+              type: 'tool-result',
+              toolCallId: 'toolu_click',
+              toolName: 'computer',
+              output: { type: 'text', value: 'OK' },
+            },
+          ],
+        },
+      ],
+      sendReasoning: true,
+      warnings: [],
+      toolNameMapping: toolsetToolNameMapping,
+      toolsetNames: { computer: 'computer' },
+    });
+
+    expect(result.prompt.messages).toMatchInlineSnapshot(`
+      [
+        {
+          "content": [
+            {
+              "cache_control": undefined,
+              "id": "toolu_click",
+              "input": {
+                "coordinate": [
+                  640,
+                  60,
+                ],
+              },
+              "name": "left_click",
+              "toolset_name": "computer",
+              "type": "tool_use",
+            },
+          ],
+          "role": "assistant",
+        },
+        {
+          "content": [
+            {
+              "cache_control": undefined,
+              "content": "OK",
+              "is_error": undefined,
+              "tool_use_id": "toolu_click",
+              "toolset_name": "computer",
+              "type": "tool_result",
+            },
+          ],
+          "role": "user",
+        },
+      ]
+    `);
+  });
+
+  it('should detect toolset tool calls through provider metadata when the tool is not passed', async () => {
+    const result = await convertToAnthropicMessagesPrompt({
+      prompt: [
+        {
+          role: 'assistant',
+          content: [
+            {
+              type: 'tool-call',
+              toolCallId: 'toolu_screenshot',
+              toolName: 'desktop',
+              input: { action: 'screenshot' },
+              providerOptions: { anthropic: { toolsetName: 'computer' } },
+            },
+          ],
+        },
+        {
+          role: 'tool',
+          content: [
+            {
+              type: 'tool-result',
+              toolCallId: 'toolu_screenshot',
+              toolName: 'desktop',
+              output: { type: 'text', value: 'OK' },
+              providerOptions: { anthropic: { toolsetName: 'computer' } },
+            },
+          ],
+        },
+      ],
+      sendReasoning: true,
+      warnings: [],
+      toolNameMapping: defaultToolNameMapping,
+    });
+
+    expect(result.prompt.messages[0].content).toEqual([
+      {
+        type: 'tool_use',
+        id: 'toolu_screenshot',
+        name: 'screenshot',
+        toolset_name: 'computer',
+        input: {},
+        cache_control: undefined,
+      },
+    ]);
+    expect(result.prompt.messages[1].content).toEqual([
+      {
+        type: 'tool_result',
+        tool_use_id: 'toolu_screenshot',
+        toolset_name: 'computer',
+        content: 'OK',
+        is_error: undefined,
+        cache_control: undefined,
+      },
+    ]);
+  });
+
+  it('should warn and skip toolset tool calls without an action', async () => {
+    const warnings: SharedV3Warning[] = [];
+    const result = await convertToAnthropicMessagesPrompt({
+      prompt: [
+        {
+          role: 'assistant',
+          content: [
+            {
+              type: 'tool-call',
+              toolCallId: 'toolu_bad',
+              toolName: 'computer',
+              input: { coordinate: [1, 2] },
+            },
+          ],
+        },
+      ],
+      sendReasoning: true,
+      warnings,
+      toolNameMapping: toolsetToolNameMapping,
+      toolsetNames: { computer: 'computer' },
+    });
+
+    expect(result.prompt.messages[0].content).toEqual([]);
+    expect(warnings).toEqual([
+      {
+        type: 'other',
+        message: 'toolset tool call for tool computer is missing the action',
+      },
+    ]);
   });
 });

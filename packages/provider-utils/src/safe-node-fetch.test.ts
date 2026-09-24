@@ -8,6 +8,19 @@ import {
 
 type Address = { address: string; family: number };
 
+describe('module initialization', () => {
+  it('succeeds when the global fetch function is unavailable', async () => {
+    vi.resetModules();
+    vi.stubGlobal('fetch', undefined);
+
+    try {
+      await expect(import('./safe-node-fetch')).resolves.toBeDefined();
+    } finally {
+      vi.unstubAllGlobals();
+    }
+  });
+});
+
 function createLookup(addresses: Address[]) {
   const lookup = vi.fn((_hostname, options, callback) => {
     callback(null, addresses);
@@ -103,11 +116,14 @@ describe('createSafeLookup', () => {
 });
 
 describe('getDefaultDownloadFetch', () => {
-  it('loads Node modules without process.getBuiltinModule', async () => {
+  it('rejects when Node modules are unavailable without process.getBuiltinModule', async () => {
     if (!isNodeRuntime()) {
       return;
     }
 
+    // No dynamic-import fallback exists: Metro rejects non-static import()
+    // expressions while parsing, and Next.js Edge Runtime rejects the
+    // Function-constructor shim. See #18545, #18559.
     const runtimeProcess = globalThis.process as unknown as {
       getBuiltinModule: ((id: string) => unknown) | undefined;
     };
@@ -115,8 +131,8 @@ describe('getDefaultDownloadFetch', () => {
     runtimeProcess.getBuiltinModule = undefined;
 
     try {
-      await expect(getDefaultDownloadFetch()).resolves.not.toBe(
-        globalThis.fetch,
+      await expect(getDefaultDownloadFetch()).rejects.toThrow(
+        'Node.js built-in module node:module is unavailable',
       );
     } finally {
       runtimeProcess.getBuiltinModule = originalGetBuiltinModule;

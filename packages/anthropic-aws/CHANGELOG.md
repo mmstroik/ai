@@ -1,5 +1,133 @@
 # @ai-sdk/anthropic-aws
 
+## 1.0.43
+
+### Patch Changes
+
+- Updated dependencies [da2e17b]
+  - @ai-sdk/provider@3.0.17
+  - @ai-sdk/anthropic@3.0.121
+  - @ai-sdk/provider-utils@4.0.53
+
+## 1.0.42
+
+### Patch Changes
+
+- Updated dependencies [bd8bf1f]
+  - @ai-sdk/anthropic@3.0.120
+
+## 1.0.41
+
+### Patch Changes
+
+- Updated dependencies [82e18b0]
+  - @ai-sdk/provider-utils@4.0.52
+  - @ai-sdk/anthropic@3.0.119
+
+## 1.0.40
+
+### Patch Changes
+
+- Updated dependencies [c11f450]
+  - @ai-sdk/anthropic@3.0.118
+
+## 1.0.39
+
+### Patch Changes
+
+- Updated dependencies [1a4dbb1]
+  - @ai-sdk/provider@3.0.16
+  - @ai-sdk/anthropic@3.0.117
+  - @ai-sdk/provider-utils@4.0.51
+
+## 1.0.38
+
+### Patch Changes
+
+- Updated dependencies [57d88f5]
+  - @ai-sdk/anthropic@3.0.116
+
+## 1.0.37
+
+### Patch Changes
+
+- Updated dependencies [cc23556]
+  - @ai-sdk/provider-utils@4.0.50
+  - @ai-sdk/anthropic@3.0.115
+
+## 1.0.36
+
+### Patch Changes
+
+- Updated dependencies [9a521b9]
+  - @ai-sdk/provider-utils@4.0.49
+  - @ai-sdk/anthropic@3.0.114
+
+## 1.0.35
+
+### Patch Changes
+
+- Updated dependencies [5642849]
+  - @ai-sdk/provider-utils@4.0.48
+  - @ai-sdk/anthropic@3.0.113
+
+## 1.0.34
+
+### Patch Changes
+
+- Updated dependencies [2d172fb]
+  - @ai-sdk/provider-utils@4.0.47
+  - @ai-sdk/anthropic@3.0.112
+
+## 1.0.33
+
+### Patch Changes
+
+- Updated dependencies [8533108]
+- Updated dependencies [31205a4]
+  - @ai-sdk/anthropic@3.0.111
+  - @ai-sdk/provider-utils@4.0.46
+
+## 1.0.32
+
+### Patch Changes
+
+- Updated dependencies [b2a4d5a]
+  - @ai-sdk/provider-utils@4.0.45
+  - @ai-sdk/anthropic@3.0.110
+
+## 1.0.31
+
+### Patch Changes
+
+- Updated dependencies [2171d15]
+  - @ai-sdk/provider@3.0.15
+  - @ai-sdk/anthropic@3.0.109
+  - @ai-sdk/provider-utils@4.0.44
+
+## 1.0.30
+
+### Patch Changes
+
+- Updated dependencies [dab0a08]
+  - @ai-sdk/provider-utils@4.0.43
+  - @ai-sdk/anthropic@3.0.108
+
+## 1.0.29
+
+### Patch Changes
+
+- Updated dependencies [ee2bf30]
+  - @ai-sdk/provider-utils@4.0.42
+  - @ai-sdk/anthropic@3.0.107
+
+## 1.0.28
+
+### Patch Changes
+
+- Updated dependencies [b74e654]
+  - @ai-sdk/anthropic@3.0.106
+
 ## 1.0.27
 
 ### Patch Changes

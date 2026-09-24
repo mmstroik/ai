@@ -1,5 +1,123 @@
 # @ai-sdk/anthropic
 
+## 3.0.121
+
+### Patch Changes
+
+- Updated dependencies [da2e17b]
+  - @ai-sdk/provider@3.0.17
+  - @ai-sdk/provider-utils@4.0.53
+
+## 3.0.120
+
+### Patch Changes
+
+- bd8bf1f: feat(anthropic): add Claude Opus 5.5 support
+
+  - add the `claude-opus-5-5` model ID to `@ai-sdk/anthropic` and `anthropic/claude-opus-5.5` to `@ai-sdk/gateway`
+  - models that always use adaptive thinking (`claude-opus-5-5`, `claude-fable-5`, `claude-fable-5-1`) no longer receive `thinking: { type: 'disabled' }` or budget-based thinking; the provider drops the unsupported setting and emits a warning
+  - models that reject forced tool use (`claude-opus-5-5`, `claude-fable-5-1`) fall back to `auto` tool choice for `required` and named tool choices, and to native structured outputs when `structuredOutputMode: 'jsonTool'` is requested, each with a warning
+  - add the `computerToolset_20260801` computer use tool (`computer_toolset_20260801`), which is required for computer use on `claude-opus-5-5`
+  - use the documented `mid-conversation-output-config-2026-07-01` beta header for per-message effort
+
+## 3.0.119
+
+### Patch Changes
+
+- Updated dependencies [82e18b0]
+  - @ai-sdk/provider-utils@4.0.52
+
+## 3.0.118
+
+### Patch Changes
+
+- c11f450: feat(anthropic): expand preserved thinking support to cover `prefix_mismatch_behavior: 'error'`
+
+## 3.0.117
+
+### Patch Changes
+
+- Updated dependencies [1a4dbb1]
+  - @ai-sdk/provider@3.0.16
+  - @ai-sdk/provider-utils@4.0.51
+
+## 3.0.116
+
+### Patch Changes
+
+- 57d88f5: feat(anthropic): add fable 5.1 support
+
+## 3.0.115
+
+### Patch Changes
+
+- Updated dependencies [cc23556]
+  - @ai-sdk/provider-utils@4.0.50
+
+## 3.0.114
+
+### Patch Changes
+
+- Updated dependencies [9a521b9]
+  - @ai-sdk/provider-utils@4.0.49
+
+## 3.0.113
+
+### Patch Changes
+
+- Updated dependencies [5642849]
+  - @ai-sdk/provider-utils@4.0.48
+
+## 3.0.112
+
+### Patch Changes
+
+- Updated dependencies [2d172fb]
+  - @ai-sdk/provider-utils@4.0.47
+
+## 3.0.111
+
+### Patch Changes
+
+- 8533108: Preserve Anthropic server-tool caller metadata in multi-turn conversations.
+- Updated dependencies [31205a4]
+  - @ai-sdk/provider-utils@4.0.46
+
+## 3.0.110
+
+### Patch Changes
+
+- Updated dependencies [b2a4d5a]
+  - @ai-sdk/provider-utils@4.0.45
+
+## 3.0.109
+
+### Patch Changes
+
+- Updated dependencies [2171d15]
+  - @ai-sdk/provider@3.0.15
+  - @ai-sdk/provider-utils@4.0.44
+
+## 3.0.108
+
+### Patch Changes
+
+- Updated dependencies [dab0a08]
+  - @ai-sdk/provider-utils@4.0.43
+
+## 3.0.107
+
+### Patch Changes
+
+- Updated dependencies [ee2bf30]
+  - @ai-sdk/provider-utils@4.0.42
+
+## 3.0.106
+
+### Patch Changes
+
+- b74e654: Reject spliced Anthropic generations while allowing duplicate message start events for the active message.
+
 ## 3.0.105
 
 ### Patch Changes

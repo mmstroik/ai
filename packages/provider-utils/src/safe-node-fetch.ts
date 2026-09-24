@@ -131,7 +131,11 @@ export async function getDefaultDownloadFetch(): Promise<FetchFunction> {
   return (safeNodeFetchPromise ??= createSafeNodeFetch());
 }
 
-function isNodeDefaultFetch(fetch: FetchFunction): boolean {
+function isNodeDefaultFetch(fetch: unknown): boolean {
+  if (typeof fetch !== 'function') {
+    return false;
+  }
+
   const source = Function.prototype.toString.call(fetch);
   return (
     source.includes('internal/deps/undici') ||
@@ -140,9 +144,8 @@ function isNodeDefaultFetch(fetch: FetchFunction): boolean {
 }
 
 async function createSafeNodeFetch(): Promise<FetchFunction> {
-  // Node 20.16+ exposes getBuiltinModule; older supported Node versions use an
-  // indirect dynamic import. Keeping the specifier non-literal prevents browser
-  // bundlers from pulling Node built-ins into the provider-utils entry point.
+  // Load Node-only modules indirectly so browser bundlers do not pull undici
+  // and Node built-ins into the browser-facing provider-utils entry point.
   const [{ createRequire }, { lookup }] = await Promise.all([
     loadNodeModule<NodeModule>('node:module'),
     loadNodeModule<NodeDns>('node:dns'),
@@ -175,13 +178,16 @@ async function loadNodeModule<T>(id: string): Promise<T> {
     | undefined;
   const builtinModule = processWithBuiltins?.getBuiltinModule?.(id);
 
-  return builtinModule == null
-    ? ((await importNodeModule(id)) as T)
-    : (builtinModule as T);
-}
+  if (builtinModule == null) {
+    // There is no bundle-safe way to load Node built-ins without
+    // process.getBuiltinModule (Node <20.16): Metro rejects non-static
+    // import() expressions while parsing, and Next.js Edge Runtime rejects
+    // the Function-constructor shim during static analysis. Throw rather
+    // than ship either, matching the v7 implementation. See #18545, #18559.
+    throw new Error(`Node.js built-in module ${id} is unavailable`);
+  }
 
-function importNodeModule(id: string): Promise<unknown> {
-  return import(id);
+  return builtinModule as T;
 }
 
 function getCurrentModulePath(): string {

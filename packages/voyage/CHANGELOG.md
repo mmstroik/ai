@@ -1,5 +1,92 @@
 # @ai-sdk/voyage
 
+## 1.0.30
+
+### Patch Changes
+
+- Updated dependencies [da2e17b]
+  - @ai-sdk/provider@3.0.17
+  - @ai-sdk/provider-utils@4.0.53
+
+## 1.0.29
+
+### Patch Changes
+
+- Updated dependencies [82e18b0]
+  - @ai-sdk/provider-utils@4.0.52
+
+## 1.0.28
+
+### Patch Changes
+
+- Updated dependencies [1a4dbb1]
+  - @ai-sdk/provider@3.0.16
+  - @ai-sdk/provider-utils@4.0.51
+
+## 1.0.27
+
+### Patch Changes
+
+- Updated dependencies [cc23556]
+  - @ai-sdk/provider-utils@4.0.50
+
+## 1.0.26
+
+### Patch Changes
+
+- Updated dependencies [9a521b9]
+  - @ai-sdk/provider-utils@4.0.49
+
+## 1.0.25
+
+### Patch Changes
+
+- Updated dependencies [5642849]
+  - @ai-sdk/provider-utils@4.0.48
+
+## 1.0.24
+
+### Patch Changes
+
+- Updated dependencies [2d172fb]
+  - @ai-sdk/provider-utils@4.0.47
+
+## 1.0.23
+
+### Patch Changes
+
+- Updated dependencies [31205a4]
+  - @ai-sdk/provider-utils@4.0.46
+
+## 1.0.22
+
+### Patch Changes
+
+- Updated dependencies [b2a4d5a]
+  - @ai-sdk/provider-utils@4.0.45
+
+## 1.0.21
+
+### Patch Changes
+
+- Updated dependencies [2171d15]
+  - @ai-sdk/provider@3.0.15
+  - @ai-sdk/provider-utils@4.0.44
+
+## 1.0.20
+
+### Patch Changes
+
+- Updated dependencies [dab0a08]
+  - @ai-sdk/provider-utils@4.0.43
+
+## 1.0.19
+
+### Patch Changes
+
+- Updated dependencies [ee2bf30]
+  - @ai-sdk/provider-utils@4.0.42
+
 ## 1.0.18
 
 ### Patch Changes
