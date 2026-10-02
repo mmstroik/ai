@@ -1,5 +1,59 @@
 # @ai-sdk/anthropic
 
+## 3.0.127
+
+### Patch Changes
+
+- d5c12b2: feat(provider/anthropic): add `safeguards` provider option and `safeguardResults` provider metadata (dangerous tool use classifier)
+
+## 3.0.126
+
+### Patch Changes
+
+- Updated dependencies [a9cea74]
+- Updated dependencies [a9cea74]
+- Updated dependencies [a9cea74]
+  - @ai-sdk/provider-utils@4.0.57
+
+## 3.0.125
+
+### Patch Changes
+
+- 358683e: feat(anthropic): add Claude Sonnet 5.5 support
+
+  - add the `claude-sonnet-5-5` model ID to `@ai-sdk/anthropic` and `@ai-sdk/google-vertex`, `anthropic.claude-sonnet-5-5` and `us.anthropic.claude-sonnet-5-5` to `@ai-sdk/amazon-bedrock`, and `anthropic/claude-sonnet-5.5` to `@ai-sdk/gateway`
+  - add the `between_tools` thinking type (`thinking: { type: 'between_tools' }`), the lowest thinking setting on `claude-sonnet-5-5`; `xhigh` and `max` effort are lowered to `high` with a warning because the API rejects them with `between_tools`
+  - `claude-sonnet-5-5` rejects disabled thinking: `thinking: { type: 'disabled' }` is replaced with `between_tools` thinking (with a warning), and budget-based thinking is converted to adaptive thinking
+  - `claude-sonnet-5-5` rejects forced tool use: `required` and named tool choices fall back to `auto`, and `structuredOutputMode: 'jsonTool'` falls back to native structured outputs, each with a warning
+
+- eeabdce: Normalize dangling programmatic tool caller references in conversation history after pruning. Before a subsequent user message, omit caller metadata whose source code execution call is missing and emit a warning, preserving the retained tool calls and results. Keep caller metadata unchanged for active tool continuations.
+
+## 3.0.124
+
+### Patch Changes
+
+- Updated dependencies [29dc427]
+  - @ai-sdk/provider-utils@4.0.56
+
+## 3.0.123
+
+### Patch Changes
+
+- f04da68: Preserve effort updates on empty system messages at the beginning of a conversation, including consecutive updates.
+- Updated dependencies [3983fea]
+  - @ai-sdk/provider@3.0.18
+  - @ai-sdk/provider-utils@4.0.55
+
+## 3.0.122
+
+### Patch Changes
+
+- f7f36d2: chore: enable dead code lint rules
+- Updated dependencies [069a945]
+- Updated dependencies [d1a36d2]
+- Updated dependencies [f7f36d2]
+  - @ai-sdk/provider-utils@4.0.54
+
 ## 3.0.121
 
 ### Patch Changes

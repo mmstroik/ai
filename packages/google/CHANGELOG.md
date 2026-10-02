@@ -1,5 +1,41 @@
 # @ai-sdk/google
 
+## 3.0.130
+
+### Patch Changes
+
+- a9cea74: Keep default Node.js downloads protected by DNS validation and connection pinning when frameworks or instrumentation wrap global fetch before or after the SDK loads.
+- Updated dependencies [a9cea74]
+- Updated dependencies [a9cea74]
+- Updated dependencies [a9cea74]
+  - @ai-sdk/provider-utils@4.0.57
+
+## 3.0.129
+
+### Patch Changes
+
+- Updated dependencies [29dc427]
+  - @ai-sdk/provider-utils@4.0.56
+
+## 3.0.128
+
+### Patch Changes
+
+- 3983fea: fix(google): forward supported GCS tool result URLs as function response file data on Vertex Gemini 3 and later. Restrict forwarding to supported image, PDF, and text MIME types while preserving HTTP(S) downloads for tool results on all Gemini generations.
+- Updated dependencies [3983fea]
+  - @ai-sdk/provider@3.0.18
+  - @ai-sdk/provider-utils@4.0.55
+
+## 3.0.127
+
+### Patch Changes
+
+- 069a945: Fix Google `embedMany` calls with more than 100 values by keeping per-value multimodal content aligned across automatic batches, including text-only entries. Validate content length before sending requests and validate each batch's provider options after middleware transforms them.
+- Updated dependencies [069a945]
+- Updated dependencies [d1a36d2]
+- Updated dependencies [f7f36d2]
+  - @ai-sdk/provider-utils@4.0.54
+
 ## 3.0.126
 
 ### Patch Changes

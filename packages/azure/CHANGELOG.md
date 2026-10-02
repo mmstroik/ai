@@ -1,5 +1,74 @@
 # @ai-sdk/azure
 
+## 3.0.131
+
+### Patch Changes
+
+- b98e43b: Route `mai-transcribe-1.5` to the Azure Speech API by default, like `mai-transcribe-2`. MAI-Transcribe-1.5 requests no longer send the `segment` timestamps default, which the model rejects.
+- 2443982: Add MAI-Voice-2-Flash and MAI-Voice-2 speech generation through `azure.speech()` using Azure Speech text to speech (SSML), with voice, output format, speed, and `style`/`styleDegree` provider options. `language` picks a default voice when no voice is set. Select the API with `providerOptions.azure.api` to override model-based routing, and add `azure.speechModel()` as an alias of `azure.speech()`.
+- e66dcd5: Reject an Azure `resourceName` that is not a single DNS label, so a malformed value cannot rewrite the request host.
+
+## 3.0.130
+
+### Patch Changes
+
+- Updated dependencies [a9cea74]
+- Updated dependencies [a9cea74]
+- Updated dependencies [a9cea74]
+  - @ai-sdk/provider-utils@4.0.57
+  - @ai-sdk/deepseek@2.0.71
+  - @ai-sdk/openai@3.0.122
+
+## 3.0.129
+
+### Patch Changes
+
+- Updated dependencies [4972874]
+- Updated dependencies [f6a20b4]
+  - @ai-sdk/openai@3.0.121
+  - @ai-sdk/deepseek@2.0.70
+
+## 3.0.128
+
+### Patch Changes
+
+- 8fff951: Add MAI-Transcribe-2 file transcription through `azure.transcription()` using the Azure Speech API, with diarization, word/segment timestamps, transcript styles, locale forcing, and phrase lists. Select the API with `providerOptions.azure.api` to override model-based routing, add a `speechBaseURL` setting for the Speech endpoint, and add `azure.transcriptionModel()` as an alias of `azure.transcription()`.
+- Updated dependencies [29dc427]
+  - @ai-sdk/provider-utils@4.0.56
+  - @ai-sdk/openai@3.0.120
+  - @ai-sdk/deepseek@2.0.69
+
+## 3.0.127
+
+### Patch Changes
+
+- Updated dependencies [3983fea]
+  - @ai-sdk/provider@3.0.18
+  - @ai-sdk/provider-utils@4.0.55
+  - @ai-sdk/deepseek@2.0.68
+  - @ai-sdk/openai@3.0.119
+
+## 3.0.126
+
+### Patch Changes
+
+- 0fb3a22: Export `OpenAIResponsesSystemMessageOptions` for typed message-level reasoning effort updates in Azure Responses models.
+- Updated dependencies [0fb3a22]
+  - @ai-sdk/openai@3.0.118
+
+## 3.0.125
+
+### Patch Changes
+
+- Updated dependencies [a3e970b]
+- Updated dependencies [069a945]
+- Updated dependencies [d1a36d2]
+- Updated dependencies [f7f36d2]
+- Updated dependencies [57256a0]
+  - @ai-sdk/openai@3.0.117
+  - @ai-sdk/provider-utils@4.0.54
+  - @ai-sdk/deepseek@2.0.67
+
 ## 3.0.124
 
 ### Patch Changes
